@@ -3,11 +3,11 @@ import { getSupabaseClient } from '@/lib/supabase';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = getSupabaseClient();
-    const { id } = params;
+    const { id } = await params;
 
     // Get specific loyalty rule
     const { data: rule, error } = await supabase
@@ -40,11 +40,11 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = getSupabaseClient();
-    const { id } = params;
+    const { id } = await params;
     const updateData = await request.json();
 
     // Update loyalty rule
@@ -80,11 +80,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = getSupabaseClient();
-    const { id } = params;
+    const { id } = await params;
 
     // Delete loyalty rule
     const { error } = await supabase
