@@ -1,92 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { getSupabaseClient } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { user_id, jewels_to_redeem } = await request.json();
+    const supabase = getSupabaseClient();
+    const { user_id, jewels_to_redeem, redemption_reason } = await request.json();
 
-    if (!user_id || !jewels_to_redeem) {
+    // Validate input
+    if (!user_id || !jewels_to_redeem || jewels_to_redeem <= 0) {
       return NextResponse.json(
-        { error: 'User ID and jewels to redeem are required' },
+        { error: 'Invalid input: user_id and positive jewels_to_redeem are required' },
         { status: 400 }
       );
     }
 
-    if (jewels_to_redeem < 100) {
-      return NextResponse.json(
-        { error: 'Minimum 100 jewels required for redemption' },
-        { status: 400 }
-      );
-    }
-
-    // Check current balance
-    const { data: balanceData, error: balanceError } = await supabase
+    // Check user's current balance
+    const { data: userSummary, error: userError } = await supabase
       .from('user_loyalty_summary')
-      .select('active_jewels_balance')
+      .select('*')
       .eq('user_id', user_id)
       .single();
 
-    if (balanceError || !balanceData) {
+    if (userError) {
+      console.error('User summary fetch error:', userError);
       return NextResponse.json(
-        { error: 'User loyalty summary not found' },
-        { status: 404 }
-      );
-    }
-
-    const currentBalance = balanceData.active_jewels_balance;
-
-    if (currentBalance < jewels_to_redeem) {
-      return NextResponse.json(
-        { error: 'Insufficient jewels balance' },
-        { status: 400 }
-      );
-    }
-
-    // Calculate discount (₹100 per jewel)
-    const discountAmount = jewels_to_redeem * 100;
-
-    // Record the redemption transaction
-    const { data: transactionData, error: transactionError } = await supabase
-      .from('loyalty_transactions')
-      .insert({
-        user_id,
-        jewels_redeemed: jewels_to_redeem,
-        reason: 'redemption'
-      })
-      .select()
-      .single();
-
-    if (transactionError) {
-      console.error('Transaction creation error:', transactionError);
-      return NextResponse.json(
-        { error: 'Failed to record redemption transaction' },
+        { error: 'Failed to fetch user loyalty summary' },
         { status: 500 }
       );
     }
 
-    // Get updated balance
-    const { data: updatedBalanceData, error: updatedBalanceError } = await supabase
+    if (!userSummary || userSummary.active_jewels_balance < jewels_to_redeem) {
+      return NextResponse.json(
+        { error: 'Insufficient jewels balance for redemption' },
+        { status: 400 }
+      );
+    }
+
+    // Create redemption transaction
+    const transactionData = {
+      user_id,
+      jewels_earned: 0,
+      jewels_redeemed: jewels_to_redeem,
+      reason: redemption_reason || 'manual_redemption',
+      expires_at: null
+    };
+
+    const { data: transaction, error: transactionError } = await supabase
+      .from('loyalty_transactions')
+      .insert(transactionData)
+      .select()
+      .single();
+
+    if (transactionError) {
+      console.error('Redemption transaction error:', transactionError);
+      return NextResponse.json(
+        { error: 'Failed to process redemption' },
+        { status: 500 }
+      );
+    }
+
+    // Get updated user summary
+    const { data: updatedUser, error: updatedUserError } = await supabase
       .from('user_loyalty_summary')
-      .select('active_jewels_balance')
+      .select('*')
       .eq('user_id', user_id)
       .single();
 
-    const remainingBalance = updatedBalanceData?.active_jewels_balance || 0;
+    if (updatedUserError) {
+      console.error('Updated user fetch error:', updatedUserError);
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Jewels redeemed successfully',
-      discount_amount: discountAmount,
-      remaining_balance: remainingBalance,
-      transaction_id: transactionData.id
+      message: `Successfully redeemed ${jewels_to_redeem} jewels`,
+      transaction_id: transaction.id,
+      user_summary: updatedUser || userSummary,
+      redemption_details: {
+        jewels_redeemed: jewels_to_redeem,
+        reason: redemption_reason || 'Manual redemption',
+        timestamp: new Date().toISOString()
+      }
     });
 
   } catch (error) {
-    console.error('Loyalty redeem error:', error);
+    console.error('Loyalty redemption API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -1,25 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/lib/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// GET /api/admin/loyalty/rules - Get all loyalty rules
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 1000;
-
+    const supabase = getSupabaseClient();
+    
+    // Get all loyalty rules
     const { data: rules, error } = await supabase
       .from('loyalty_rules')
       .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Supabase error:', error);
+      console.error('Rules fetch error:', error);
       return NextResponse.json(
         { error: 'Failed to fetch loyalty rules' },
         { status: 500 }
@@ -27,12 +20,12 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      success: true,
-      rules: rules || []
+      rules: rules || [],
+      success: true
     });
 
   } catch (error) {
-    console.error('API error:', error);
+    console.error('Admin loyalty rules API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -40,69 +33,28 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/loyalty/rules - Create new loyalty rule
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const {
-      rule_name,
-      rule_description,
-      rule_type,
-      rule_value,
-      is_active,
-      applies_to,
-      start_date,
-      end_date
-    } = body;
+    const supabase = getSupabaseClient();
+    const ruleData = await request.json();
 
-    // Validation
-    if (!rule_name || !rule_type || rule_value === undefined) {
+    // Validate required fields
+    if (!ruleData.rule_name || !ruleData.jewels_earned || ruleData.jewels_earned <= 0) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Rule name and positive jewels earned are required' },
         { status: 400 }
       );
     }
 
-    // Check if rule name already exists
-    const { data: existingRule, error: checkError } = await supabase
+    // Create new rule
+    const { data: rule, error } = await supabase
       .from('loyalty_rules')
-      .select('id')
-      .eq('rule_name', rule_name)
-      .single();
-
-    if (checkError && checkError.code !== 'PGRST116') {
-      console.error('Check existing rule error:', checkError);
-      return NextResponse.json(
-        { error: 'Failed to check existing rule' },
-        { status: 500 }
-      );
-    }
-
-    if (existingRule) {
-      return NextResponse.json(
-        { error: 'Rule name already exists' },
-        { status: 400 }
-      );
-    }
-
-    // Create the rule
-    const { data: newRule, error: createError } = await supabase
-      .from('loyalty_rules')
-      .insert({
-        rule_name,
-        rule_description,
-        rule_type,
-        rule_value,
-        is_active,
-        applies_to,
-        start_date: start_date ? new Date(start_date).toISOString() : new Date().toISOString(),
-        end_date: end_date ? new Date(end_date).toISOString() : null
-      })
+      .insert(ruleData)
       .select()
       .single();
 
-    if (createError) {
-      console.error('Create rule error:', createError);
+    if (error) {
+      console.error('Rule creation error:', error);
       return NextResponse.json(
         { error: 'Failed to create loyalty rule' },
         { status: 500 }
@@ -110,13 +62,13 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
+      rule,
       success: true,
-      rule: newRule,
       message: 'Loyalty rule created successfully'
     });
 
   } catch (error) {
-    console.error('API error:', error);
+    console.error('Admin loyalty rules POST API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

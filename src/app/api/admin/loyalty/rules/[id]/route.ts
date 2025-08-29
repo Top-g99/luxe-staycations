@@ -1,95 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/lib/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// PUT /api/admin/loyalty/rules/[id] - Update loyalty rule
-export async function PUT(
+export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const {
-      rule_name,
-      rule_description,
-      rule_type,
-      rule_value,
-      is_active,
-      applies_to,
-      start_date,
-      end_date
-    } = body;
+    const supabase = getSupabaseClient();
+    const { id } = params;
 
-    // Validation
-    if (!rule_name || !rule_type || rule_value === undefined) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    // Check if rule name already exists for other rules
-    const { data: existingRule, error: checkError } = await supabase
+    // Get specific loyalty rule
+    const { data: rule, error } = await supabase
       .from('loyalty_rules')
-      .select('id')
-      .eq('rule_name', rule_name)
-      .neq('id', id)
-      .single();
-
-    if (checkError && checkError.code !== 'PGRST116') {
-      console.error('Check existing rule error:', checkError);
-      return NextResponse.json(
-        { error: 'Failed to check existing rule' },
-        { status: 500 }
-      );
-    }
-
-    if (existingRule) {
-      return NextResponse.json(
-        { error: 'Rule name already exists' },
-        { status: 400 }
-      );
-    }
-
-    // Update the rule
-    const { data: updatedRule, error: updateError } = await supabase
-      .from('loyalty_rules')
-      .update({
-        rule_name,
-        rule_description,
-        rule_type,
-        rule_value,
-        is_active,
-        applies_to,
-        start_date: start_date ? new Date(start_date).toISOString() : new Date().toISOString(),
-        end_date: end_date ? new Date(end_date).toISOString() : null,
-        updated_at: new Date().toISOString()
-      })
+      .select('*')
       .eq('id', id)
-      .select()
       .single();
 
-    if (updateError) {
-      console.error('Update rule error:', updateError);
+    if (error) {
+      console.error('Rule fetch error:', error);
       return NextResponse.json(
-        { error: 'Failed to update loyalty rule' },
-        { status: 500 }
+        { error: 'Loyalty rule not found' },
+        { status: 404 }
       );
     }
 
     return NextResponse.json({
-      success: true,
-      rule: updatedRule,
-      message: 'Loyalty rule updated successfully'
+      rule,
+      success: true
     });
 
   } catch (error) {
-    console.error('API error:', error);
+    console.error('Admin loyalty rule GET API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -97,22 +38,62 @@ export async function PUT(
   }
 }
 
-// DELETE /api/admin/loyalty/rules/[id] - Delete loyalty rule
-export async function DELETE(
+export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const supabase = getSupabaseClient();
+    const { id } = params;
+    const updateData = await request.json();
 
-    // Delete the rule
-    const { error: deleteError } = await supabase
+    // Update loyalty rule
+    const { data: rule, error } = await supabase
+      .from('loyalty_rules')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Rule update error:', error);
+      return NextResponse.json(
+        { error: 'Failed to update loyalty rule' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      rule,
+      success: true,
+      message: 'Loyalty rule updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Admin loyalty rule PUT API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = getSupabaseClient();
+    const { id } = params;
+
+    // Delete loyalty rule
+    const { error } = await supabase
       .from('loyalty_rules')
       .delete()
       .eq('id', id);
 
-    if (deleteError) {
-      console.error('Delete rule error:', deleteError);
+    if (error) {
+      console.error('Rule deletion error:', error);
       return NextResponse.json(
         { error: 'Failed to delete loyalty rule' },
         { status: 500 }
@@ -125,7 +106,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('API error:', error);
+    console.error('Admin loyalty rule DELETE API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
