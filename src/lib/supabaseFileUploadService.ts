@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getSupabaseClient } from './supabase';
 
 export interface UploadResult {
   success: boolean;
@@ -31,6 +31,7 @@ export class SupabaseFileUploadService {
     options: Partial<FileUploadOptions> = {}
   ): Promise<UploadResult> {
     try {
+      const supabase = getSupabaseClient();
       const config = { ...this.defaultOptions, ...options };
       
       // Validate file
@@ -98,13 +99,15 @@ export class SupabaseFileUploadService {
    */
   async uploadPropertyImages(
     files: File[],
-    propertyId: string
+    propertyId?: string
   ): Promise<UploadResult[]> {
-    return this.uploadMultipleFiles(files, {
+    const options: Partial<FileUploadOptions> = {
       bucket: 'luxe-properties',
-      path: `properties/${propertyId}/images`,
+      path: propertyId ? `properties/${propertyId}` : 'properties',
       allowedTypes: ['image/*']
-    });
+    };
+    
+    return this.uploadMultipleFiles(files, options);
   }
 
   /**
@@ -112,47 +115,52 @@ export class SupabaseFileUploadService {
    */
   async uploadDestinationImages(
     files: File[],
-    destinationId: string
+    destinationId?: string
   ): Promise<UploadResult[]> {
-    return this.uploadMultipleFiles(files, {
+    const options: Partial<FileUploadOptions> = {
       bucket: 'luxe-destinations',
-      path: `destinations/${destinationId}/images`,
+      path: destinationId ? `destinations/${destinationId}` : 'destinations',
       allowedTypes: ['image/*']
-    });
+    };
+    
+    return this.uploadMultipleFiles(files, options);
   }
 
   /**
-   * Upload banner media (images/videos)
+   * Upload banner images/videos
    */
   async uploadBannerMedia(
-    file: File,
-    bannerId: string
-  ): Promise<UploadResult> {
-    return this.uploadFile(file, {
+    files: File[]
+  ): Promise<UploadResult[]> {
+    const options: Partial<FileUploadOptions> = {
       bucket: 'luxe-banners',
-      path: `banners/${bannerId}`,
+      path: 'banners',
       allowedTypes: ['image/*', 'video/*']
-    });
+    };
+    
+    return this.uploadMultipleFiles(files, options);
   }
 
   /**
    * Delete a file from Supabase Storage
    */
   async deleteFile(
-    bucket: string,
-    path: string
+    filePath: string,
+    bucket: string = 'luxe-media'
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      const supabase = getSupabaseClient();
+      
       const { error } = await supabase.storage
         .from(bucket)
-        .remove([path]);
+        .remove([filePath]);
 
       if (error) {
         console.error('Supabase delete error:', error);
         return { success: false, error: error.message };
       }
 
-      console.log('File deleted successfully:', path);
+      console.log('File deleted successfully:', filePath);
       return { success: true };
 
     } catch (error) {
@@ -165,36 +173,54 @@ export class SupabaseFileUploadService {
   }
 
   /**
-   * Get file URL (public or signed)
+   * Get file URL
    */
-  async getFileUrl(
-    bucket: string,
-    path: string,
-    signed: boolean = false,
-    expiresIn: number = 3600
-  ): Promise<string | null> {
+  getFileUrl(
+    filePath: string,
+    bucket: string = 'luxe-media'
+  ): string {
     try {
-      if (signed) {
-        const { data, error } = await supabase.storage
-          .from(bucket)
-          .createSignedUrl(path, expiresIn);
+      const supabase = getSupabaseClient();
+      
+      const { data } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(filePath);
 
-        if (error) {
-          console.error('Signed URL error:', error);
-          return null;
-        }
-
-        return data.signedUrl;
-      } else {
-        const { data } = supabase.storage
-          .from(bucket)
-          .getPublicUrl(path);
-
-        return data.publicUrl;
-      }
+      return data.publicUrl;
     } catch (error) {
-      console.error('Get file URL error:', error);
-      return null;
+      console.error('Error getting file URL:', error);
+      return '';
+    }
+  }
+
+  /**
+   * Get signed URL for private files
+   */
+  async getSignedUrl(
+    filePath: string,
+    bucket: string = 'luxe-media',
+    expiresIn: number = 3600
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
+    try {
+      const supabase = getSupabaseClient();
+      
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(filePath, expiresIn);
+
+      if (error) {
+        console.error('Signed URL error:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, url: data.signedUrl };
+
+    } catch (error) {
+      console.error('Signed URL generation error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown signed URL error'
+      };
     }
   }
 
@@ -202,58 +228,58 @@ export class SupabaseFileUploadService {
    * List files in a bucket/folder
    */
   async listFiles(
-    bucket: string,
-    path: string = ''
-  ): Promise<{ name: string; size: number; updated_at: string }[]> {
+    bucket: string = 'luxe-media',
+    folder?: string
+  ): Promise<{ success: boolean; files?: any[]; error?: string }> {
     try {
+      const supabase = getSupabaseClient();
+      
       const { data, error } = await supabase.storage
         .from(bucket)
-        .list(path);
+        .list(folder || '');
 
       if (error) {
         console.error('List files error:', error);
-        return [];
+        return { success: false, error: error.message };
       }
 
-      return data.map(file => ({
-        name: file.name,
-        size: file.metadata?.size || 0,
-        updated_at: file.updated_at
-      }));
+      return { success: true, files: data };
 
     } catch (error) {
       console.error('List files error:', error);
-      return [];
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown list files error'
+      };
     }
   }
 
   /**
    * Validate file before upload
    */
-  private validateFile(file: File, options: FileUploadOptions): { success: boolean; error?: string } {
+  private validateFile(file: File, config: FileUploadOptions): { success: boolean; error?: string } {
     // Check file size
-    if (file.size > options.maxSize!) {
+    if (file.size > config.maxSize!) {
       return {
         success: false,
-        error: `File size ${(file.size / 1024 / 1024).toFixed(2)}MB exceeds maximum allowed size ${(options.maxSize! / 1024 / 1024).toFixed(2)}MB`
+        error: `File size (${file.size} bytes) exceeds maximum allowed size (${config.maxSize} bytes)`
       };
     }
 
     // Check file type
-    if (options.allowedTypes && options.allowedTypes.length > 0) {
-      const isAllowed = options.allowedTypes.some(type => {
-        if (type.endsWith('/*')) {
-          return file.type.startsWith(type.slice(0, -1));
-        }
-        return file.type === type;
-      });
-
-      if (!isAllowed) {
-        return {
-          success: false,
-          error: `File type ${file.type} is not allowed. Allowed types: ${options.allowedTypes.join(', ')}`
-        };
+    const isAllowedType = config.allowedTypes!.some(type => {
+      if (type.endsWith('/*')) {
+        const baseType = type.slice(0, -2);
+        return file.type.startsWith(baseType);
       }
+      return file.type === type;
+    });
+
+    if (!isAllowedType) {
+      return {
+        success: false,
+        error: `File type (${file.type}) is not allowed. Allowed types: ${config.allowedTypes!.join(', ')}`
+      };
     }
 
     return { success: true };
@@ -264,43 +290,8 @@ export class SupabaseFileUploadService {
    */
   private generateFileName(file: File): string {
     const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 15);
+    const randomString = Math.random().toString(36).substring(2, 15);
     const extension = file.name.split('.').pop();
-    return `${timestamp}-${random}.${extension}`;
-  }
-
-  /**
-   * Create storage buckets if they don't exist
-   * Note: This requires admin privileges
-   */
-  async createStorageBuckets(): Promise<void> {
-    const buckets = [
-      { name: 'luxe-media', public: true },
-      { name: 'luxe-properties', public: true },
-      { name: 'luxe-destinations', public: true },
-      { name: 'luxe-banners', public: true },
-      { name: 'luxe-documents', public: false }
-    ];
-
-    for (const bucket of buckets) {
-      try {
-        const { error } = await supabase.storage.createBucket(bucket.name, {
-          public: bucket.public,
-          allowedMimeTypes: bucket.public ? ['image/*', 'video/*'] : ['application/pdf', 'text/*'],
-          fileSizeLimit: 50 * 1024 * 1024 // 50MB
-        });
-
-        if (error && error.message !== 'Bucket already exists') {
-          console.warn(`Could not create bucket ${bucket.name}:`, error.message);
-        } else {
-          console.log(`Bucket ${bucket.name} ready`);
-        }
-      } catch (error) {
-        console.warn(`Could not create bucket ${bucket.name}:`, error);
-      }
-    }
+    return `${timestamp}-${randomString}.${extension}`;
   }
 }
-
-// Export singleton instance
-export const supabaseFileUploadService = new SupabaseFileUploadService();
