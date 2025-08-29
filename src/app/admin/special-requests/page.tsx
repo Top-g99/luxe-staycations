@@ -1,0 +1,521 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import {
+  Container,
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  Chip,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+  Tooltip
+} from '@mui/material';
+import {
+  Celebration,
+  CheckCircle,
+  Cancel,
+  Edit,
+  Visibility,
+  FilterList,
+  Search,
+  PriorityHigh,
+  Schedule,
+  Done
+} from '@mui/icons-material';
+import { useBookingContext } from '@/contexts/BookingContext';
+
+export default function SpecialRequestsPage() {
+  const { allBookings } = useBookingContext();
+  const [specialRequests, setSpecialRequests] = useState<any[]>([]);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterPriority, setFilterPriority] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [updateNotes, setUpdateNotes] = useState('');
+
+  useEffect(() => {
+    // Extract all special requests from bookings
+    const allRequests: any[] = [];
+    
+    allBookings.forEach(booking => {
+      if (booking.guestInfo.specialRequests && booking.guestInfo.specialRequests.trim()) {
+        allRequests.push({
+          id: `request-${booking.id}`,
+          title: 'Special Request',
+          description: booking.guestInfo.specialRequests,
+          status: 'pending',
+          priority: 'medium',
+          createdAt: booking.createdAt,
+          bookingId: booking.id,
+          guestName: `${booking.guestInfo.firstName} ${booking.guestInfo.lastName}`,
+          guestEmail: booking.guestInfo.email,
+          guestPhone: booking.guestInfo.phone,
+          propertyName: booking.bookingDetails.propertyName || 'Unknown Property',
+          checkIn: booking.bookingDetails.checkIn,
+          checkOut: booking.bookingDetails.checkOut,
+          bookingStatus: booking.status
+        });
+      }
+    });
+
+    setSpecialRequests(allRequests);
+  }, [allBookings]);
+
+  const filteredRequests = specialRequests.filter(request => {
+    const matchesStatus = filterStatus === 'all' || request.status === filterStatus;
+    const matchesPriority = filterPriority === 'all' || request.priority === filterPriority;
+    const matchesSearch = 
+      request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.propertyName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesStatus && matchesPriority && matchesSearch;
+  });
+
+  const handleViewDetails = (request: any) => {
+    setSelectedRequest(request);
+    setDetailDialogOpen(true);
+  };
+
+  const handleUpdateStatus = (request: any) => {
+    setSelectedRequest(request);
+    setUpdateNotes(request.adminNotes || '');
+    setUpdateDialogOpen(true);
+  };
+
+  const handleSaveUpdate = () => {
+    if (selectedRequest) {
+      // Update the request status and notes
+      // In a real app, this would update the database
+      console.log('Updating request:', selectedRequest.id, 'with notes:', updateNotes);
+      
+      // For now, we'll just close the dialog
+      setUpdateDialogOpen(false);
+      setSelectedRequest(null);
+      setUpdateNotes('');
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'warning';
+      case 'approved': return 'success';
+      case 'rejected': return 'error';
+      case 'completed': return 'info';
+      default: return 'default';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'error';
+      case 'medium': return 'warning';
+      case 'low': return 'success';
+      default: return 'default';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending': return <Schedule />;
+      case 'approved': return <CheckCircle />;
+      case 'rejected': return <Cancel />;
+      case 'completed': return <Done />;
+      default: return <Schedule />;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getCategoryLabel = (category: string) => {
+    return category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Typography variant="h3" sx={{ fontWeight: 600, mb: 4, color: '#5a3d35' }}>
+        Special Requests Management
+      </Typography>
+
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ border: '2px solid #f3f4f6' }}>
+            <CardContent>
+              <Typography variant="h4" sx={{ fontWeight: 600, color: '#d97706' }}>
+                {specialRequests.length}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Total Requests
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ border: '2px solid #f3f4f6' }}>
+            <CardContent>
+              <Typography variant="h4" sx={{ fontWeight: 600, color: '#ff9800' }}>
+                {specialRequests.filter(r => r.status === 'pending').length}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Pending Review
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ border: '2px solid #f3f4f6' }}>
+            <CardContent>
+              <Typography variant="h4" sx={{ fontWeight: 600, color: '#4caf50' }}>
+                {specialRequests.filter(r => r.status === 'approved').length}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Approved
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ border: '2px solid #f3f4f6' }}>
+            <CardContent>
+              <Typography variant="h4" sx={{ fontWeight: 600, color: '#f44336' }}>
+                {specialRequests.filter(r => r.priority === 'high').length}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                High Priority
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Filters */}
+      <Card sx={{ mb: 4, border: '2px solid #f3f4f6' }}>
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Search requests"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by guest name, property, or request details"
+                InputProps={{
+                  startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} />
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Filter by Status</InputLabel>
+                <Select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  label="Filter by Status"
+                >
+                  <MenuItem value="all">All Status</MenuItem>
+                  <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="approved">Approved</MenuItem>
+                  <MenuItem value="rejected">Rejected</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Filter by Priority</InputLabel>
+                <Select
+                  value={filterPriority}
+                  onChange={(e) => setFilterPriority(e.target.value)}
+                  label="Filter by Priority"
+                >
+                  <MenuItem value="all">All Priorities</MenuItem>
+                  <MenuItem value="high">High Priority</MenuItem>
+                  <MenuItem value="medium">Medium Priority</MenuItem>
+                  <MenuItem value="low">Low Priority</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {filteredRequests.length} request{filteredRequests.length !== 1 ? 's' : ''} found
+              </Typography>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Requests List */}
+      {filteredRequests.length === 0 ? (
+        <Card sx={{ border: '2px solid #f3f4f6' }}>
+          <CardContent sx={{ textAlign: 'center', py: 8 }}>
+            <Celebration sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              No Special Requests Found
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {searchTerm || filterStatus !== 'all' || filterPriority !== 'all' 
+                ? 'Try adjusting your filters or search terms.'
+                : 'Guests haven\'t submitted any special requests yet.'
+              }
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredRequests.map((request) => (
+            <Grid item xs={12} key={request.id}>
+              <Card sx={{ border: '2px solid #f3f4f6' }}>
+                <CardContent>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={8}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        {getStatusIcon(request.status)}
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                          {request.title}
+                        </Typography>
+                      </Box>
+                      
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                        {request.description}
+                      </Typography>
+
+                      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                        <Chip
+                          label={getCategoryLabel(request.category)}
+                          size="small"
+                          variant="outlined"
+                        />
+                        <Chip
+                          label={request.priority}
+                          color={getPriorityColor(request.priority) as any}
+                          size="small"
+                          icon={<PriorityHigh />}
+                        />
+                        <Chip
+                          label={request.status}
+                          color={getStatusColor(request.status) as any}
+                          size="small"
+                        />
+                      </Box>
+
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        <strong>Guest:</strong> {request.guestName} • {request.guestEmail}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        <strong>Property:</strong> {request.propertyName}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        <strong>Stay:</strong> {formatDate(request.checkIn)} - {formatDate(request.checkOut)}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        <strong>Submitted:</strong> {formatDate(request.createdAt)}
+                      </Typography>
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<Visibility />}
+                          onClick={() => handleViewDetails(request)}
+                        >
+                          View Details
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<Edit />}
+                          onClick={() => handleUpdateStatus(request)}
+                        >
+                          Update Status
+                        </Button>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', mt: 1 }}>
+                          Booking ID: {request.bookingId}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+
+      {/* Request Details Dialog */}
+      <Dialog open={detailDialogOpen} onClose={() => setDetailDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Celebration sx={{ color: '#d97706' }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Request Details
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {selectedRequest && (
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                {selectedRequest.title}
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 3 }}>
+                {selectedRequest.description}
+              </Typography>
+
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Category:</Typography>
+                  <Typography variant="body2">{getCategoryLabel(selectedRequest.category)}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Priority:</Typography>
+                  <Typography variant="body2">{selectedRequest.priority}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Status:</Typography>
+                  <Typography variant="body2">{selectedRequest.status}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Type:</Typography>
+                  <Typography variant="body2">{selectedRequest.type}</Typography>
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Typography variant="h6" sx={{ mb: 2 }}>Guest Information</Typography>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Name:</Typography>
+                  <Typography variant="body2">{selectedRequest.guestName}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Email:</Typography>
+                  <Typography variant="body2">{selectedRequest.guestEmail}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Phone:</Typography>
+                  <Typography variant="body2">{selectedRequest.guestPhone}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Property:</Typography>
+                  <Typography variant="body2">{selectedRequest.propertyName}</Typography>
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Typography variant="h6" sx={{ mb: 2 }}>Timeline</Typography>
+              <Typography variant="body2">
+                <strong>Created:</strong> {formatDate(selectedRequest.createdAt)}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Last Updated:</strong> {formatDate(selectedRequest.updatedAt)}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDetailDialogOpen(false)}>Close</Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setDetailDialogOpen(false);
+              handleUpdateStatus(selectedRequest);
+            }}
+          >
+            Update Status
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Update Status Dialog */}
+      <Dialog open={updateDialogOpen} onClose={() => setUpdateDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Update Request Status</DialogTitle>
+        <DialogContent>
+          {selectedRequest && (
+            <Box sx={{ pt: 1 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                {selectedRequest.title}
+              </Typography>
+              
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputLabel>New Status</InputLabel>
+                <Select
+                  value={selectedRequest.status}
+                  onChange={(e) => setSelectedRequest({
+                    ...selectedRequest,
+                    status: e.target.value
+                  })}
+                  label="New Status"
+                >
+                  <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="approved">Approved</MenuItem>
+                  <MenuItem value="rejected">Rejected</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                label="Admin Notes"
+                value={updateNotes}
+                onChange={(e) => setUpdateNotes(e.target.value)}
+                placeholder="Add notes about this request (optional)"
+                helperText="These notes will be visible to the guest"
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setUpdateDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSaveUpdate}
+            sx={{
+              background: 'linear-gradient(45deg, #5a3d35, #d97706)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #4a332c, #b45309)',
+              }
+            }}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
+}
