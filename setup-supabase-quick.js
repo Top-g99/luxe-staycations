@@ -69,10 +69,10 @@ console.log(`
 // Check if .env.local exists
 const envPath = path.join(__dirname, '.env.local');
 if (fs.existsSync(envPath)) {
-  const envContent = fs.readFileSync(envPath, 'utf8');
-  
-  if (envContent.includes('your_supabase_project_url_here')) {
-    console.log(`
+    const envContent = fs.readFileSync(envPath, 'utf8');
+
+    if (envContent.includes('your_supabase_project_url_here')) {
+        console.log(`
 ⚠️  ACTION REQUIRED:
 ===================
 Your .env.local file still has placeholder values.
@@ -83,16 +83,16 @@ Please update it with your real Supabase credentials:
 3. Save the file
 4. Restart the development server
 `);
-  } else {
-    console.log(`
+    } else {
+        console.log(`
 ✅ ENVIRONMENT CONFIGURED:
 =========================
 Your .env.local file appears to be configured.
 You can now test the Supabase connection!
 `);
-  }
+    }
 } else {
-  console.log(`
+    console.log(`
 ❌ MISSING .env.local:
 =====================
 Please create .env.local file with your Supabase credentials.
