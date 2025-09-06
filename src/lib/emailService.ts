@@ -216,9 +216,16 @@ export class EmailService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          config: this.config,
+          smtpHost: this.config.smtpHost,
+          smtpPort: this.config.smtpPort,
+          smtpUser: this.config.smtpUser,
+          smtpPassword: this.config.smtpPassword,
+          enableSSL: this.config.enableSSL,
+          fromName: this.config.fromName,
+          fromEmail: this.config.fromEmail,
           to: data.guestEmail,
-          template: template
+          subject: template.subject,
+          html: template.html
         }),
       });
 
@@ -254,9 +261,16 @@ export class EmailService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          config: this.config,
+          smtpHost: this.config.smtpHost,
+          smtpPort: this.config.smtpPort,
+          smtpUser: this.config.smtpUser,
+          smtpPassword: this.config.smtpPassword,
+          enableSSL: this.config.enableSSL,
+          fromName: this.config.fromName,
+          fromEmail: this.config.fromEmail,
           to: data.email,
-          template: template
+          subject: template.subject,
+          html: template.html
         }),
       });
 
@@ -280,13 +294,19 @@ export class EmailService {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/test-connection`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/test-connection-real`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          config: this.config
+          smtpHost: this.config.smtpHost,
+          smtpPort: this.config.smtpPort,
+          smtpUser: this.config.smtpUser,
+          smtpPassword: this.config.smtpPassword,
+          enableSSL: this.config.enableSSL,
+          fromName: this.config.fromName,
+          fromEmail: this.config.fromEmail
         }),
       });
 
@@ -310,14 +330,22 @@ export class EmailService {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/test`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send-real`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          config: this.config,
-          testEmail: testEmail
+          smtpHost: this.config.smtpHost,
+          smtpPort: this.config.smtpPort,
+          smtpUser: this.config.smtpUser,
+          smtpPassword: this.config.smtpPassword,
+          enableSSL: this.config.enableSSL,
+          fromName: this.config.fromName,
+          fromEmail: this.config.fromEmail,
+          to: testEmail,
+          subject: 'Test Email from Luxe Staycations',
+          html: '<h1>Test Email</h1><p>This is a test email from Luxe Staycations.</p>'
         }),
       });
 
@@ -389,9 +417,16 @@ export class EmailService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          config: this.config,
+          smtpHost: this.config.smtpHost,
+          smtpPort: this.config.smtpPort,
+          smtpUser: this.config.smtpUser,
+          smtpPassword: this.config.smtpPassword,
+          enableSSL: this.config.enableSSL,
+          fromName: this.config.fromName,
+          fromEmail: this.config.fromEmail,
           to: data.email,
-          template: template
+          subject: template.subject,
+          html: template.html
         }),
       });
 
@@ -672,9 +707,16 @@ Luxe Staycations Partnership Team`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          config: this.config,
+          smtpHost: this.config.smtpHost,
+          smtpPort: this.config.smtpPort,
+          smtpUser: this.config.smtpUser,
+          smtpPassword: this.config.smtpPassword,
+          enableSSL: this.config.enableSSL,
+          fromName: this.config.fromName,
+          fromEmail: this.config.fromEmail,
           to: data.email,
-          template: template
+          subject: template.subject,
+          html: template.html
         }),
       });
 
@@ -831,9 +873,16 @@ Email: info@luxestaycations.in | Phone: +91-8828279739`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          config: this.config,
+          smtpHost: this.config.smtpHost,
+          smtpPort: this.config.smtpPort,
+          smtpUser: this.config.smtpUser,
+          smtpPassword: this.config.smtpPassword,
+          enableSSL: this.config.enableSSL,
+          fromName: this.config.fromName,
+          fromEmail: this.config.fromEmail,
           to: data.email,
-          template: template
+          subject: template.subject,
+          html: template.html
         }),
       });
 
@@ -903,9 +952,16 @@ Email: info@luxestaycations.in | Phone: +91-8828279739`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          config: this.config,
+          smtpHost: this.config.smtpHost,
+          smtpPort: this.config.smtpPort,
+          smtpUser: this.config.smtpUser,
+          smtpPassword: this.config.smtpPassword,
+          enableSSL: this.config.enableSSL,
+          fromName: this.config.fromName,
+          fromEmail: this.config.fromEmail,
           to: data.guestEmail,
-          template: template
+          subject: template.subject,
+          html: template.html
         }),
       });
 
@@ -936,9 +992,16 @@ Email: info@luxestaycations.in | Phone: +91-8828279739`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          config: this.config,
+          smtpHost: this.config.smtpHost,
+          smtpPort: this.config.smtpPort,
+          smtpUser: this.config.smtpUser,
+          smtpPassword: this.config.smtpPassword,
+          enableSSL: this.config.enableSSL,
+          fromName: this.config.fromName,
+          fromEmail: this.config.fromEmail,
           to: adminEmail,
-          template: template
+          subject: template.subject,
+          html: template.html
         }),
       });
 
