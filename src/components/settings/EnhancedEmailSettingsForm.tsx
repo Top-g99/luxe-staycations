@@ -552,20 +552,256 @@ export default function EnhancedEmailSettingsForm() {
         <Typography variant="h6" sx={{ fontWeight: 600, color: '#5a3d35' }}>
           Email Templates
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          sx={{
-            background: 'linear-gradient(45deg, #5a3d35, #d97706)',
-            '&:hover': {
-              background: 'linear-gradient(45deg, #4a332c, #b45309)',
-            }
-          }}
-        >
-          Add Template
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<Template />}
+            onClick={() => console.log('Load comprehensive templates')}
+          >
+            Load Templates
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            sx={{
+              background: 'linear-gradient(45deg, #5a3d35, #d97706)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #4a332c, #b45309)',
+              }
+            }}
+          >
+            Add Template
+          </Button>
+        </Box>
       </Box>
 
+      {/* Template Categories Overview */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Booking Templates */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ border: '1px solid #e0e0e0', height: '100%' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ 
+                  background: '#e3f2fd', 
+                  borderRadius: '50%', 
+                  p: 1, 
+                  mr: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Typography sx={{ fontSize: '20px' }}>📅</Typography>
+                </Box>
+                <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 600 }}>
+                  Booking Templates
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Confirmation, cancellation, and modification emails
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Chip label="Confirmation" size="small" color="primary" />
+                <Chip label="Cancellation" size="small" color="error" />
+                <Chip label="Modification" size="small" color="warning" />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Payment Templates */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ border: '1px solid #e0e0e0', height: '100%' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ 
+                  background: '#e8f5e8', 
+                  borderRadius: '50%', 
+                  p: 1, 
+                  mr: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Typography sx={{ fontSize: '20px' }}>💳</Typography>
+                </Box>
+                <Typography variant="h6" sx={{ color: '#2e7d32', fontWeight: 600 }}>
+                  Payment Templates
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Payment confirmations, receipts, and refund notifications
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Chip label="Confirmation" size="small" color="success" />
+                <Chip label="Receipt" size="small" color="info" />
+                <Chip label="Refund" size="small" color="warning" />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Guest Templates */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ border: '1px solid #e0e0e0', height: '100%' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ 
+                  background: '#fff3e0', 
+                  borderRadius: '50%', 
+                  p: 1, 
+                  mr: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Typography sx={{ fontSize: '20px' }}>👥</Typography>
+                </Box>
+                <Typography variant="h6" sx={{ color: '#f57c00', fontWeight: 600 }}>
+                  Guest Templates
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Welcome messages, check-in instructions, and feedback requests
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Chip label="Welcome" size="small" color="primary" />
+                <Chip label="Check-in" size="small" color="info" />
+                <Chip label="Feedback" size="small" color="secondary" />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Host Templates */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ border: '1px solid #e0e0e0', height: '100%' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ 
+                  background: '#f3e5f5', 
+                  borderRadius: '50%', 
+                  p: 1, 
+                  mr: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Typography sx={{ fontSize: '20px' }}>🏠</Typography>
+                </Box>
+                <Typography variant="h6" sx={{ color: '#7b1fa2', fontWeight: 600 }}>
+                  Host Templates
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Booking alerts, earnings notifications, and management updates
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Chip label="Booking Alert" size="small" color="primary" />
+                <Chip label="Earnings" size="small" color="success" />
+                <Chip label="Management" size="small" color="info" />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Admin Templates */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ border: '1px solid #e0e0e0', height: '100%' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ 
+                  background: '#e1f5fe', 
+                  borderRadius: '50%', 
+                  p: 1, 
+                  mr: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Typography sx={{ fontSize: '20px' }}>⚙️</Typography>
+                </Box>
+                <Typography variant="h6" sx={{ color: '#0277bd', fontWeight: 600 }}>
+                  Admin Templates
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                System notifications, reports, and administrative alerts
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Chip label="Notifications" size="small" color="primary" />
+                <Chip label="Reports" size="small" color="info" />
+                <Chip label="Alerts" size="small" color="warning" />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Marketing Templates */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ border: '1px solid #e0e0e0', height: '100%' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ 
+                  background: '#fce4ec', 
+                  borderRadius: '50%', 
+                  p: 1, 
+                  mr: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Typography sx={{ fontSize: '20px' }}>📢</Typography>
+                </Box>
+                <Typography variant="h6" sx={{ color: '#c2185b', fontWeight: 600 }}>
+                  Marketing Templates
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Newsletters, promotions, and loyalty program communications
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Chip label="Newsletter" size="small" color="primary" />
+                <Chip label="Promotions" size="small" color="error" />
+                <Chip label="Loyalty" size="small" color="success" />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Quick Actions */}
+      <Box sx={{ mb: 3, p: 3, background: '#f8f9fa', borderRadius: 2 }}>
+        <Typography variant="h6" sx={{ mb: 2, color: '#5a3d35' }}>
+          Quick Actions
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Button
+            variant="contained"
+            startIcon={<TestTube />}
+            onClick={() => console.log('Test all templates')}
+            sx={{ background: '#5a3d35' }}
+          >
+            Test All Templates
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Analytics />}
+            onClick={() => console.log('View analytics')}
+          >
+            View Analytics
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={() => console.log('Refresh templates')}
+          >
+            Refresh Templates
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Templates Table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
