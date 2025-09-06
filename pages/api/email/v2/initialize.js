@@ -1,24 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
     console.log('🚀 Starting email system initialization...');
     
     // Check if required environment variables are available
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       console.error('Missing required environment variables');
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: 'Missing required environment variables for Supabase connection',
-          timestamp: new Date().toISOString()
-        },
-        { status: 500 }
-      );
+      return res.status(500).json({
+        success: false,
+        message: 'Missing required environment variables for Supabase connection',
+        timestamp: new Date().toISOString()
+      });
     }
 
-    // Create Supabase client inside the function
+    // Create Supabase client
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       console.error('Error fetching email triggers:', triggersError);
     }
 
-    return NextResponse.json({
+    return res.status(200).json({
       success: true,
       message: 'Email system initialized successfully',
       config: configData,
@@ -105,13 +105,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Email system initialization failed:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        message: `Initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
+    return res.status(500).json({
+      success: false,
+      message: `Initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      timestamp: new Date().toISOString()
+    });
   }
 }
