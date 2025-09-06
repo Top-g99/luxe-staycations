@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { emailService } from '@/lib/emailService';
+import { contactFormManager } from '@/lib/contactFormManager';
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,6 +43,24 @@ export async function POST(request: NextRequest) {
     } catch (emailError) {
       console.error('Error sending contact form thank you email:', emailError);
       // Don't fail the contact form submission if email fails
+    }
+
+    // Save contact form submission
+    try {
+      contactFormManager.initialize();
+      contactFormManager.addSubmission({
+        name: body.name,
+        email: body.email,
+        phone: body.phone || '',
+        subject: body.subject,
+        message: body.message,
+        status: 'new',
+        priority: 'medium'
+      });
+      console.log('Contact form submission saved successfully');
+    } catch (saveError) {
+      console.error('Error saving contact form submission:', saveError);
+      // Don't fail the request if saving fails
     }
 
     // Return success response

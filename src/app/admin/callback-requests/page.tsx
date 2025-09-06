@@ -44,29 +44,45 @@ import {
   Clear
 } from '@mui/icons-material';
 import { callbackManager, CallbackRequest } from '@/lib/callbackManager';
+import { contactFormManager, ContactFormSubmission } from '@/lib/contactFormManager';
 
 export default function CallbackRequestsPage() {
   const [callbacks, setCallbacks] = useState<CallbackRequest[]>([]);
+  const [contactSubmissions, setContactSubmissions] = useState<ContactFormSubmission[]>([]);
   const [filteredCallbacks, setFilteredCallbacks] = useState<CallbackRequest[]>([]);
+  const [filteredContactSubmissions, setFilteredContactSubmissions] = useState<ContactFormSubmission[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all'); // 'all', 'callback', 'contact'
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedCallback, setSelectedCallback] = useState<CallbackRequest | null>(null);
+  const [selectedContactSubmission, setSelectedContactSubmission] = useState<ContactFormSubmission | null>(null);
   const [editNotes, setEditNotes] = useState('');
   const [editStatus, setEditStatus] = useState<CallbackRequest['status']>('pending');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   useEffect(() => {
     loadCallbacks();
-    const unsubscribe = callbackManager.subscribe(loadCallbacks);
-    return unsubscribe;
+    loadContactSubmissions();
+    const unsubscribeCallbacks = callbackManager.subscribe(loadCallbacks);
+    const unsubscribeContacts = contactFormManager.subscribe(loadContactSubmissions);
+    return () => {
+      unsubscribeCallbacks();
+      unsubscribeContacts();
+    };
   }, []);
 
   useEffect(() => {
     filterCallbacks();
-  }, [callbacks, statusFilter]);
+    filterContactSubmissions();
+  }, [callbacks, contactSubmissions, statusFilter, typeFilter]);
 
   const loadCallbacks = () => {
     setCallbacks(callbackManager.getAllCallbacks());
+  };
+
+  const loadContactSubmissions = () => {
+    contactFormManager.initialize();
+    setContactSubmissions(contactFormManager.getAllSubmissions());
   };
 
   const filterCallbacks = () => {
@@ -74,6 +90,14 @@ export default function CallbackRequestsPage() {
       setFilteredCallbacks(callbacks);
     } else {
       setFilteredCallbacks(callbacks.filter(callback => callback.status === statusFilter));
+    }
+  };
+
+  const filterContactSubmissions = () => {
+    if (statusFilter === 'all') {
+      setFilteredContactSubmissions(contactSubmissions);
+    } else {
+      setFilteredContactSubmissions(contactSubmissions.filter(submission => submission.status === statusFilter));
     }
   };
 
@@ -130,6 +154,32 @@ export default function CallbackRequestsPage() {
     }
   };
 
+  const handleEditContactSubmission = (submission: ContactFormSubmission) => {
+    setSelectedContactSubmission(submission);
+    setEditNotes(submission.notes || '');
+    setEditStatus(submission.status as any);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteContactSubmission = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this contact form submission?')) {
+      const success = contactFormManager.deleteSubmission(id);
+      if (success) {
+        setSnackbar({
+          open: true,
+          message: 'Contact form submission deleted successfully!',
+          severity: 'success'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'Failed to delete contact form submission!',
+          severity: 'error'
+        });
+      }
+    }
+  };
+
   const getStatusColor = (status: CallbackRequest['status']) => {
     switch (status) {
       case 'pending': return 'warning';
@@ -160,10 +210,10 @@ export default function CallbackRequestsPage() {
           color: 'var(--primary-dark)',
           mb: 2 
         }}>
-          Callback Requests Management
+          Callback Requests & Contact Form Management
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          Manage and track all guest callback requests
+          Manage and track all guest callback requests and contact form submissions
         </Typography>
       </Box>
 
@@ -234,6 +284,20 @@ export default function CallbackRequestsPage() {
       {/* Filters and Actions */}
       <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel>Filter by Type</InputLabel>
+          <Select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            label="Filter by Type"
+            startAdornment={<FilterList />}
+          >
+            <MenuItem value="all">All Requests</MenuItem>
+            <MenuItem value="callback">Callback Requests</MenuItem>
+            <MenuItem value="contact">Contact Form</MenuItem>
+          </Select>
+        </FormControl>
+        
+        <FormControl sx={{ minWidth: 200 }}>
           <InputLabel>Filter by Status</InputLabel>
           <Select
             value={statusFilter}
@@ -241,11 +305,14 @@ export default function CallbackRequestsPage() {
             label="Filter by Status"
             startAdornment={<FilterList />}
           >
-            <MenuItem value="all">All Requests</MenuItem>
+            <MenuItem value="all">All Status</MenuItem>
             <MenuItem value="pending">Pending</MenuItem>
             <MenuItem value="contacted">Contacted</MenuItem>
             <MenuItem value="completed">Completed</MenuItem>
             <MenuItem value="cancelled">Cancelled</MenuItem>
+            <MenuItem value="new">New</MenuItem>
+            <MenuItem value="in_progress">In Progress</MenuItem>
+            <MenuItem value="closed">Closed</MenuItem>
           </Select>
         </FormControl>
         
@@ -264,26 +331,28 @@ export default function CallbackRequestsPage() {
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: 'var(--primary-light)' }}>
-              <TableCell sx={{ color: 'white', fontWeight: 600 }}>Guest Details</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 600 }}>Contact Info</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 600 }}>Guests</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 600 }}>Preferred Time</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 600 }}>Type</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 600 }}>Contact Details</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 600 }}>Subject/Message</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 600 }}>Priority</TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 600 }}>Status</TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 600 }}>Date</TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 600 }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredCallbacks.length === 0 ? (
+            {filteredCallbacks.length === 0 && filteredContactSubmissions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} sx={{ textAlign: 'center', py: 4 }}>
                   <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                    No callback requests found
+                    No requests found
                   </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              filteredCallbacks.map((callback) => (
+              <>
+                {/* Callback Requests */}
+                {typeFilter === 'all' || typeFilter === 'callback' ? filteredCallbacks.map((callback) => (
                 <TableRow key={callback.id} hover>
                   <TableCell>
                     <Box>

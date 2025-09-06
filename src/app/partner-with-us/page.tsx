@@ -217,7 +217,8 @@ export default function PartnerWithUs() {
       };
       
       try {
-        const emailResult = await emailTriggerManager.triggerPartnerRequest(partnerData);
+        // Send email directly using email service
+        const emailResult = await emailService.sendPartnerRequest(partnerData);
         if (emailResult.success) {
           setSnackbar({ open: true, message: 'Application submitted successfully! Confirmation email sent.', severity: 'success' });
         } else {
