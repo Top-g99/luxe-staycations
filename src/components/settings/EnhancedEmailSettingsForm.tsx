@@ -154,10 +154,16 @@ export default function EnhancedEmailSettingsForm() {
       console.log('Initializing enhanced email system...');
       setIsLoading(true);
       
-      // For now, just initialize the form without API calls
-      // This allows the user to configure email settings
+      // Load saved configuration from localStorage
+      const savedConfig = localStorage.getItem('emailConfig');
+      if (savedConfig) {
+        const parsedConfig = JSON.parse(savedConfig);
+        setConfigForm(parsedConfig);
+        setIsConfigured(true);
+        console.log('Loaded saved email configuration');
+      }
+      
       setIsInitialized(true);
-      setIsConfigured(false);
       
       // Set default templates
       setTemplates([
@@ -238,13 +244,27 @@ export default function EnhancedEmailSettingsForm() {
     setTestResult(null);
     
     try {
-      // Simulate connection test
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setTestResult({
-        success: true,
-        message: 'SMTP connection test successful! Your email configuration is working.'
+      const response = await fetch('/api/email/test-connection-real', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ config: configForm }),
       });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setTestResult({
+          success: true,
+          message: 'SMTP connection test successful! Your email configuration is working.'
+        });
+      } else {
+        setTestResult({
+          success: false,
+          message: result.message || 'Connection test failed'
+        });
+      }
     } catch (error: unknown) {
       setTestResult({
         success: false,
@@ -268,13 +288,53 @@ export default function EnhancedEmailSettingsForm() {
     setTestResult(null);
     
     try {
-      // Simulate sending test email
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setTestResult({
-        success: true,
-        message: `Test email sent successfully to ${testEmail}! Check your inbox.`
+      const response = await fetch('/api/email/send-real', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: testEmail,
+          subject: 'Test Email from Luxe Staycations',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+              <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h2 style="color: #5a3d35; text-align: center; margin-bottom: 20px;">🎉 Email Test Successful!</h2>
+                <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                  Congratulations! Your email configuration is working perfectly. This is a test email from your Luxe Staycations email system.
+                </p>
+                <div style="background-color: #f0f8f0; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #4caf50;">
+                  <p style="margin: 0; color: #2e7d32; font-weight: bold;">✅ SMTP Configuration Details:</p>
+                  <ul style="margin: 10px 0 0 0; color: #2e7d32;">
+                    <li>Host: ${configForm.smtpHost}</li>
+                    <li>Port: ${configForm.smtpPort}</li>
+                    <li>SSL/TLS: ${configForm.enableSSL ? 'Enabled' : 'Disabled'}</li>
+                    <li>From: ${configForm.fromName} &lt;${configForm.fromEmail}&gt;</li>
+                  </ul>
+                </div>
+                <p style="color: #666; font-size: 14px; text-align: center; margin-top: 30px;">
+                  This email was sent at ${new Date().toLocaleString()}
+                </p>
+              </div>
+            </div>
+          `,
+          config: configForm
+        }),
       });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setTestResult({
+          success: true,
+          message: `Test email sent successfully to ${testEmail}! Check your inbox.`
+        });
+      } else {
+        setTestResult({
+          success: false,
+          message: result.message || 'Failed to send test email'
+        });
+      }
     } catch (error: unknown) {
       setTestResult({
         success: false,
