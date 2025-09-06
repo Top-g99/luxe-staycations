@@ -178,6 +178,10 @@ export class SupabaseInstagramManager {
 
   // Save Instagram post to database
   public async savePost(post: Omit<DatabaseInstagramPost, 'id' | 'created_at' | 'updated_at'>): Promise<boolean> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { error } = await supabase
         .from('instagram_posts')
@@ -197,6 +201,10 @@ export class SupabaseInstagramManager {
 
   // Get Instagram posts from database
   public async getPosts(limit: number = 12): Promise<DatabaseInstagramPost[]> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { data, error } = await supabase
         .from('instagram_posts')
@@ -217,6 +225,10 @@ export class SupabaseInstagramManager {
 
   // Save Instagram story to database
   public async saveStory(story: Omit<DatabaseInstagramStory, 'id' | 'created_at' | 'updated_at'>): Promise<boolean> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { error } = await supabase
         .from('instagram_stories')
@@ -236,6 +248,10 @@ export class SupabaseInstagramManager {
 
   // Get Instagram stories from database
   public async getStories(limit: number = 24): Promise<DatabaseInstagramStory[]> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { data, error } = await supabase
         .from('instagram_stories')
@@ -256,6 +272,10 @@ export class SupabaseInstagramManager {
 
   // Save Instagram analytics to database
   public async saveAnalytics(analytics: Omit<DatabaseInstagramAnalytics, 'id' | 'created_at' | 'updated_at'>): Promise<boolean> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { error } = await supabase
         .from('instagram_analytics')
@@ -275,6 +295,10 @@ export class SupabaseInstagramManager {
 
   // Get Instagram analytics from database
   public async getAnalytics(period: string): Promise<DatabaseInstagramAnalytics | null> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { data, error } = await supabase
         .from('instagram_analytics')
@@ -309,6 +333,10 @@ export class SupabaseInstagramManager {
 
   // Get recent posts count
   public async getPostsCount(): Promise<number> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { count, error } = await supabase
         .from('instagram_posts')
@@ -327,6 +355,10 @@ export class SupabaseInstagramManager {
 
   // Get stories count
   public async getStoriesCount(): Promise<number> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { count, error } = await supabase
         .from('instagram_stories')
@@ -345,6 +377,10 @@ export class SupabaseInstagramManager {
 
   // Clear old data (older than 30 days)
   public async clearOldData(): Promise<boolean> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

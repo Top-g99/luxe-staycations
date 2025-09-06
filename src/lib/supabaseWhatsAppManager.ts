@@ -43,6 +43,10 @@ export class SupabaseWhatsAppManager {
   public async initialize(): Promise<void> {
     if (this.isInitialized) return;
     
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       // Test connection by checking if tables exist
       const { error } = await supabase
@@ -64,6 +68,10 @@ export class SupabaseWhatsAppManager {
 
   // Load WhatsApp configuration from Supabase
   public async loadConfiguration(): Promise<WhatsAppConfig | null> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { data, error } = await supabase
         .from('whatsapp_configurations')
@@ -100,6 +108,10 @@ export class SupabaseWhatsAppManager {
 
   // Save WhatsApp configuration to Supabase
   public async saveConfiguration(config: WhatsAppConfig): Promise<boolean> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       // First, disable all existing configurations
       await supabase
@@ -133,6 +145,10 @@ export class SupabaseWhatsAppManager {
 
   // Get all WhatsApp templates
   public async getTemplates(): Promise<DatabaseWhatsAppTemplate[]> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { data, error } = await supabase
         .from('whatsapp_templates')
@@ -153,6 +169,10 @@ export class SupabaseWhatsAppManager {
 
   // Get templates by type
   public async getTemplatesByType(type: string): Promise<DatabaseWhatsAppTemplate[]> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { data, error } = await supabase
         .from('whatsapp_templates')
@@ -174,6 +194,10 @@ export class SupabaseWhatsAppManager {
 
   // Get specific template by ID
   public async getTemplate(id: string): Promise<DatabaseWhatsAppTemplate | null> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { data, error } = await supabase
         .from('whatsapp_templates')
@@ -197,6 +221,10 @@ export class SupabaseWhatsAppManager {
 
   // Save new template
   public async saveTemplate(template: Omit<DatabaseWhatsAppTemplate, 'id' | 'created_at' | 'updated_at'>): Promise<boolean> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { error } = await supabase
         .from('whatsapp_templates')
@@ -216,6 +244,10 @@ export class SupabaseWhatsAppManager {
 
   // Update existing template
   public async updateTemplate(id: string, updates: Partial<DatabaseWhatsAppTemplate>): Promise<boolean> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { error } = await supabase
         .from('whatsapp_templates')
@@ -236,6 +268,10 @@ export class SupabaseWhatsAppManager {
 
   // Delete template
   public async deleteTemplate(id: string): Promise<boolean> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { error } = await supabase
         .from('whatsapp_templates')

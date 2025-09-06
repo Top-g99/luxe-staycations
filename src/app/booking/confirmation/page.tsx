@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import {
   Container,
   Box,
@@ -17,7 +17,7 @@ import { emailService } from '@/lib/emailService';
 import { whatsappService } from '@/lib/whatsappService';
 import WhatsAppButton from '@/components/WhatsAppButton';
 
-export default function ConfirmationPage() {
+function ConfirmationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [emailStatus, setEmailStatus] = useState<'sending' | 'sent' | 'error' | null>(null);
@@ -237,5 +237,19 @@ export default function ConfirmationPage() {
         position={{ bottom: 20, right: 20 }}
       />
     </Container>
+  );
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <CircularProgress />
+        </Box>
+      </Container>
+    }>
+      <ConfirmationContent />
+    </Suspense>
   );
 }
