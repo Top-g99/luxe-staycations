@@ -27,6 +27,8 @@ export const TABLES = {
   CONSULTATIONS: 'consultations',
   EMAIL_CONFIGURATIONS: 'email_configurations',
   EMAIL_TEMPLATES: 'email_templates',
+  EMAIL_TRIGGERS: 'email_triggers',
+  EMAIL_LOGS: 'email_logs',
   WHATSAPP_CONFIGURATIONS: 'whatsapp_configurations',
   WHATSAPP_TEMPLATES: 'whatsapp_templates',
   INSTAGRAM_CONFIGURATIONS: 'instagram_configurations',
@@ -173,6 +175,28 @@ export interface DatabaseEmailTemplate {
   is_default: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface DatabaseEmailTrigger {
+  id: string;
+  name: string;
+  event_type: string;
+  template_id: string;
+  conditions: Record<string, any>;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseEmailLog {
+  id: string;
+  template_id: string;
+  recipient_email: string;
+  subject: string;
+  status: 'sent' | 'failed' | 'pending';
+  error_message?: string;
+  sent_at: string;
+  created_at: string;
 }
 
 export interface DatabaseWhatsAppConfiguration {
