@@ -43,66 +43,34 @@ export default function AdminBookingsPage() {
   const getPropertyName = (propertyId: string) => {
     try {
       const property = propertyManager?.getById(propertyId);
-      return property ? property.name : `Property ${propertyId}`;
+      return property ? property.name : `Property ${propertyId.slice(0, 8)}...`;
     } catch (error) {
-      return `Property ${propertyId}`;
+      return `Property ${propertyId.slice(0, 8)}...`;
     }
   };
 
-  // Load real-time bookings from DataManager-based bookingManager
+  // Load real-time bookings from Supabase API
   useEffect(() => {
     const loadBookings = async () => {
       try {
-        const { bookingManager } = await import('@/lib/dataManager');
+        const response = await fetch('/api/bookings');
+        const result = await response.json();
         
-        if (typeof window !== 'undefined') {
-          await bookingManager.initialize();
+        if (result.success) {
+          setBookings(result.data || []);
+        } else {
+          console.error('Error loading bookings:', result.error);
+          setBookings([]);
         }
-        
-        const allBookings = bookingManager.getAll();
-        
-        // Filter out any invalid bookings and ensure all required fields exist
-        const validBookings = allBookings.filter(booking => 
-          booking && 
-          booking.id && 
-          booking.guestName && 
-          booking.propertyId &&
-          typeof booking.totalAmount === 'number'
-        );
-        
-        setBookings(validBookings);
         setLoading(false);
       } catch (error) {
         console.error('Error loading bookings:', error);
+        setBookings([]);
         setLoading(false);
       }
     };
 
     loadBookings();
-
-    // Subscribe to real-time updates
-    let unsubscribe: (() => void) | null = null;
-    import('@/lib/dataManager').then(({ bookingManager }) => {
-      unsubscribe = bookingManager.subscribe(() => {
-        const updatedBookings = bookingManager.getAll();
-        
-        // Filter out any invalid bookings and ensure all required fields exist
-        const validBookings = updatedBookings.filter(booking => 
-          booking && 
-          booking.id && 
-          booking.guestName && 
-          booking.propertyId &&
-          typeof booking.totalAmount === 'number'
-        );
-        setBookings(validBookings);
-      });
-    });
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
   }, []);
 
   return (
@@ -117,17 +85,14 @@ export default function AdminBookingsPage() {
             onClick={async () => {
               try {
                 setLoading(true);
-                const { bookingManager } = await import('@/lib/dataManager');
-                const allBookings = bookingManager.getAll();
+                const response = await fetch('/api/bookings');
+                const result = await response.json();
                 
-                const validBookings = allBookings.filter(booking => 
-                  booking && 
-                  booking.id && 
-                  booking.guestName && 
-                  booking.propertyId &&
-                  typeof booking.totalAmount === 'number'
-                );
-                setBookings(validBookings);
+                if (result.success) {
+                  setBookings(result.data || []);
+                } else {
+                  console.error('Error refreshing bookings:', result.error);
+                }
               } catch (error) {
                 console.error('Error refreshing bookings:', error);
               } finally {
