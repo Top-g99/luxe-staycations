@@ -68,6 +68,24 @@ export class EmailService {
     }
   }
 
+  // Helper function to convert EmailRecipient[] to string[]
+  private convertRecipientsToEmails(recipients: string | string[] | EmailRecipient[]): string | string[] {
+    if (typeof recipients === 'string') {
+      return recipients;
+    }
+    
+    if (Array.isArray(recipients)) {
+      // Check if it's EmailRecipient[]
+      if (recipients.length > 0 && typeof recipients[0] === 'object' && 'email' in recipients[0]) {
+        return (recipients as EmailRecipient[]).map(r => r.email);
+      }
+      // It's string[]
+      return recipients as string[];
+    }
+    
+    return recipients;
+  }
+
   // Send email using options
   public async sendEmail(options: EmailOptions): Promise<EmailSendResult> {
     if (!this.isInitialized) {
@@ -76,11 +94,12 @@ export class EmailService {
 
     try {
       const { to, subject, html, text, templateId, variables, ...otherOptions } = options;
+      const convertedTo = this.convertRecipientsToEmails(to);
 
       if (templateId) {
-        return await emailCore.sendTemplateEmail(to, templateId, variables || {});
+        return await emailCore.sendTemplateEmail(convertedTo, templateId, variables || {});
       } else {
-        return await emailCore.sendEmail(to, subject, html || '', text);
+        return await emailCore.sendEmail(convertedTo, subject, html || '', text);
       }
     } catch (error) {
       console.error('Error sending email:', error);
