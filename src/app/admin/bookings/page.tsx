@@ -18,7 +18,8 @@ import {
   Button,
   LinearProgress
 } from '@mui/material';
-import { Visibility, Edit, Refresh, Add } from '@mui/icons-material';
+import { Visibility, Edit, Delete, Refresh, Add } from '@mui/icons-material';
+import { isAdmin, hasAdminPermission, getAdminPermissionError } from '@/lib/adminPermissions';
 import BookingEditDialog from '@/components/BookingEditDialog';
 
 export default function AdminBookingsPage() {
@@ -46,6 +47,40 @@ export default function AdminBookingsPage() {
       return property ? property.name : `Property ${propertyId.slice(0, 8)}...`;
     } catch (error) {
       return `Property ${propertyId.slice(0, 8)}...`;
+    }
+  };
+
+  // Delete booking function
+  const handleDeleteBooking = async (booking: any) => {
+    if (!hasAdminPermission('delete', 'booking')) {
+      alert(getAdminPermissionError('delete', 'booking'));
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete this booking? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/bookings`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: booking.id }),
+      });
+
+      if (response.ok) {
+        // Remove from local state
+        setBookings(prev => prev.filter(b => b.id !== booking.id));
+        console.log('Booking deleted successfully');
+      } else {
+        console.error('Failed to delete booking');
+        alert('Failed to delete booking');
+      }
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      alert('Error deleting booking');
     }
   };
 
@@ -177,28 +212,39 @@ export default function AdminBookingsPage() {
                         />
                       </TableCell>
                       <TableCell>
-                        <IconButton 
-                          size="small"
-                          onClick={() => {
-                            setSelectedBooking(booking);
-                            setDialogMode('view');
-                            setDialogOpen(true);
-                          }}
-                          sx={{ color: '#1976d2' }}
-                        >
-                          <Visibility />
-                        </IconButton>
-                        <IconButton 
-                          size="small"
-                          onClick={() => {
-                            setSelectedBooking(booking);
-                            setDialogMode('edit');
-                            setDialogOpen(true);
-                          }}
-                          sx={{ color: '#d97706' }}
-                        >
-                          <Edit />
-                        </IconButton>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <IconButton 
+                            size="small"
+                            onClick={() => {
+                              setSelectedBooking(booking);
+                              setDialogMode('view');
+                              setDialogOpen(true);
+                            }}
+                            sx={{ color: '#1976d2' }}
+                          >
+                            <Visibility />
+                          </IconButton>
+                          <IconButton 
+                            size="small"
+                            onClick={() => {
+                              setSelectedBooking(booking);
+                              setDialogMode('edit');
+                              setDialogOpen(true);
+                            }}
+                            sx={{ color: '#d97706' }}
+                          >
+                            <Edit />
+                          </IconButton>
+                          {isAdmin() && (
+                            <IconButton 
+                              size="small"
+                              onClick={() => handleDeleteBooking(booking)}
+                              sx={{ color: '#f44336' }}
+                            >
+                              <Delete />
+                            </IconButton>
+                          )}
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))

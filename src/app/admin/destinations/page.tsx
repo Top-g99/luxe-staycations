@@ -39,6 +39,7 @@ import {
   PhotoCamera
 } from '@mui/icons-material';
 import { destinationManager } from '@/lib/dataManager';
+import { isAdmin, hasAdminPermission, getAdminPermissionError } from '@/lib/adminPermissions';
 
 interface Destination {
   id: string;
@@ -113,6 +114,14 @@ export default function DestinationsAdmin() {
   };
 
   const handleDeleteDestination = (destination: Destination) => {
+    if (!hasAdminPermission('delete', 'destination')) {
+      setSnackbar({
+        open: true,
+        message: getAdminPermissionError('delete', 'destination'),
+        severity: 'error'
+      });
+      return;
+    }
     setDestinationToDelete(destination);
     setDeleteDialogOpen(true);
   };
@@ -462,21 +471,23 @@ export default function DestinationsAdmin() {
                   >
                     <Edit />
                   </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDeleteDestination(destination)}
-                    sx={{ 
-                      color: '#D32F2F',
-                      backgroundColor: 'rgba(211, 47, 47, 0.08)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(211, 47, 47, 0.15)',
-                        transform: 'scale(1.1)'
-                      },
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <Delete />
-                  </IconButton>
+                  {isAdmin() && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteDestination(destination)}
+                      sx={{ 
+                        color: '#D32F2F',
+                        backgroundColor: 'rgba(211, 47, 47, 0.08)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(211, 47, 47, 0.15)',
+                          transform: 'scale(1.1)'
+                        },
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <Delete />
+                    </IconButton>
+                  )}
                 </Box>
               </ListItem>
             ))}

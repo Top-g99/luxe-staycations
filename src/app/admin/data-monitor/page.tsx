@@ -212,14 +212,23 @@ export default function AdminDataMonitorPage() {
   };
 
   const updateStats = () => {
-    const newStats = masterDataManager.getStats();
-    setStats(newStats);
+    // Only update stats if we don't have live data
+    if (Object.keys(liveData).length === 0) {
+      const newStats = masterDataManager.getStats();
+      setStats(newStats);
+    }
+    // Live data stats are already set in fetchLiveData()
   };
 
   const updateSyncStatus = () => {
     const status: Record<string, boolean> = {};
     managers.forEach(({ type, manager }) => {
-      status[type] = manager.getAll().length > 0;
+      // Use live data if available, otherwise fall back to local manager
+      if (liveData[type] && liveData[type].length > 0) {
+        status[type] = true;
+      } else {
+        status[type] = manager.getAll().length > 0;
+      }
     });
     setSyncStatus(status);
   };
