@@ -42,6 +42,7 @@ import GeneralSettingsForm from '@/components/settings/GeneralSettingsForm';
 import BusinessProfileForm from '@/components/settings/BusinessProfileForm';
 import PaymentSettingsForm from '@/components/settings/PaymentSettingsForm';
 import EmailSettingsForm from '@/components/settings/EmailSettingsForm';
+import EnhancedEmailSettingsForm from '@/components/settings/EnhancedEmailSettingsForm';
 import RazorpaySettingsForm from '@/components/settings/RazorpaySettingsForm';
 import WhatsAppSettingsForm from '@/components/settings/WhatsAppSettingsForm';
 import InstagramSettingsForm from '@/components/settings/InstagramSettingsForm';
@@ -210,7 +211,7 @@ export default function AdminSettings() {
       case 4:
         return (
           <SettingsWrapper>
-            <EmailSettingsForm />
+            <EnhancedEmailSettingsForm />
           </SettingsWrapper>
         );
       case 5:
