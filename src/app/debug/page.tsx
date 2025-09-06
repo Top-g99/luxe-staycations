@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { propertyManager } from '@/lib/propertyManager';
+import { propertyManager } from '@/lib/dataManager';
 
 export default function DebugPage() {
   const [debugInfo, setDebugInfo] = useState<any>({ status: 'Loading...' });
@@ -18,11 +18,11 @@ export default function DebugPage() {
         setDebugInfo({ status: 'Initialized, getting properties...' });
 
         // Get all properties
-        const allProperties = propertyManager.getAllProperties();
+        const allProperties = propertyManager.getAll();
         console.log('Debug: All properties:', allProperties.length);
 
         // Get featured properties
-        const featuredProperties = propertyManager.getFeaturedProperties();
+        const featuredProperties = propertyManager.getFeatured();
         console.log('Debug: Featured properties:', featuredProperties.length);
 
         setDebugInfo({

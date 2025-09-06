@@ -24,3 +24,6 @@ keysToClear.forEach(key => {
 console.log('localStorage cleared successfully!');
 console.log('Now try updating destinations again.');
 
+
+
+

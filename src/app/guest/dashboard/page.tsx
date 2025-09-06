@@ -37,6 +37,7 @@ import { useRouter } from 'next/navigation';
 import { useBookingContext } from '@/contexts/BookingContext';
 import GuestAuthGuard from '@/components/GuestAuthGuard';
 import SpecialRequestDialog from '@/components/SpecialRequestDialog';
+import { emailService } from '@/lib/emailService';
 
 export default function GuestDashboard() {
   const router = useRouter();
@@ -101,6 +102,35 @@ export default function GuestDashboard() {
           updatedAt: new Date().toISOString()
         });
         
+        // Send cancellation confirmation email
+        if (emailService.isConfigured) {
+          const cancellationData = {
+            guestName: selectedBooking.guestInfo?.name || 'Guest',
+            guestEmail: selectedBooking.guestInfo?.email || guestEmail,
+            bookingId: selectedBooking.id,
+            propertyName: selectedBooking.bookingDetails?.propertyName || 'Luxury Villa',
+            propertyAddress: selectedBooking.bookingDetails?.propertyLocation || 'Premium Location',
+            checkIn: selectedBooking.bookingDetails?.checkIn || '',
+            checkOut: selectedBooking.bookingDetails?.checkOut || '',
+            guests: parseInt(selectedBooking.bookingDetails?.guests || '1'),
+            totalAmount: parseFloat(selectedBooking.bookingDetails?.totalAmount || '0'),
+            cancellationReason: 'Guest requested cancellation',
+            refundAmount: parseFloat(selectedBooking.bookingDetails?.totalAmount || '0') * 0.9, // 90% refund
+            refundMethod: 'Original payment method',
+            refundTimeline: '5-7 business days',
+            hostName: 'Property Host',
+            hostPhone: '+91-8828279739',
+            hostEmail: 'host@luxestaycations.in'
+          };
+          
+          try {
+            await emailService.sendBookingCancellation(cancellationData);
+          } catch (emailError) {
+            console.error('Email sending failed:', emailError);
+            // Don't show error to user, just log it
+          }
+        }
+        
         // Refresh bookings
         loadGuestBookings(guestEmail);
         setCancelDialogOpen(false);
@@ -125,7 +155,7 @@ export default function GuestDashboard() {
     setSpecialRequestDialogOpen(true);
   };
 
-  const handleSaveSpecialRequests = (requests: any[]) => {
+  const handleSaveSpecialRequests = async (requests: any[]) => {
     if (selectedBookingForRequests) {
       // Update booking with special requests in guest info
       updateBooking(selectedBookingForRequests.id, {
@@ -135,6 +165,28 @@ export default function GuestDashboard() {
         },
         updatedAt: new Date().toISOString()
       });
+      
+      // Send confirmation email for special requests
+      if (emailService.isConfigured && requests.length > 0) {
+        const specialRequestData = {
+          guestName: selectedBookingForRequests.guestInfo?.name || 'Guest',
+          email: selectedBookingForRequests.guestInfo?.email || guestEmail,
+          phone: selectedBookingForRequests.guestInfo?.phone || '',
+          propertyName: selectedBookingForRequests.propertyName || 'Luxury Villa',
+          requestType: requests.map(r => r.category).join(', '),
+          description: requests.map(r => r.description).join('\n\n'),
+          urgency: requests.some(r => r.priority === 'high') ? 'High' : 
+                   requests.some(r => r.priority === 'medium') ? 'Medium' : 'Low',
+          requestId: 'SR-' + Date.now()
+        };
+        
+        try {
+          await emailService.sendSpecialRequestConfirmation(specialRequestData);
+        } catch (emailError) {
+          console.error('Email sending failed:', emailError);
+          // Don't show error to user, just log it
+        }
+      }
       
       // Refresh bookings
       loadGuestBookings(guestEmail);
@@ -181,7 +233,7 @@ export default function GuestDashboard() {
         <Button
           variant="outlined"
           startIcon={<Logout />}
-          onClick={handleLogout}
+          onClick={() => handleLogout()}
           sx={{ borderColor: '#d97706', color: '#d97706' }}
         >
           Logout
@@ -210,7 +262,7 @@ export default function GuestDashboard() {
               <Button
                 fullWidth
                 variant="contained"
-                onClick={handleSearch}
+                onClick={() => handleSearch()}
                 disabled={!guestEmail}
                 sx={{
                   background: 'linear-gradient(45deg, #5a3d35, #d97706)',
@@ -436,7 +488,7 @@ export default function GuestDashboard() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCancelDialogOpen(false)}>Keep Booking</Button>
-          <Button onClick={handleCancelBooking} color="error" variant="contained">
+          <Button onClick={() => handleCancelBooking()} color="error" variant="contained">
             Cancel Booking
           </Button>
         </DialogActions>

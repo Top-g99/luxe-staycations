@@ -331,3 +331,6 @@ async function testBusinessLogic() {
 // Run the complete test
 testCompleteLoyaltyProgram();
 
+
+
+

@@ -37,7 +37,7 @@ export default function FamilyVillaGetawaysPage() {
         {/* Article Header */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h1" sx={{ 
-            fontFamily: 'Gilda Display, serif',
+            fontFamily: 'Playfair Display, serif',
             color: 'var(--primary-dark)',
             mb: 3,
             fontSize: { xs: '2rem', md: '3rem' }
@@ -91,7 +91,7 @@ export default function FamilyVillaGetawaysPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             The Perfect Family Escape
           </Typography>
@@ -105,7 +105,7 @@ export default function FamilyVillaGetawaysPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Family-Centric Amenities
           </Typography>
@@ -115,7 +115,7 @@ export default function FamilyVillaGetawaysPage() {
               <Typography variant="h5" sx={{ 
                 color: 'var(--primary-dark)',
                 mb: 2,
-                fontFamily: 'Gilda Display, serif'
+                fontFamily: 'Playfair Display, serif'
               }}>
                 1. Kid-Friendly Pools and Play Areas
               </Typography>
@@ -132,7 +132,7 @@ export default function FamilyVillaGetawaysPage() {
               <Typography variant="h5" sx={{ 
                 color: 'var(--primary-dark)',
                 mb: 2,
-                fontFamily: 'Gilda Display, serif'
+                fontFamily: 'Playfair Display, serif'
               }}>
                 2. Spacious Common Areas
               </Typography>
@@ -149,7 +149,7 @@ export default function FamilyVillaGetawaysPage() {
               <Typography variant="h5" sx={{ 
                 color: 'var(--primary-dark)',
                 mb: 2,
-                fontFamily: 'Gilda Display, serif'
+                fontFamily: 'Playfair Display, serif'
               }}>
                 3. Entertainment for All Ages
               </Typography>
@@ -164,7 +164,7 @@ export default function FamilyVillaGetawaysPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Safety and Convenience
           </Typography>
@@ -178,7 +178,7 @@ export default function FamilyVillaGetawaysPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Creating Lasting Memories
           </Typography>
@@ -192,7 +192,7 @@ export default function FamilyVillaGetawaysPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Conclusion
           </Typography>
@@ -212,7 +212,7 @@ export default function FamilyVillaGetawaysPage() {
           <Typography variant="h5" sx={{ 
             color: 'var(--primary-dark)',
             mb: 2,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Plan Your Family Getaway
           </Typography>

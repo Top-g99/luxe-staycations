@@ -28,9 +28,11 @@ import {
   Villa,
   Apartment
 } from '@mui/icons-material';
-import { propertyManager } from '@/lib/propertyManager';
+import { propertyManager } from '@/lib/dataManager';
+import { destinationManager } from '@/lib/dataManager';
 
-const destinations = [
+// Default destinations for fallback
+const defaultDestinations = [
   {
     name: 'Lonavala',
     state: 'Maharashtra',
@@ -48,42 +50,6 @@ const destinations = [
     propertyCount: 25,
     rating: 4.7,
     popularFor: ['Beaches', 'Nightlife', 'Culture']
-  },
-  {
-    name: 'Alibaug',
-    state: 'Maharashtra',
-    image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80',
-    description: 'Coastal town with pristine beaches and historic forts',
-    propertyCount: 8,
-    rating: 4.6,
-    popularFor: ['Beaches', 'History', 'Seafood']
-  },
-  {
-    name: 'Karjat',
-    state: 'Maharashtra',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
-    description: 'Peaceful retreat surrounded by Sahyadri mountains',
-    propertyCount: 6,
-    rating: 4.5,
-    popularFor: ['Trekking', 'Nature', 'Peace']
-  },
-  {
-    name: 'Mussoorie',
-    state: 'Uttarakhand',
-    image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80',
-    description: 'Queen of Hills with colonial charm and mountain views',
-    propertyCount: 15,
-    rating: 4.8,
-    popularFor: ['Mountains', 'Colonial Heritage', 'Adventure']
-  },
-  {
-    name: 'Kasauli',
-    state: 'Himachal Pradesh',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
-    description: 'Quaint hill station with British colonial architecture',
-    propertyCount: 10,
-    rating: 4.7,
-    popularFor: ['Colonial Heritage', 'Peace', 'Nature']
   }
 ];
 
@@ -92,7 +58,29 @@ function DestinationsContent() {
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [stateFilter, setStateFilter] = useState('');
-  const [filteredDestinations, setFilteredDestinations] = useState(destinations);
+  const [destinations, setDestinations] = useState<any[]>([]);
+  const [filteredDestinations, setFilteredDestinations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDestinations = async () => {
+      try {
+        await destinationManager.initialize();
+        const data = destinationManager.getAll();
+        setDestinations(data);
+        setFilteredDestinations(data);
+      } catch (error) {
+        console.error('Error loading destinations:', error);
+        // Fallback to default destinations
+        setDestinations(defaultDestinations);
+        setFilteredDestinations(defaultDestinations);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDestinations();
+  }, []);
 
   useEffect(() => {
     let filtered = destinations;
@@ -105,17 +93,18 @@ function DestinationsContent() {
     }
 
     if (stateFilter) {
-      filtered = filtered.filter(dest => dest.state === stateFilter);
+      filtered = filtered.filter(dest => dest.location === stateFilter);
     }
 
     setFilteredDestinations(filtered);
-  }, [searchTerm, stateFilter]);
+  }, [searchTerm, stateFilter, destinations]);
 
   const handleDestinationClick = (destination: any) => {
-    router.push(`/villas?destination=${destination.name}`);
+    // Navigate to home page with destination pre-filled in search
+    router.push(`/?destination=${encodeURIComponent(destination.name)}`);
   };
 
-  const states = [...new Set(destinations.map(dest => dest.state))];
+  const states = [...new Set(destinations.map(dest => dest.location))];
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -127,7 +116,7 @@ function DestinationsContent() {
             fontWeight: 700, 
             mb: 2,
             color: 'var(--primary-dark)',
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}
         >
           Explore Destinations
@@ -187,6 +176,68 @@ function DestinationsContent() {
               Clear Filters
             </Button>
           </Grid>
+          <Grid item xs={12} md={3}>
+            <Button
+              variant="contained"
+              onClick={async () => {
+                try {
+                  await propertyManager.initialize();
+                  const allProperties = propertyManager.getAll();
+                  if (allProperties.length === 0) {
+                    // Add sample properties
+                    const sampleProperties = [
+                      {
+                        id: 'casa-alphonso-lonavala',
+                        name: 'Casa Alphonso - Lonavala',
+                        location: 'Lonavala, Maharashtra',
+                        description: 'Luxury villa with panoramic mountain views, private pool, and modern amenities.',
+                        price: 15000,
+                        rating: 4.8,
+                        reviews: 25,
+                        maxGuests: 8,
+                        amenities: ['Private Pool', 'WiFi', 'Kitchen', 'Parking', 'Mountain View'],
+                        image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80',
+                        featured: true,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                      },
+                      {
+                        id: 'casa-alphonso-malpe',
+                        name: 'Casa Alphonso - Malpe',
+                        location: 'Malpe, Maharashtra',
+                        description: 'Luxury beachfront villa in Malpe with stunning ocean views, private pool, and modern amenities.',
+                        price: 18000,
+                        rating: 4.9,
+                        reviews: 32,
+                        maxGuests: 8,
+                        amenities: ['Private Pool', 'Beach Access', 'WiFi', 'Kitchen', 'Parking', 'Ocean View'],
+                        image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80',
+                        featured: true,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                      }
+                    ];
+                    
+                    for (const property of sampleProperties) {
+                      await propertyManager.create(property);
+                    }
+                    
+                    console.log('Sample properties added successfully');
+                    alert('Sample properties added! Now you can click on destinations to see properties.');
+                  } else {
+                    alert(`Already have ${allProperties.length} properties in the system.`);
+                  }
+                } catch (error) {
+                  console.error('Error adding sample properties:', error);
+                  alert('Error adding sample properties. Check console for details.');
+                }
+              }}
+              fullWidth
+              sx={{ bgcolor: 'var(--primary-dark)' }}
+            >
+              Add Sample Properties
+            </Button>
+          </Grid>
         </Grid>
       </Paper>
 
@@ -228,31 +279,43 @@ function DestinationsContent() {
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center' }}>
                       <LocationOn sx={{ fontSize: 16, mr: 0.5 }} />
-                      {destination.state}
+                      {destination.state || destination.location || 'Maharashtra, India'}
                     </Typography>
                   </Box>
                   <Box sx={{ textAlign: 'right' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                       <Star sx={{ color: '#fbbf24', fontSize: 18, mr: 0.5 }} />
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {destination.rating}
+                        {destination.rating || 4.5}
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      {destination.propertyCount} properties
+                      {destination.propertyCount || 0} properties
                     </Typography>
                   </Box>
                 </Box>
 
                 <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2, lineHeight: 1.6 }}>
-                  {destination.description}
+                  {destination.description || 'Experience luxury and comfort in this beautiful destination with premium accommodations and exceptional service.'}
                 </Typography>
 
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                  {destination.popularFor.map((tag) => (
+                  {destination.popularFor && destination.popularFor.length > 0 ? (
+                    destination.popularFor.map((tag: string) => (
+                      <Chip
+                        key={tag}
+                        label={tag}
+                        size="small"
+                        sx={{
+                          bgcolor: 'var(--primary-light)',
+                          color: 'var(--primary-dark)',
+                          fontSize: '0.75rem'
+                        }}
+                      />
+                    ))
+                  ) : (
                     <Chip
-                      key={tag}
-                      label={tag}
+                      label="Luxury Villas"
                       size="small"
                       sx={{
                         bgcolor: 'var(--primary-light)',
@@ -260,7 +323,7 @@ function DestinationsContent() {
                         fontSize: '0.75rem'
                       }}
                     />
-                  ))}
+                  )}
                 </Box>
 
                 <Button
@@ -299,6 +362,8 @@ function DestinationsContent() {
           </Button>
         </Box>
       )}
+
+
     </Container>
   );
 }

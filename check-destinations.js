@@ -83,3 +83,6 @@ async function checkDestinations() {
 
 checkDestinations();
 
+
+
+

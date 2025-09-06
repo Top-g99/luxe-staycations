@@ -50,3 +50,6 @@ console.log('Featured destinations:', testManager.getFeaturedDestinations().leng
 console.log('First destination:', testManager.getAllDestinations()[0].name);
 console.log('Test completed successfully!');
 
+
+
+

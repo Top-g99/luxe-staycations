@@ -56,3 +56,6 @@ console.log('After reset:', testManager.getAllDestinations().length, 'destinatio
 
 console.log('✅ Destination manager test completed successfully!');
 
+
+
+

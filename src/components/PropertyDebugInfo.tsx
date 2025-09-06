@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Chip, Button } from '@mui/material';
 import { Refresh } from '@mui/icons-material';
-import { propertyManager } from '@/lib/propertyManager';
+import { propertyManager } from '@/lib/dataManager';
 
 export default function PropertyDebugInfo() {
   const [properties, setProperties] = useState<any[]>([]);
@@ -11,7 +11,7 @@ export default function PropertyDebugInfo() {
 
   useEffect(() => {
     const loadProperties = () => {
-      const allProperties = propertyManager.getAllProperties();
+      const allProperties = propertyManager.getAll();
       setProperties(allProperties);
       setLastUpdate(new Date());
     };
@@ -37,15 +37,15 @@ export default function PropertyDebugInfo() {
         <Button
           size="small"
           startIcon={<Refresh />}
-          onClick={() => {
-            propertyManager.forceRefresh();
-            const loadProperties = () => {
-              const allData = propertyManager.getAllProperties();
-              setProperties(allData);
-              setLastUpdate(new Date());
-            };
-            loadProperties();
-          }}
+                      onClick={() => {
+              // DataManager doesn't have forceRefresh, just reload
+              const loadProperties = () => {
+                const allData = propertyManager.getAll();
+                setProperties(allData);
+                setLastUpdate(new Date());
+              };
+              loadProperties();
+            }}
         >
           Refresh
         </Button>

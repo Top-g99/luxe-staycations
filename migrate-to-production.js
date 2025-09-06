@@ -30,70 +30,12 @@ class ProductionMigration {
 
         try {
             // This would normally read from browser localStorage
-            // For now, we'll create sample migration data
+            // For now, we'll create empty migration data structure
             const sampleData = {
-                properties: [{
-                    id: 'casa-alphonso-001',
-                    name: 'Casa Alphonso',
-                    location: 'Goa, India',
-                    description: 'Luxury villa with ocean view',
-                    price: 15000,
-                    rating: 4.8,
-                    reviews: 127,
-                    type: 'villa',
-                    amenities: ['Pool', 'Ocean View', 'Private Beach', 'WiFi'],
-                    featured: true,
-                    bedrooms: 4,
-                    bathrooms: 3,
-                    maxGuests: 8,
-                    images: ['casa-alphonso-1.jpg', 'casa-alphonso-2.jpg'],
-                    available: true,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                }],
-                destinations: [{
-                        id: 'goa-001',
-                        name: 'Goa',
-                        description: 'Tropical paradise with pristine beaches',
-                        image: 'goa-beach.jpg',
-                        featured: true,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    },
-                    {
-                        id: 'kerala-001',
-                        name: 'Kerala',
-                        description: 'God\'s own country with backwaters',
-                        image: 'kerala-backwaters.jpg',
-                        featured: true,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }
-                ],
-                dealBanners: [{
-                    id: 'banner-001',
-                    title: 'Summer Special',
-                    description: 'Get 20% off on luxury villas',
-                    video_url: '/videos/6271140-uhd_2160_4096_30fps.mp4',
-                    button_text: 'Book Now',
-                    button_url: '/villas',
-                    active: true,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                }],
-                settings: [{
-                        key: 'app_name',
-                        value: 'Luxe Staycations',
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    },
-                    {
-                        key: 'contact_email',
-                        value: 'info@luxestaycations.com',
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }
-                ]
+                properties: [],
+                destinations: [],
+                dealBanners: [],
+                settings: []
             };
 
             // Save migration data

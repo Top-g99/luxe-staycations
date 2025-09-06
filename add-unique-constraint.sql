@@ -23,3 +23,6 @@ WHERE tc.table_name = 'destinations'
 -- VALUES ('Goa, India', 'Test duplicate', 'https://example.com/test.jpg', false);
 
 
+
+
+

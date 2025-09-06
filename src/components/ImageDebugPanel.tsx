@@ -19,7 +19,7 @@ import {
   Warning,
   CheckCircle
 } from '@mui/icons-material';
-import { propertyManager } from '@/lib/propertyManager';
+import { propertyManager } from '@/lib/dataManager';
 
 export default function ImageDebugPanel() {
   const [properties, setProperties] = useState<any[]>([]);
@@ -27,7 +27,7 @@ export default function ImageDebugPanel() {
 
   useEffect(() => {
     const loadProperties = () => {
-      const allProperties = propertyManager.getAllProperties();
+      const allProperties = propertyManager.getAll();
       setProperties(allProperties);
     };
 
@@ -86,7 +86,7 @@ export default function ImageDebugPanel() {
           size="small"
           startIcon={<Refresh />}
           onClick={() => {
-            const allProperties = propertyManager.getAllProperties();
+            const allProperties = propertyManager.getAll();
             setProperties(allProperties);
           }}
         >

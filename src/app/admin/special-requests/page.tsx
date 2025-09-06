@@ -41,10 +41,18 @@ import {
   Done
 } from '@mui/icons-material';
 import { useBookingContext } from '@/contexts/BookingContext';
+import { propertyManager } from '@/lib/dataManager';
 
 export default function SpecialRequestsPage() {
   const { allBookings } = useBookingContext();
   const [specialRequests, setSpecialRequests] = useState<any[]>([]);
+  
+  // Initialize propertyManager for getting property names
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      propertyManager.initialize();
+    }
+  }, []);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,21 +66,57 @@ export default function SpecialRequestsPage() {
     const allRequests: any[] = [];
     
     allBookings.forEach(booking => {
-      if (booking.guestInfo.specialRequests && booking.guestInfo.specialRequests.trim()) {
+      // Handle both old BookingContext structure and new DataManager structure
+      let specialRequests = '';
+      let guestName = '';
+      let guestEmail = '';
+      let guestPhone = '';
+      let checkIn = '';
+      let checkOut = '';
+      let propertyName = 'Unknown Property';
+      
+      if (booking.guestInfo && booking.guestInfo.specialRequests) {
+        // Old BookingContext structure
+        specialRequests = booking.guestInfo.specialRequests;
+        guestName = `${booking.guestInfo.firstName || ''} ${booking.guestInfo.lastName || ''}`.trim();
+        guestEmail = booking.guestInfo.email || '';
+        guestPhone = booking.guestInfo.phone || '';
+        checkIn = booking.bookingDetails?.checkIn || '';
+        checkOut = booking.bookingDetails?.checkOut || '';
+        propertyName = booking.bookingDetails?.propertyName || 'Unknown Property';
+      } else if ('guestName' in booking && 'propertyId' in booking) {
+        // New DataManager structure
+        specialRequests = (booking as any).specialRequests || '';
+        guestName = (booking as any).guestName || '';
+        guestEmail = (booking as any).guestEmail || '';
+        guestPhone = (booking as any).guestPhone || '';
+        checkIn = (booking as any).checkIn || '';
+        checkOut = (booking as any).checkOut || '';
+        // For DataManager structure, get property name from propertyId
+        try {
+          const property = propertyManager.getById((booking as any).propertyId);
+          propertyName = property ? property.name : `Property ${(booking as any).propertyId}`;
+        } catch (error) {
+          propertyName = `Property ${(booking as any).propertyId}`;
+        }
+      }
+      
+      if (specialRequests && specialRequests.trim()) {
         allRequests.push({
           id: `request-${booking.id}`,
           title: 'Special Request',
-          description: booking.guestInfo.specialRequests,
+          description: specialRequests,
+          category: 'guest-request', // Add missing category field
           status: 'pending',
           priority: 'medium',
           createdAt: booking.createdAt,
           bookingId: booking.id,
-          guestName: `${booking.guestInfo.firstName} ${booking.guestInfo.lastName}`,
-          guestEmail: booking.guestInfo.email,
-          guestPhone: booking.guestInfo.phone,
-          propertyName: booking.bookingDetails.propertyName || 'Unknown Property',
-          checkIn: booking.bookingDetails.checkIn,
-          checkOut: booking.bookingDetails.checkOut,
+          guestName: guestName,
+          guestEmail: guestEmail,
+          guestPhone: guestPhone,
+          propertyName: propertyName,
+          checkIn: checkIn,
+          checkOut: checkOut,
           bookingStatus: booking.status
         });
       }
@@ -117,7 +161,8 @@ export default function SpecialRequestsPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
+    if (!status || typeof status !== 'string') return 'default';
     switch (status) {
       case 'pending': return 'warning';
       case 'approved': return 'success';
@@ -127,7 +172,8 @@ export default function SpecialRequestsPage() {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string | undefined) => {
+    if (!priority || typeof priority !== 'string') return 'default';
     switch (priority) {
       case 'high': return 'error';
       case 'medium': return 'warning';
@@ -146,17 +192,23 @@ export default function SpecialRequestsPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
   };
 
-  const getCategoryLabel = (category: string) => {
+  const getCategoryLabel = (category: string | undefined) => {
+    if (!category || typeof category !== 'string') return 'Unknown';
     return category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
@@ -292,7 +344,7 @@ export default function SpecialRequestsPage() {
         </Card>
       ) : (
         <Grid container spacing={3}>
-          {filteredRequests.map((request) => (
+          {filteredRequests.filter(request => request && request.id).map((request) => (
             <Grid item xs={12} key={request.id}>
               <Card sx={{ border: '2px solid #f3f4f6' }}>
                 <CardContent>

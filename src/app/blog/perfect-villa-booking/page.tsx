@@ -37,7 +37,7 @@ export default function PerfectVillaBookingPage() {
         {/* Article Header */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h1" sx={{ 
-            fontFamily: 'Gilda Display, serif',
+            fontFamily: 'Playfair Display, serif',
             color: 'var(--primary-dark)',
             mb: 3,
             fontSize: { xs: '2rem', md: '3rem' }
@@ -91,7 +91,7 @@ export default function PerfectVillaBookingPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Understanding Your Needs
           </Typography>
@@ -105,7 +105,7 @@ export default function PerfectVillaBookingPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Key Selection Criteria
           </Typography>
@@ -115,7 +115,7 @@ export default function PerfectVillaBookingPage() {
               <Typography variant="h5" sx={{ 
                 color: 'var(--primary-dark)',
                 mb: 2,
-                fontFamily: 'Gilda Display, serif'
+                fontFamily: 'Playfair Display, serif'
               }}>
                 1. Location and Accessibility
               </Typography>
@@ -132,7 +132,7 @@ export default function PerfectVillaBookingPage() {
               <Typography variant="h5" sx={{ 
                 color: 'var(--primary-dark)',
                 mb: 2,
-                fontFamily: 'Gilda Display, serif'
+                fontFamily: 'Playfair Display, serif'
               }}>
                 2. Villa Size and Layout
               </Typography>
@@ -149,7 +149,7 @@ export default function PerfectVillaBookingPage() {
               <Typography variant="h5" sx={{ 
                 color: 'var(--primary-dark)',
                 mb: 2,
-                fontFamily: 'Gilda Display, serif'
+                fontFamily: 'Playfair Display, serif'
               }}>
                 3. Amenities and Services
               </Typography>
@@ -164,7 +164,7 @@ export default function PerfectVillaBookingPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Research and Reviews
           </Typography>
@@ -178,7 +178,7 @@ export default function PerfectVillaBookingPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Booking Tips
           </Typography>
@@ -192,7 +192,7 @@ export default function PerfectVillaBookingPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Conclusion
           </Typography>
@@ -211,7 +211,7 @@ export default function PerfectVillaBookingPage() {
           <Typography variant="h5" sx={{ 
             color: 'var(--primary-dark)',
             mb: 2,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Start Your Villa Search
           </Typography>

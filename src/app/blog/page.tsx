@@ -52,7 +52,7 @@ export default function BlogPage() {
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 8 }}>
           <Typography variant="h2" sx={{ 
-            fontFamily: 'Gilda Display, serif',
+            fontFamily: 'Playfair Display, serif',
             color: 'var(--primary-dark)',
             mb: 4
           }}>
@@ -132,7 +132,7 @@ export default function BlogPage() {
         {/* Coming Soon Message */}
         <Box sx={{ textAlign: 'center', mt: 8, p: 4, bgcolor: 'var(--background-light)', borderRadius: 2 }}>
           <Typography variant="h5" sx={{ 
-            fontFamily: 'Gilda Display, serif',
+            fontFamily: 'Playfair Display, serif',
             color: 'var(--primary-dark)',
             mb: 2
           }}>

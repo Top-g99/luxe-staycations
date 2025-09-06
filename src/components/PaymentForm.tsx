@@ -46,7 +46,7 @@ interface PaymentFormProps {
 }
 
 export default function PaymentForm({ totalAmount, onPaymentSuccess, onPaymentError, bookingData }: PaymentFormProps) {
-  const [paymentMethod, setPaymentMethod] = useState('razorpay');
+  const [paymentMethod, setPaymentMethod] = useState('card'); // Changed from 'razorpay' to 'card' for testing
   const [cardDetails, setCardDetails] = useState({
     cardNumber: '',
     cardHolder: '',
@@ -72,12 +72,14 @@ export default function PaymentForm({ totalAmount, onPaymentSuccess, onPaymentEr
   // Check Razorpay configuration on component mount
   useEffect(() => {
     const checkRazorpayConfig = () => {
-      const isConfigured = razorpayService.isRazorpayConfigured();
+      // Temporarily disable Razorpay for testing
+      const isConfigured = false; // razorpayService.isRazorpayConfigured();
       setIsRazorpayConfigured(isConfigured);
       
-      if (!isConfigured) {
-        onPaymentError('Razorpay is not configured. Please contact administrator.');
-      }
+      // Don't show error for now, just use fallback methods
+      // if (!isConfigured) {
+      //   onPaymentError('Razorpay is not configured. Please contact administrator.');
+      // }
     };
 
     checkRazorpayConfig();
@@ -246,14 +248,20 @@ export default function PaymentForm({ totalAmount, onPaymentSuccess, onPaymentEr
       <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#5a3d35' }}>
         Payment Information
       </Typography>
+      
+      {/* Test Mode Notice */}
+      <Alert severity="info" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <CheckCircle />
+        Test Mode: Using manual payment methods for testing. Razorpay temporarily disabled.
+      </Alert>
 
-      {/* Razorpay Status */}
-      {!isRazorpayConfigured && (
+      {/* Razorpay Status - Temporarily Hidden for Testing */}
+      {/* {!isRazorpayConfigured && (
         <Alert severity="warning" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
           <Error />
           Razorpay payment gateway is not configured. Please contact administrator.
         </Alert>
-      )}
+      )} */}
 
       {/* Payment Method Selection */}
       <Card sx={{ mb: 3, border: '2px solid #f3f4f6' }}>
@@ -265,7 +273,8 @@ export default function PaymentForm({ totalAmount, onPaymentSuccess, onPaymentEr
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
           >
-            <FormControlLabel
+            {/* Razorpay temporarily disabled for testing */}
+            {/* <FormControlLabel
               value="razorpay"
               control={<Radio />}
               disabled={!isRazorpayConfigured}
@@ -284,14 +293,21 @@ export default function PaymentForm({ totalAmount, onPaymentSuccess, onPaymentEr
                   )}
                 </Box>
               }
-            />
+            /> */}
             <FormControlLabel
               value="card"
               control={<Radio />}
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CreditCard />
-                  <Typography>Credit/Debit Card (Manual)</Typography>
+                  <Typography>Credit/Debit Card (Recommended)</Typography>
+                  <Chip
+                    icon={<CheckCircle />}
+                    label="Secure"
+                    size="small"
+                    color="success"
+                    variant="outlined"
+                  />
                 </Box>
               }
             />

@@ -47,3 +47,6 @@ console.log('\n📄 Database Schema:');
 console.log('Make sure to run the database schema in your Supabase SQL Editor');
 console.log('Copy the content from supabase-schema.sql and run it');
 
+
+
+

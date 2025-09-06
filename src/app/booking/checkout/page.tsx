@@ -33,7 +33,7 @@ import {
 } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useBookingContext } from '@/contexts/BookingContext';
-import { propertyManager, Property } from '@/lib/propertyManager';
+import { propertyManager, Property } from '@/lib/dataManager';
 import GuestInfoForm from '@/components/GuestInfoForm';
 import BookingSummary from '@/components/BookingSummary';
 import PaymentForm from '@/components/PaymentForm';
@@ -71,7 +71,7 @@ function BookingCheckoutContent() {
           if (typeof window !== 'undefined') {
             propertyManager.initialize();
           }
-          const propertyData = propertyManager.getPropertyById(propertyId);
+          const propertyData = propertyManager.getById(propertyId);
           setProperty(propertyData || null);
         }
         setLoading(false);
@@ -484,7 +484,6 @@ function BookingCheckoutContent() {
     </Container>
   );
 }
-
 export default function BookingCheckoutPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -492,3 +491,4 @@ export default function BookingCheckoutPage() {
     </Suspense>
   );
 }
+

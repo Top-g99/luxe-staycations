@@ -95,3 +95,6 @@ CREATE POLICY "Users can view own loyalty summary" ON user_loyalty_summary
 SELECT 'Missing loyalty tables created successfully!' as status;
 
 
+
+
+

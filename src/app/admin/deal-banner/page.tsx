@@ -1,41 +1,28 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
   Container,
   Typography,
-  Paper,
   TextField,
   Button,
+  Paper,
+  Grid,
+  Box,
   Switch,
   FormControlLabel,
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  Alert,
   Snackbar,
+  Alert,
   CircularProgress,
-  Divider,
   Chip
 } from '@mui/material';
-import {
-  Save,
-  Upload,
-  PlayArrow,
-  Image,
-  VideoFile,
-  Refresh,
-  Delete,
-  Visibility,
-  VisibilityOff
-} from '@mui/icons-material';
-import { dealBannerManager, DealBanner } from '@/lib/dealBannerManager';
+import { Save, Refresh, Delete, VideoFile, Image } from '@mui/icons-material';
+import { dealBannerManager } from '@/lib/dataManager';
+import type { DealBanner } from '@/lib/dataManager';
 
 export default function DealBannerPage() {
+  // State management
   const [dealBanner, setDealBanner] = useState<DealBanner | null>(null);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -43,15 +30,18 @@ export default function DealBannerPage() {
     severity: 'success' as 'success' | 'error' | 'info' | 'warning'
   });
 
-  // Form data
-  const [formData, setFormData] = useState({
+  // Form data with guaranteed defaults
+  const [formData, setFormData] = useState<DealBanner>({
+    id: '',
     title: '',
     subtitle: '',
     buttonText: '',
     buttonLink: '',
     videoUrl: '',
     fallbackImageUrl: '',
-    isActive: true
+    isActive: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   });
 
   // File upload states
@@ -62,39 +52,49 @@ export default function DealBannerPage() {
 
   // Load deal banner data
   useEffect(() => {
-    const loadDealBanner = () => {
-      const data = dealBannerManager.getDealBanner();
-      setDealBanner(data);
-      if (data) {
-        setFormData({
-          title: data.title,
-          subtitle: data.subtitle,
-          buttonText: data.buttonText,
-          buttonLink: data.buttonLink,
-          videoUrl: data.videoUrl,
-          fallbackImageUrl: data.fallbackImageUrl,
-          isActive: data.isActive
+    const loadDealBanner = async () => {
+      try {
+        await dealBannerManager.initialize();
+        const data = dealBannerManager.getActive();
+        const activeBanner = Array.isArray(data) ? data[0] : data;
+        setDealBanner(activeBanner);
+        
+        if (activeBanner) {
+          setFormData({
+            id: activeBanner.id || '',
+            title: activeBanner.title || '',
+            subtitle: activeBanner.subtitle || '',
+            buttonText: activeBanner.buttonText || '',
+            buttonLink: activeBanner.buttonLink || '',
+            videoUrl: activeBanner.videoUrl || '',
+            fallbackImageUrl: activeBanner.fallbackImageUrl || '',
+            isActive: activeBanner.isActive === true,
+            createdAt: activeBanner.createdAt || new Date().toISOString(),
+            updatedAt: activeBanner.updatedAt || new Date().toISOString()
+          });
+        }
+      } catch (error) {
+        console.error('Error loading deal banner:', error);
+        setSnackbar({
+          open: true,
+          message: 'Error loading deal banner',
+          severity: 'error'
         });
       }
     };
 
     loadDealBanner();
-
-    // Subscribe to changes
-    const unsubscribe = dealBannerManager.subscribe(() => {
-      loadDealBanner();
-    });
-
-    return unsubscribe;
   }, []);
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  // Input change handler
+  const handleInputChange = (field: keyof DealBanner, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
+  // Video upload handler
   const handleVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -102,17 +102,18 @@ export default function DealBannerPage() {
       setUploadingVideo(true);
       
       try {
-        const videoUrl = await dealBannerManager.uploadVideo(file);
-        setFormData(prev => ({ ...prev, videoUrl }));
+        // For now, just use the file name as a placeholder
+        const videoUrl = `/uploads/videos/${file.name}`;
+        handleInputChange('videoUrl', videoUrl);
         setSnackbar({
           open: true,
-          message: 'Video uploaded successfully!',
-          severity: 'success'
+          message: 'Video file selected (upload functionality coming soon)',
+          severity: 'info'
         });
       } catch (error) {
         setSnackbar({
           open: true,
-          message: 'Failed to upload video',
+          message: 'Failed to process video file',
           severity: 'error'
         });
       } finally {
@@ -121,6 +122,7 @@ export default function DealBannerPage() {
     }
   };
 
+  // Image upload handler
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -128,17 +130,18 @@ export default function DealBannerPage() {
       setUploadingImage(true);
       
       try {
-        const imageUrl = await dealBannerManager.uploadImage(file);
-        setFormData(prev => ({ ...prev, fallbackImageUrl: imageUrl }));
+        // For now, just use the file name as a placeholder
+        const imageUrl = `/uploads/images/${file.name}`;
+        handleInputChange('fallbackImageUrl', imageUrl);
         setSnackbar({
           open: true,
-          message: 'Image uploaded successfully!',
-          severity: 'success'
+          message: 'Image file selected (upload functionality coming soon)',
+          severity: 'info'
         });
       } catch (error) {
         setSnackbar({
           open: true,
-          message: 'Failed to upload image',
+          message: 'Failed to process image file',
           severity: 'error'
         });
       } finally {
@@ -147,28 +150,39 @@ export default function DealBannerPage() {
     }
   };
 
+  // Save handler
   const handleSave = async () => {
     setSaving(true);
     
     try {
-      const success = dealBannerManager.updateDealBanner(formData);
-      if (success) {
-        setSnackbar({
-          open: true,
-          message: 'Deal banner updated successfully!',
-          severity: 'success'
-        });
+      await dealBannerManager.initialize();
+      
+      const dealBannerData = {
+        title: formData.title,
+        subtitle: formData.subtitle,
+        buttonText: formData.buttonText,
+        buttonLink: formData.buttonLink,
+        videoUrl: formData.videoUrl,
+        fallbackImageUrl: formData.fallbackImageUrl,
+        isActive: formData.isActive
+      };
+
+      if (dealBanner) {
+        await dealBannerManager.update(dealBanner.id, dealBannerData);
       } else {
-        setSnackbar({
-          open: true,
-          message: 'Failed to update deal banner',
-          severity: 'error'
-        });
+        await dealBannerManager.create(dealBannerData);
       }
-    } catch (error) {
+      
       setSnackbar({
         open: true,
-        message: 'Error updating deal banner',
+        message: 'Deal banner saved successfully!',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error saving deal banner:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error saving deal banner',
         severity: 'error'
       });
     } finally {
@@ -176,24 +190,73 @@ export default function DealBannerPage() {
     }
   };
 
-  const handleReset = () => {
-    dealBannerManager.resetToDefault();
-    setSnackbar({
-      open: true,
-      message: 'Deal banner reset to defaults',
-      severity: 'info'
-    });
+  // Reset handler
+  const handleReset = async () => {
+    try {
+      await dealBannerManager.initialize();
+      await dealBannerManager.clear();
+      setFormData({
+        id: '',
+        title: '',
+        subtitle: '',
+        buttonText: '',
+        buttonLink: '',
+        videoUrl: '',
+        fallbackImageUrl: '',
+        isActive: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      setDealBanner(null);
+      setSnackbar({
+        open: true,
+        message: 'Deal banner reset successfully',
+        severity: 'info'
+      });
+    } catch (error) {
+      console.error('Error resetting deal banner:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error resetting deal banner',
+        severity: 'error'
+      });
+    }
   };
 
-  const handleClear = () => {
-    dealBannerManager.clearDealBanner();
-    setSnackbar({
-      open: true,
-      message: 'Deal banner cleared',
-      severity: 'info'
-    });
+  // Clear handler
+  const handleClear = async () => {
+    try {
+      await dealBannerManager.initialize();
+      await dealBannerManager.clear();
+      setFormData({
+        id: '',
+        title: '',
+        subtitle: '',
+        buttonText: '',
+        buttonLink: '',
+        videoUrl: '',
+        fallbackImageUrl: '',
+        isActive: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      setDealBanner(null);
+      setSnackbar({
+        open: true,
+        message: 'Deal banner cleared successfully',
+        severity: 'info'
+      });
+    } catch (error) {
+      console.error('Error clearing deal banner:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error clearing deal banner',
+        severity: 'error'
+      });
+    }
   };
 
+  // Close snackbar
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
@@ -392,64 +455,64 @@ export default function DealBannerPage() {
               Preview
             </Typography>
 
-            {dealBanner && (
-              <Card sx={{ mb: 2 }}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={formData.fallbackImageUrl}
-                  alt="Deal Banner Preview"
-                  sx={{ objectFit: 'cover' }}
-                />
-                <CardContent>
-                  <Typography variant="h6" sx={{ mb: 1, color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-                    {formData.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 2, color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-                    {formData.subtitle}
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{ bgcolor: 'white', color: 'var(--primary-dark)' }}
-                  >
-                    {formData.buttonText}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            <Divider sx={{ my: 2 }} />
-
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Status
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              {formData.isActive ? (
-                <Chip icon={<Visibility />} label="Active" color="success" size="small" />
-              ) : (
-                <Chip icon={<VisibilityOff />} label="Inactive" color="default" size="small" />
-              )}
-            </Box>
-
-            {dealBanner && (
-              <>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Last Updated
+            {formData.isActive ? (
+              <Box sx={{ 
+                p: 3, 
+                bgcolor: 'background.paper', 
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                textAlign: 'center'
+              }}>
+                <Typography variant="h5" sx={{ mb: 1, fontWeight: 600 }}>
+                  {formData.title || 'Deal Title'}
                 </Typography>
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  {new Date(dealBanner.updatedAt).toLocaleString()}
+                <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
+                  {formData.subtitle || 'Deal subtitle will appear here'}
                 </Typography>
-              </>
+                <Button
+                  variant="contained"
+                  size="large"
+                  href={formData.buttonLink || '#'}
+                  sx={{ mb: 2 }}
+                >
+                  {formData.buttonText || 'Button Text'}
+                </Button>
+                {formData.videoUrl && (
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    Video: {formData.videoUrl}
+                  </Typography>
+                )}
+                {formData.fallbackImageUrl && (
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    Image: {formData.fallbackImageUrl}
+                  </Typography>
+                )}
+              </Box>
+            ) : (
+              <Box sx={{ 
+                p: 3, 
+                bgcolor: 'grey.100', 
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                textAlign: 'center'
+              }}>
+                <Typography variant="body2" color="text.secondary">
+                  Banner is currently inactive
+                </Typography>
+              </Box>
             )}
           </Paper>
         </Grid>
       </Grid>
 
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert
           onClose={handleCloseSnackbar}

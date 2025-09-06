@@ -42,3 +42,6 @@ SELECT * FROM destinations;
 DROP TABLE destinations_backup;
 
 
+
+
+

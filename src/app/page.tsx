@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import WhatsAppButton from '@/components/WhatsAppButton';
 import {
   Box,
   Container,
@@ -30,195 +31,20 @@ import {
   ChevronRight,
   Phone
 } from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useBookingContext } from '@/contexts/BookingContext';
 import { callbackManager } from '@/lib/callbackManager';
-import { propertyManager } from '@/lib/propertyManager';
-import { destinationManager } from '@/lib/destinationManager';
-import { dealBannerManager } from '@/lib/dealBannerManager';
+import { propertyManager, destinationManager, heroBackgroundManager } from '@/lib/dataManager';
 import HeroSlider from '@/components/HeroSlider';
+import Footer from '@/components/Footer';
 
-// Deal Banner Section Component
-function DealBannerSection() {
-  const [dealBanner, setDealBanner] = useState<any>(null);
+
+
+function HomePageContent() {
+  console.log('Homepage: Component rendering');
+  
   const router = useRouter();
-
-  useEffect(() => {
-    const loadDealBanner = () => {
-      const data = dealBannerManager.getDealBanner();
-      setDealBanner(data);
-    };
-
-    loadDealBanner();
-
-    // Subscribe to changes
-    const unsubscribe = dealBannerManager.subscribe(() => {
-      loadDealBanner();
-    });
-
-    return unsubscribe;
-  }, []);
-
-  // Don't render if no deal banner or not active
-  if (!dealBanner || !dealBanner.isActive) {
-    return null;
-  }
-
-  return (
-    <Box sx={{
-      position: 'relative',
-      height: '500px',
-      overflow: 'hidden',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      mt: 8
-    }}>
-      {/* Video Background */}
-      {dealBanner.videoUrl && dealBanner.videoUrl.trim() !== '' ? (
-        <Box
-          component="video"
-          autoPlay
-          muted
-          loop
-          playsInline
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 1
-          }}
-        >
-          <source src={dealBanner.videoUrl} type="video/mp4" />
-          {/* Fallback image if video doesn't load */}
-          {dealBanner.fallbackImageUrl && dealBanner.fallbackImageUrl.trim() !== '' && (
-            <Box
-              component="img"
-              src={dealBanner.fallbackImageUrl}
-              alt="Luxury Villa"
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-            />
-          )}
-        </Box>
-      ) : (
-        /* Fallback image when no video is available */
-        dealBanner.fallbackImageUrl && dealBanner.fallbackImageUrl.trim() !== '' ? (
-          <Box
-            component="img"
-            src={dealBanner.fallbackImageUrl}
-            alt="Luxury Villa"
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              zIndex: 1
-            }}
-          />
-        ) : (
-          /* Default background when no image is available */
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%)',
-              zIndex: 1
-            }}
-          />
-        )
-      )}
-      
-      {/* Light Overlay for Text Readability - Removed for better video visibility */}
-      {/* <Box sx={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        bgcolor: 'rgba(0, 0, 0, 0.1)',
-        zIndex: 2
-      }} /> */}
-      
-      {/* Content */}
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 3 }}>
-        <Box sx={{
-          textAlign: 'center',
-          color: 'white',
-          maxWidth: 600,
-          mx: 'auto'
-        }}>
-          <Typography 
-            variant="h3" 
-            sx={{ 
-              fontFamily: 'Gilda Display, serif',
-              fontWeight: 700,
-              mb: 2,
-              textShadow: '0 2px 12px rgba(0,0,0,0.6)',
-              fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
-            }}
-          >
-            {dealBanner.title}
-          </Typography>
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              fontFamily: 'Nunito, sans-serif',
-              fontWeight: 400,
-              mb: 4,
-              textShadow: '0 1px 8px rgba(0,0,0,0.6)',
-              fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' }
-            }}
-          >
-            {dealBanner.subtitle}
-          </Typography>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => router.push(dealBanner.buttonLink)}
-            sx={{
-              bgcolor: 'var(--secondary-dark)',
-              color: 'white',
-              px: 6,
-              py: 2,
-              borderRadius: 3,
-              fontSize: '1.2rem',
-              fontWeight: 600,
-              fontFamily: 'Nunito, sans-serif',
-              textTransform: 'none',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-              '&:hover': {
-                bgcolor: 'var(--secondary-dark)',
-                transform: 'translateY(-3px)',
-                boxShadow: '0 8px 30px rgba(0,0,0,0.4)'
-              },
-              transition: 'all 0.3s ease'
-            }}
-          >
-            {dealBanner.buttonText}
-          </Button>
-        </Box>
-      </Container>
-    </Box>
-  );
-}
-
-export default function HomePage() {
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const { searchFormData, setSearchFormData } = useBookingContext();
   
   // Initialize search data from context or default
@@ -240,16 +66,15 @@ export default function HomePage() {
     message: ''
   });
 
-  // State for no villas popup
-  const [noVillasPopup, setNoVillasPopup] = useState({
-    open: false,
-    destination: ''
-  });
 
   // State for featured properties and all properties
   const [featuredProperties, setFeaturedProperties] = useState<any[]>([]);
   const [allProperties, setAllProperties] = useState<any[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
+
+  // Debug logging after state is initialized
+  console.log('Homepage: featuredProperties state:', featuredProperties.length);
+  console.log('Homepage: allProperties state:', allProperties.length);
 
   // Initialize search data from context
   useEffect(() => {
@@ -258,12 +83,33 @@ export default function HomePage() {
     }
   }, [searchFormData]);
 
-  // Load properties from propertyManager with real-time updates
+  // Handle destination URL parameter from destinations page
   useEffect(() => {
-    const loadProperties = () => {
+    const destinationParam = searchParams.get('destination');
+    if (destinationParam) {
+      console.log('Destination from URL:', destinationParam);
+      setSearchData(prev => ({
+        ...prev,
+        destination: destinationParam
+      }));
+      // Also update the booking context
+      setSearchFormData({
+        destination: destinationParam,
+        checkIn: '',
+        checkOut: '',
+        guests: '1'
+      });
+    }
+  }, [searchParams, setSearchFormData]);
+
+  // Load properties from propertyManager with real-time updates (restored from backup)
+  
+  useEffect(() => {
+    const loadProperties = async () => {
       try {
-        const allData = propertyManager.getAllProperties();
-        const featuredData = propertyManager.getFeaturedProperties();
+        await propertyManager.initialize();
+        const allData = propertyManager.getAll();
+        const featuredData = propertyManager.getFeatured();
         setAllProperties(allData);
         setFeaturedProperties(featuredData);
         console.log('Homepage: Loaded properties - All:', allData.length, 'Featured:', featuredData.length);
@@ -277,8 +123,8 @@ export default function HomePage() {
 
     // Subscribe to real-time updates
     const unsubscribe = propertyManager.subscribe(() => {
-      const updatedAllData = propertyManager.getAllProperties();
-      const updatedFeaturedData = propertyManager.getFeaturedProperties();
+      const updatedAllData = propertyManager.getAll();
+      const updatedFeaturedData = propertyManager.getFeatured();
       setAllProperties(updatedAllData);
       setFeaturedProperties(updatedFeaturedData);
       console.log('Homepage: Updated properties - All:', updatedAllData.length, 'Featured:', updatedFeaturedData.length);
@@ -288,12 +134,13 @@ export default function HomePage() {
     return unsubscribe;
   }, []);
 
-  // Load destinations from destinationManager with real-time updates
+  // Load destinations from destinationManager with real-time updates (restored from backup)
   useEffect(() => {
-    const loadDestinations = () => {
+    const loadDestinations = async () => {
       try {
-        const destinationsData = destinationManager.getAllDestinations();
-        const formattedDestinations = destinationsData.map(dest => ({
+        await destinationManager.initialize();
+        const destinationsData = destinationManager.getAll();
+        const formattedDestinations = destinationsData.map((dest: any) => ({
           name: dest.name,
           image: dest.image
         }));
@@ -309,8 +156,8 @@ export default function HomePage() {
 
     // Subscribe to real-time updates
     const unsubscribe = destinationManager.subscribe(() => {
-      const updatedDestinationsData = destinationManager.getAllDestinations();
-      const formattedDestinations = updatedDestinationsData.map(dest => ({
+      const updatedDestinationsData = destinationManager.getAll();
+      const formattedDestinations = updatedDestinationsData.map((dest: any) => ({
         name: dest.name,
         image: dest.image
       }));
@@ -334,35 +181,29 @@ export default function HomePage() {
   const handleSearchSubmit = () => {
     if (isSearchFormValid) {
       setSearchFormData(searchData);
-      router.push('/villas');
+      // Pass search data as URL parameters to villas page
+      const searchParams = new URLSearchParams({
+        destination: searchData.destination,
+        checkIn: searchData.checkIn,
+        checkOut: searchData.checkOut,
+        guests: searchData.guests
+      });
+      router.push(`/villas?${searchParams.toString()}`);
     }
   };
 
   const handleDestinationClick = (destination: string) => {
-    const availableVillas = allProperties.filter(property => {
-      const locationMatch = property.location.toLowerCase().includes(destination.toLowerCase());
-      const nameMatch = property.name.toLowerCase().includes(destination.toLowerCase());
-      const descriptionMatch = property.description.toLowerCase().includes(destination.toLowerCase());
-      
-      let specialMatch = false;
-      if (destination.toLowerCase().includes('lonavala')) {
-        specialMatch = property.location.toLowerCase().includes('lonavala') || 
-                      property.location.toLowerCase().includes('khandala') ||
-                      property.location.toLowerCase().includes('karla') ||
-                      property.name.toLowerCase().includes('casa alphonso');
-      }
-      
-      return locationMatch || nameMatch || descriptionMatch || specialMatch;
+    // Always navigate to villas page with the selected destination
+    const searchParams = new URLSearchParams({
+      destination: encodeURIComponent(destination)
     });
-
-    if (availableVillas.length > 0) {
-      router.push(`/villas?destination=${encodeURIComponent(destination)}`);
-    } else {
-      setNoVillasPopup({
-        open: true,
-        destination: destination
-      });
-    }
+    
+    // Add check-in/check-out/guests if they exist
+    if (searchData.checkIn) searchParams.append('checkIn', searchData.checkIn);
+    if (searchData.checkOut) searchParams.append('checkOut', searchData.checkOut);
+    if (searchData.guests) searchParams.append('guests', searchData.guests);
+    
+    router.push(`/villas?${searchParams.toString()}`);
   };
 
   const handleCallbackSubmit = () => {
@@ -402,23 +243,150 @@ export default function HomePage() {
         setCallbackFormOpen={setCallbackFormOpen}
       />
 
-      {/* Deal Banner Section */}
-      <DealBannerSection />
+
+
+      {/* Why Choose Us Section */}
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Typography variant="h3" sx={{ 
+            fontFamily: 'Playfair Display, serif',
+            color: 'var(--primary-dark)',
+            mb: 2
+          }}>
+            The Luxe Staycations Difference
+          </Typography>
+        </Box>
+
+        <Grid container spacing={4}>
+            {/* Card 1: Curated Excellence */}
+            <Grid item xs={12} md={4}>
+            <Box sx={{ 
+              textAlign: 'center',
+              p: 3,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}>
+              <Box sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                bgcolor: 'var(--primary-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mb: 3,
+                fontSize: '2rem'
+              }}>
+                🏠
+              </Box>
+              <Typography variant="h5" sx={{ 
+                fontFamily: 'Playfair Display, serif',
+                color: 'var(--primary-dark)',
+                fontWeight: 'bold',
+                mb: 2
+              }}>
+                Curated Excellence
+              </Typography>
+              <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
+                Every villa undergoes a rigorous 50-point verification process for quality and authenticity.
+              </Typography>
+            </Box>
+          </Grid>
+
+          {/* Card 2: Concierge Magic */}
+          <Grid item xs={12} md={4}>
+            <Box sx={{ 
+              textAlign: 'center',
+              p: 3,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}>
+              <Box sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                bgcolor: 'var(--primary-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mb: 3,
+                fontSize: '2rem'
+              }}>
+                ✨
+              </Box>
+              <Typography variant="h5" sx={{ 
+                fontFamily: 'Playfair Display, serif',
+                color: 'var(--primary-dark)',
+                fontWeight: 'bold',
+                mb: 2
+              }}>
+                Concierge Magic
+              </Typography>
+              <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
+                From private chefs to yacht rentals, we orchestrate every detail of your escape.
+              </Typography>
+            </Box>
+          </Grid>
+
+          {/* Card 3: Hassle-Free Experience */}
+          <Grid item xs={12} md={4}>
+            <Box sx={{ 
+              textAlign: 'center',
+              p: 3,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}>
+              <Box sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                bgcolor: 'var(--primary-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mb: 3,
+                fontSize: '2rem'
+              }}>
+                🔒
+              </Box>
+              <Typography variant="h5" sx={{ 
+                fontFamily: 'Playfair Display, serif',
+                color: 'var(--primary-dark)',
+                fontWeight: 'bold',
+                mb: 2
+              }}>
+                Hassle-Free Experience
+              </Typography>
+              <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
+                Secure payments, transparent pricing, and 24/7 support ensure complete peace of mind.
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
 
       {/* Explore Top Properties Section */}
       <Container maxWidth="lg" sx={{ py: 8 }}>
         <Box sx={{ textAlign: 'center', mb: 6 }}>
           <Typography variant="h3" sx={{ 
-            fontFamily: 'Gilda Display, serif',
+            fontFamily: 'Playfair Display, serif',
             color: 'var(--primary-dark)',
             mb: 2
           }}>
-            Explore Top Properties
+            Featured Luxe Retreats
           </Typography>
           <Typography variant="h6" sx={{ color: 'text.secondary' }}>
             Discover our most popular and highly-rated villas
           </Typography>
         </Box>
+
+
 
         <Grid container spacing={4}>
           {featuredProperties.map((property) => (
@@ -441,7 +409,7 @@ export default function HomePage() {
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                     <Typography variant="h6" sx={{ 
-                      fontFamily: 'Gilda Display, serif',
+                      fontFamily: 'Playfair Display, serif',
                       color: 'var(--primary-dark)',
                       fontWeight: 'bold'
                     }}>
@@ -491,7 +459,7 @@ export default function HomePage() {
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 6 }}>
             <Typography variant="h3" sx={{ 
-              fontFamily: 'Gilda Display, serif',
+              fontFamily: 'Playfair Display, serif',
               color: 'var(--primary-dark)',
               mb: 2
             }}>
@@ -525,7 +493,7 @@ export default function HomePage() {
                   />
                   <CardContent sx={{ textAlign: 'center', p: 2 }}>
                     <Typography variant="h6" sx={{ 
-                      fontFamily: 'Gilda Display, serif',
+                      fontFamily: 'Playfair Display, serif',
                       color: 'var(--primary-dark)',
                       fontWeight: 'bold'
                     }}>
@@ -539,17 +507,42 @@ export default function HomePage() {
         </Container>
       </Box>
 
+
+
       {/* Luxe Jewels Loyalty Program Section */}
       <Box sx={{ 
-        background: 'linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%)', 
+        position: 'relative',
         py: 6,
         borderTop: '1px solid #F0F0F0',
-        borderBottom: '1px solid #F0F0F0'
+        borderBottom: '1px solid #F0F0F0',
+        backgroundImage: 'url("https://scdn.aro.ie/Sites/50/imperialhotels2022/uploads/images/FullLengthImages/Large/SB12129735_Bedford_Hotel_Interior__Reception._4500x3000.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(2px)',
+          zIndex: 1
+        }
       }}>
-        <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', mb: 5 }}>
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
+          <Box sx={{ 
+            textAlign: 'center', 
+            mb: 5,
+            background: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: 2,
+            p: 3,
+            backdropFilter: 'blur(10px)'
+          }}>
             <Typography variant="h4" sx={{ 
-              fontFamily: 'Gilda Display, serif',
+              fontFamily: 'Playfair Display, serif',
               color: '#3E2723',
               mb: 2,
               fontWeight: 700,
@@ -598,7 +591,7 @@ export default function HomePage() {
                   <Typography variant="h5" sx={{ 
                     fontWeight: 700, 
                     mb: 2,
-                    fontFamily: 'Gilda Display, serif',
+                    fontFamily: 'Playfair Display, serif',
                     letterSpacing: '0.5px'
                   }}>
                     Earn Jewels
@@ -668,7 +661,7 @@ export default function HomePage() {
                   <Typography variant="h5" sx={{ 
                     fontWeight: 700, 
                     mb: 2,
-                    fontFamily: 'Gilda Display, serif',
+                    fontFamily: 'Playfair Display, serif',
                     letterSpacing: '0.5px'
                   }}>
                     Redeem Rewards
@@ -716,7 +709,7 @@ export default function HomePage() {
       <Container maxWidth="lg" sx={{ py: 8 }}>
         <Box sx={{ textAlign: 'center', mb: 6 }}>
           <Typography variant="h3" sx={{ 
-            fontFamily: 'Gilda Display, serif',
+            fontFamily: 'Playfair Display, serif',
             color: 'var(--primary-dark)',
             mb: 2
           }}>
@@ -731,7 +724,7 @@ export default function HomePage() {
           <Grid item xs={12} md={8}>
             <Card sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ 
-                fontFamily: 'Gilda Display, serif',
+                fontFamily: 'Playfair Display, serif',
                 color: 'var(--primary-dark)',
                 mb: 3
               }}>
@@ -877,7 +870,7 @@ export default function HomePage() {
             Our Blog
           </Typography>
           <Typography variant="h3" sx={{ 
-            fontFamily: 'Gilda Display, serif',
+            fontFamily: 'Playfair Display, serif',
             color: 'var(--primary-dark)',
             mb: 4
           }}>
@@ -905,7 +898,7 @@ export default function HomePage() {
               <CardMedia
                 component="img"
                 height="240"
-                image="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"
+                image="https://visitmaldives.s3.amazonaws.com/go0mRMwZ/c/kxhw2dyl-shareable_image.jpg"
                 alt="Luxury villa amenities"
                 sx={{ objectFit: 'cover' }}
               />
@@ -949,7 +942,7 @@ export default function HomePage() {
               <CardMedia
                 component="img"
                 height="240"
-                image="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80"
+                image="https://www.travelanddestinations.com/wp-content/uploads/2019/05/Beautiful-places-in-Italy-Burano.jpg"
                 alt="Villa booking guide"
                 sx={{ objectFit: 'cover' }}
               />
@@ -1055,11 +1048,99 @@ export default function HomePage() {
 
 
 
-      {/* Callback Request Section */}
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+
+
+      {/* The LUXE Villa Experience Section */}
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Grid container spacing={6} alignItems="center">
+          {/* Left Side - Image */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ position: 'relative' }}>
+              <img
+                src="https://media.vrbo.com/lodging/84000000/83390000/83381400/83381369/c2e741a3.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill"
+                alt="Luxury Villa Experience"
+                style={{
+                  width: '100%',
+                  height: '500px',
+                  objectFit: 'cover',
+                  borderRadius: '12px'
+                }}
+              />
+            </Box>
+          </Grid>
+
+          {/* Right Side - Features Grid */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ pl: { xs: 0, md: 4 } }}>
+              <Typography 
+                variant="h3" 
+                sx={{ 
+                  fontFamily: 'Playfair Display, serif',
+                  color: 'var(--primary-dark)',
+                  mb: 3,
+                  whiteSpace: 'nowrap',
+                  textAlign: 'left',
+                  ml: { xs: -1, md: -2 }
+                }}
+              >
+                The LUXE Villa Experience
+              </Typography>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: 'text.secondary',
+                  mb: 4,
+                  lineHeight: 1.6,
+                  textAlign: 'left'
+                }}
+              >
+                Every villa in our collection is personally curated and verified through our rigorous 50-point Luxe Certification process. We don't just offer accommodations—we deliver transformative experiences where every detail is crafted for your absolute comfort and luxury.
+              </Typography>
+
+              <Grid container spacing={2}>
+                {[
+                  'Infinity Pools',
+                  'Private Chef',
+                  'Dedicated Butler',
+                  'Entertainment Hub',
+                  'Luxe Certified',
+                  'Bespoke Celebrations',
+                  'Designer Interiors',
+                  'Daily Housekeeping'
+                ].map((feature, index) => (
+                  <Grid item xs={12} sm={6} key={index}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      p: 2,
+                      bgcolor: 'var(--primary-light)',
+                      borderRadius: 2,
+                      mb: 1
+                    }}>
+                      <Box sx={{ 
+                        width: 8, 
+                        height: 8, 
+                        borderRadius: '50%', 
+                        bgcolor: 'var(--secondary-dark)', 
+                        mr: 2 
+                      }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500, color: 'white' }}>
+                        {feature}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
+
+      {/* Need Help Section */}
+      <Container maxWidth="lg" sx={{ py: 8 }}>
         <Box sx={{ textAlign: 'center', mb: 6 }}>
           <Typography variant="h3" sx={{ 
-            fontFamily: 'Gilda Display, serif',
+            fontFamily: 'Playfair Display, serif',
             color: 'var(--primary-dark)',
             mb: 2
           }}>
@@ -1105,7 +1186,7 @@ export default function HomePage() {
         fullWidth
       >
         <DialogTitle sx={{ 
-          fontFamily: 'Gilda Display, serif',
+          fontFamily: 'Playfair Display, serif',
           color: 'var(--primary-dark)'
         }}>
           Request Callback
@@ -1170,7 +1251,7 @@ export default function HomePage() {
             Cancel
           </Button>
           <Button 
-            onClick={handleCallbackSubmit}
+            onClick={() => handleCallbackSubmit()}
             variant="contained"
             sx={{
               bgcolor: 'var(--secondary-dark)',
@@ -1185,26 +1266,33 @@ export default function HomePage() {
         </DialogActions>
       </Dialog>
 
-      {/* No Villas Popup */}
-      <Dialog 
-        open={noVillasPopup.open} 
-        onClose={() => setNoVillasPopup({ open: false, destination: '' })}
-      >
-        <DialogTitle>No Villas Available</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Sorry, we don't have any villas available in {noVillasPopup.destination} at the moment. 
-            Please try searching for a different destination or contact us for assistance.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setNoVillasPopup({ open: false, destination: '' })}>
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+
 
 
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh' 
+      }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    }>
+      <HomePageContent />
+      <WhatsAppButton
+        phoneNumber="+91-8828279739"
+        message="Hello! I'm interested in your luxury villas. Can you help me find the perfect staycation experience?"
+        variant="floating"
+        size="large"
+        position={{ bottom: 20, right: 20 }}
+      />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Container, 
@@ -29,6 +29,7 @@ import {
   Instagram,
   LinkedIn
 } from '@mui/icons-material';
+import { contactManager, ContactInfo } from '@/lib/contactManager';
 
 export default function ContactUs() {
   const [formData, setFormData] = useState({
@@ -43,6 +44,22 @@ export default function ContactUs() {
     message: '',
     severity: 'success' as 'success' | 'error'
   });
+  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+
+  useEffect(() => {
+    // Initialize contact manager and load contact info
+    if (typeof window !== 'undefined') {
+      contactManager.initialize();
+      setContactInfo(contactManager.getContactInfo());
+      
+      // Subscribe to contact info changes
+      const unsubscribe = contactManager.subscribe((newContactInfo) => {
+        setContactInfo(newContactInfo);
+      });
+      
+      return unsubscribe;
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -51,66 +68,125 @@ export default function ContactUs() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate form submission
-    setSnackbar({
-      open: true,
-      message: 'Thank you for your message! We will get back to you soon.',
-      severity: 'success'
-    });
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      subject: '',
-      message: ''
-    });
+    
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setSnackbar({
+          open: true,
+          message: result.message || 'Thank you for your message! We will get back to you soon.',
+          severity: 'success'
+        });
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: result.error || 'Failed to send message. Please try again.',
+          severity: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to send message. Please try again.',
+        severity: 'error'
+      });
+    }
   };
 
-  const contactInfo = [
-    {
-      icon: <Email sx={{ fontSize: 40, color: '#d97706' }} />,
-      title: "Email Us",
-      details: "info@luxestaycations.com",
-      subtitle: "We'll respond within 24 hours"
-    },
-    {
-      icon: <Phone sx={{ fontSize: 40, color: '#d97706' }} />,
-      title: "Call Us",
-      details: "+91 98765 43210",
-      subtitle: "Available 24/7 for urgent queries"
-    },
-    {
-      icon: <LocationOn sx={{ fontSize: 40, color: '#d97706' }} />,
-      title: "Visit Us",
-      details: "Mumbai, Maharashtra, India",
-      subtitle: "Head office location"
-    },
-    {
-      icon: <AccessTime sx={{ fontSize: 40, color: '#d97706' }} />,
-      title: "Business Hours",
-      details: "Mon - Fri: 9:00 AM - 6:00 PM",
-      subtitle: "Weekend support available"
-    }
-  ];
+  const getContactInfoArray = () => {
+    if (!contactInfo) return [];
+    
+    return [
+      {
+        icon: <Email sx={{ fontSize: 40, color: '#d97706' }} />,
+        title: "Email Us",
+        details: contactInfo.email,
+        subtitle: "We'll respond within 24 hours"
+      },
+      {
+        icon: <Phone sx={{ fontSize: 40, color: '#d97706' }} />,
+        title: "Call Us",
+        details: contactInfo.phone,
+        subtitle: "Available 24/7 for urgent queries"
+      },
+      {
+        icon: <LocationOn sx={{ fontSize: 40, color: '#d97706' }} />,
+        title: "Visit Us",
+        details: contactInfo.address,
+        subtitle: "Head office location"
+      },
+      {
+        icon: <AccessTime sx={{ fontSize: 40, color: '#d97706' }} />,
+        title: "Business Hours",
+        details: contactInfo.businessHours,
+        subtitle: "Weekend support available"
+      }
+    ];
+  };
 
   return (
-    <Box sx={{ pt: 16, pb: 8 }}>
+    <Box>
       {/* Hero Section */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #2d1b1b 0%, #1a1a1a 50%, #0f0f0f 100%)',
+          background: 'url("https://luxgroup.vn/wp-content/uploads/2023/08/luxurytravel-vn-dulichsangtrong1-840x473.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           color: 'white',
-          py: 12,
-          mb: 8
+          minHeight: '60vh',
+          display: 'flex',
+          alignItems: 'center',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'url("https://luxgroup.vn/wp-content/uploads/2023/08/luxurytravel-vn-dulichsangtrong1-840x473.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'blur(2px)',
+            zIndex: -1
+          }
         }}
       >
-        <Container maxWidth="lg">
+        {/* Dark overlay for better text readability */}
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 1,
+        }} />
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
           <Box sx={{ textAlign: 'center' }}>
             <Typography 
               variant="h1" 
               sx={{ 
+                fontFamily: 'Playfair Display, serif',
                 fontSize: { xs: '2.5rem', md: '4rem' },
                 fontWeight: 700,
                 mb: 3,
@@ -138,13 +214,14 @@ export default function ContactUs() {
         </Container>
       </Box>
 
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ py: 8 }}>
         <Grid container spacing={8}>
           {/* Contact Form */}
           <Grid item xs={12} lg={7}>
             <Typography 
               variant="h2" 
               sx={{ 
+                fontFamily: 'Playfair Display, serif',
                 mb: 4,
                 fontSize: { xs: '2rem', md: '2.5rem' },
                 fontWeight: 600,
@@ -297,6 +374,7 @@ export default function ContactUs() {
             <Typography 
               variant="h2" 
               sx={{ 
+                fontFamily: 'Playfair Display, serif',
                 mb: 4,
                 fontSize: { xs: '2rem', md: '2.5rem' },
                 fontWeight: 600,
@@ -307,7 +385,7 @@ export default function ContactUs() {
             </Typography>
 
             <Grid container spacing={3}>
-              {contactInfo.map((info, index) => (
+              {getContactInfoArray().map((info, index) => (
                 <Grid item xs={12} sm={6} lg={12} key={index}>
                   <Card 
                     sx={{ 
@@ -397,6 +475,7 @@ export default function ContactUs() {
           <Typography 
             variant="h2" 
             sx={{ 
+              fontFamily: 'Playfair Display, serif',
               textAlign: 'center',
               mb: 6,
               fontSize: { xs: '2rem', md: '2.5rem' },

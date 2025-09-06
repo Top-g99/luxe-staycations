@@ -68,3 +68,6 @@ console.log('- Data will be accessible from any device');
 
 console.log('\n🚀 Ready to scale your Luxe Staycations platform!');
 
+
+
+

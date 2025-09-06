@@ -50,54 +50,8 @@ export let destinations: any[] = [
   }
 ];
 
-// Properties data
-export let properties: any[] = [
-  {
-    id: '1',
-    name: 'Casa Alphonso',
-    description: 'Luxurious villa with stunning mountain views',
-    location: 'Lonavala',
-    type: 'Villa',
-    price: 15000,
-    bedrooms: 3,
-    bathrooms: 2,
-    images: ['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80'],
-    featured: true,
-    amenities: ['WiFi', 'Pool', 'Kitchen', 'Parking'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: '2',
-    name: 'Mountain View Retreat',
-    description: 'Peaceful retreat with panoramic views',
-    location: 'Khandala',
-    type: 'Cottage',
-    price: 12000,
-    bedrooms: 2,
-    bathrooms: 1,
-    images: ['https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80'],
-    featured: true,
-    amenities: ['WiFi', 'Garden', 'Kitchen'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: '3',
-    name: 'Strawberry Villa',
-    description: 'Charming villa in the heart of Mahabaleshwar',
-    location: 'Mahabaleshwar',
-    type: 'Villa',
-    price: 18000,
-    bedrooms: 4,
-    bathrooms: 3,
-    images: ['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80'],
-    featured: false,
-    amenities: ['WiFi', 'Pool', 'Kitchen', 'Parking', 'Garden'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
+// Properties data - Start with empty array for dynamic data
+export let properties: any[] = [];
 
 // Helper functions for destinations
 export const destinationStore = {

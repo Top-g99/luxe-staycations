@@ -26,3 +26,6 @@ console.log('Test destinations created:', testDestinations.length);
 console.log('First destination:', testDestinations[0].name);
 console.log('Test completed successfully!');
 
+
+
+

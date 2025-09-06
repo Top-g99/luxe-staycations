@@ -37,7 +37,7 @@ export default function LuxuryVillaAmenitiesPage() {
         {/* Article Header */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h1" sx={{ 
-            fontFamily: 'Gilda Display, serif',
+            fontFamily: 'Playfair Display, serif',
             color: 'var(--primary-dark)',
             mb: 3,
             fontSize: { xs: '2rem', md: '3rem' }
@@ -91,7 +91,7 @@ export default function LuxuryVillaAmenitiesPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Introduction
           </Typography>
@@ -105,7 +105,7 @@ export default function LuxuryVillaAmenitiesPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Essential Luxury Amenities
           </Typography>
@@ -115,7 +115,7 @@ export default function LuxuryVillaAmenitiesPage() {
               <Typography variant="h5" sx={{ 
                 color: 'var(--primary-dark)',
                 mb: 2,
-                fontFamily: 'Gilda Display, serif'
+                fontFamily: 'Playfair Display, serif'
               }}>
                 1. Private Swimming Pool
               </Typography>
@@ -132,7 +132,7 @@ export default function LuxuryVillaAmenitiesPage() {
               <Typography variant="h5" sx={{ 
                 color: 'var(--primary-dark)',
                 mb: 2,
-                fontFamily: 'Gilda Display, serif'
+                fontFamily: 'Playfair Display, serif'
               }}>
                 2. Gourmet Kitchen
               </Typography>
@@ -149,7 +149,7 @@ export default function LuxuryVillaAmenitiesPage() {
               <Typography variant="h5" sx={{ 
                 color: 'var(--primary-dark)',
                 mb: 2,
-                fontFamily: 'Gilda Display, serif'
+                fontFamily: 'Playfair Display, serif'
               }}>
                 3. Smart Home Technology
               </Typography>
@@ -164,7 +164,7 @@ export default function LuxuryVillaAmenitiesPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Wellness and Relaxation
           </Typography>
@@ -177,7 +177,7 @@ export default function LuxuryVillaAmenitiesPage() {
           <Typography variant="h4" sx={{ 
             color: 'var(--primary-dark)',
             mb: 3,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Conclusion
           </Typography>
@@ -196,7 +196,7 @@ export default function LuxuryVillaAmenitiesPage() {
           <Typography variant="h5" sx={{ 
             color: 'var(--primary-dark)',
             mb: 2,
-            fontFamily: 'Gilda Display, serif'
+            fontFamily: 'Playfair Display, serif'
           }}>
             Ready to Experience Luxury?
           </Typography>

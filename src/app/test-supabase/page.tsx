@@ -11,33 +11,29 @@ import {
   Alert,
   CircularProgress,
   Grid,
-  TextField
+  Chip
 } from '@mui/material';
-import { getSupabaseClient, isSupabaseAvailable } from '@/lib/supabase';
+import { supabasePropertyManager } from '@/lib/supabasePropertyManager';
+import { isSupabaseAvailable, getSupabaseClient } from '@/lib/supabase';
 
-export default function TestSupabase() {
-  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [testData, setTestData] = useState<any[]>([]);
+export default function TestSupabasePage() {
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error' | 'not-configured'>('checking');
+  const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [newProperty, setNewProperty] = useState({
-    name: '',
-    description: '',
-    price: 0,
-    location: ''
-  });
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     testConnection();
   }, []);
 
   const testConnection = async () => {
+    setLoading(true);
+    setMessage('');
+
     try {
-      setConnectionStatus('checking');
-      
       if (!isSupabaseAvailable()) {
-        setConnectionStatus('error');
-        setErrorMessage('Supabase is not configured. Please check your environment variables.');
+        setConnectionStatus('not-configured');
+        setMessage('Supabase is not configured. Please check your .env.local file.');
         return;
       }
 
@@ -46,229 +42,214 @@ export default function TestSupabase() {
       // Test basic connection
       const { data, error } = await supabase
         .from('properties')
-        .select('*')
+        .select('count')
         .limit(1);
 
       if (error) {
         setConnectionStatus('error');
-        setErrorMessage(`Connection error: ${error.message}`);
-        return;
+        setMessage(`Connection error: ${error.message}`);
+      } else {
+        setConnectionStatus('connected');
+        setMessage('✅ Supabase connection successful!');
+        
+        // Load properties
+        await loadProperties();
       }
-
-      setConnectionStatus('connected');
-      setTestData(data || []);
-      
     } catch (error) {
       setConnectionStatus('error');
-      setErrorMessage(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadProperties = async () => {
+    try {
+      await supabasePropertyManager.initialize();
+      const props = supabasePropertyManager.getProperties();
+      setProperties(props);
+      setMessage(`✅ Loaded ${props.length} properties from Supabase`);
+    } catch (error) {
+      setMessage(`Error loading properties: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const addTestProperty = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const supabase = getSupabaseClient();
-      
-      const { data, error } = await supabase
-        .from('properties')
-        .insert([{
-          name: newProperty.name,
-          description: newProperty.description,
-          price: newProperty.price,
-          location: newProperty.location,
-          type: 'villa',
-          amenities: ['WiFi', 'Pool'],
-          images: [],
-          featured: false,
-          available: true,
-          max_guests: 4,
-          bedrooms: 2,
-          bathrooms: 2
-        }])
-        .select();
+      const newProperty = await supabasePropertyManager.addProperty({
+        name: `Test Property ${Date.now()}`,
+        location: 'Test Location',
+        description: 'This is a test property added via Supabase',
+        image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
+        price: 10000,
+        rating: 4.5,
+        reviews: 10,
+        type: 'Test Villa',
+        amenities: ['WiFi', 'Kitchen', 'Parking'],
+        featured: false
+      });
 
-      if (error) {
-        setErrorMessage(`Error adding property: ${error.message}`);
-        return;
-      }
-
-      setTestData(prev => [...prev, ...(data || [])]);
-      setNewProperty({ name: '', description: '', price: 0, location: '' });
-      
+      setProperties(prev => [...prev, newProperty]);
+      setMessage(`✅ Added test property: ${newProperty.name}`);
     } catch (error) {
-      setErrorMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setMessage(`Error adding property: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshData = async () => {
+  const clearProperties = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const supabase = getSupabaseClient();
-      
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('properties')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000');
 
       if (error) {
-        setErrorMessage(`Error fetching data: ${error.message}`);
-        return;
+        setMessage(`Error clearing properties: ${error.message}`);
+      } else {
+        setProperties([]);
+        setMessage('✅ Cleared all properties from Supabase');
       }
-
-      setTestData(data || []);
-      
     } catch (error) {
-      setErrorMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (connectionStatus) {
+      case 'connected': return 'success';
+      case 'error': return 'error';
+      case 'not-configured': return 'warning';
+      default: return 'info';
     }
   };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h3" component="h1" gutterBottom align="center" sx={{ color: '#704F49' }}>
         Supabase Connection Test
       </Typography>
 
-      {/* Connection Status */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Connection Status
-          </Typography>
-          
-          {connectionStatus === 'checking' && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <CircularProgress size={20} />
-              <Typography>Checking connection...</Typography>
-            </Box>
-          )}
-          
-          {connectionStatus === 'connected' && (
-            <Alert severity="success">
-              ✅ Supabase connection successful!
-            </Alert>
-          )}
-          
-          {connectionStatus === 'error' && (
-            <Alert severity="error">
-              ❌ {errorMessage}
-            </Alert>
-          )}
-          
-          <Button 
-            onClick={testConnection} 
-            variant="outlined" 
-            sx={{ mt: 2 }}
-          >
-            Test Connection
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Add Test Data */}
-      {connectionStatus === 'connected' && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Add Test Property
-            </Typography>
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Property Name"
-                  value={newProperty.name}
-                  onChange={(e) => setNewProperty(prev => ({ ...prev, name: e.target.value }))}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Location"
-                  value={newProperty.location}
-                  onChange={(e) => setNewProperty(prev => ({ ...prev, location: e.target.value }))}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Price"
-                  type="number"
-                  value={newProperty.price}
-                  onChange={(e) => setNewProperty(prev => ({ ...prev, price: Number(e.target.value) }))}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Description"
-                  value={newProperty.description}
-                  onChange={(e) => setNewProperty(prev => ({ ...prev, description: e.target.value }))}
-                />
-              </Grid>
-            </Grid>
-            
-            <Button 
-              onClick={addTestProperty}
-              variant="contained"
-              disabled={loading || !newProperty.name || !newProperty.location}
-              sx={{ mt: 2 }}
-            >
-              {loading ? <CircularProgress size={20} /> : 'Add Property'}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Display Test Data */}
-      {connectionStatus === 'connected' && (
+      <Box sx={{ mb: 4 }}>
         <Card>
           <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Test Data ({testData.length} properties)
+            <Typography variant="h6" gutterBottom>
+              Connection Status
+            </Typography>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              {loading ? (
+                <CircularProgress size={20} />
+              ) : (
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    backgroundColor: connectionStatus === 'connected' ? '#4caf50' : 
+                                   connectionStatus === 'error' ? '#f44336' : '#ff9800'
+                  }}
+                />
+              )}
+              <Typography variant="body1">
+                {connectionStatus === 'checking' && 'Checking connection...'}
+                {connectionStatus === 'connected' && 'Connected to Supabase'}
+                {connectionStatus === 'error' && 'Connection failed'}
+                {connectionStatus === 'not-configured' && 'Not configured'}
               </Typography>
-              <Button onClick={refreshData} variant="outlined" disabled={loading}>
-                {loading ? <CircularProgress size={20} /> : 'Refresh'}
+            </Box>
+
+            {message && (
+              <Alert severity={getStatusColor()} sx={{ mb: 2 }}>
+                {message}
+              </Alert>
+            )}
+
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Button
+                variant="contained"
+                onClick={testConnection}
+                disabled={loading}
+                sx={{ bgcolor: '#704F49', '&:hover': { bgcolor: '#5A3F3A' } }}
+              >
+                Test Connection
+              </Button>
+              
+              <Button
+                variant="outlined"
+                onClick={addTestProperty}
+                disabled={loading || connectionStatus !== 'connected'}
+                sx={{ borderColor: '#704F49', color: '#704F49', '&:hover': { borderColor: '#5A3F3A' } }}
+              >
+                Add Test Property
+              </Button>
+              
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={clearProperties}
+                disabled={loading || connectionStatus !== 'connected'}
+              >
+                Clear All Properties
               </Button>
             </Box>
-            
-            {testData.length === 0 ? (
-              <Typography color="text.secondary">
-                No properties found. Add some test data above.
-              </Typography>
-            ) : (
-              <Grid container spacing={2}>
-                {testData.map((property, index) => (
-                  <Grid item xs={12} sm={6} md={4} key={property.id || index}>
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Typography variant="h6">{property.name}</Typography>
-                        <Typography color="text.secondary">{property.location}</Typography>
-                        <Typography variant="body2">₹{property.price?.toLocaleString()}</Typography>
-                        <Typography variant="caption" display="block">
-                          {property.description}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
           </CardContent>
         </Card>
-      )}
+      </Box>
 
-      {/* Error Display */}
-      {errorMessage && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
+      <Box>
+        <Typography variant="h6" gutterBottom>
+          Properties in Database ({properties.length})
+        </Typography>
+        
+        <Grid container spacing={2}>
+          {properties.map((property) => (
+            <Grid item xs={12} sm={6} md={4} key={property.id}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    {property.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    {property.location}
+                  </Typography>
+                  <Typography variant="h6" color="primary">
+                    ₹{property.price?.toLocaleString()}/night
+                  </Typography>
+                  <Box sx={{ mt: 1 }}>
+                    <Chip 
+                      label={property.type} 
+                      size="small" 
+                      variant="outlined"
+                      sx={{ mr: 1, mb: 1 }}
+                    />
+                    {property.featured && (
+                      <Chip 
+                        label="Featured" 
+                        size="small" 
+                        color="primary"
+                        sx={{ mb: 1 }}
+                      />
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+        
+        {properties.length === 0 && (
+          <Alert severity="info">
+            No properties found in the database. Try adding a test property or check your connection.
+          </Alert>
+        )}
+      </Box>
     </Container>
   );
 }

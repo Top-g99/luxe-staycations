@@ -46,7 +46,7 @@ import {
   People
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
-import { propertyManager } from '@/lib/propertyManager';
+import { propertyManager } from '@/lib/dataManager';
 import { destinationManager } from '@/lib/destinationManager';
 import { callbackManager } from '@/lib/callbackManager';
 import { dealBannerManager } from '@/lib/dealBannerManager';
@@ -82,8 +82,8 @@ export default function AdminDashboard() {
   const loadDashboardData = () => {
     try {
       // Load properties
-      const properties = propertyManager.getAllProperties();
-      const featuredProperties = propertyManager.getFeaturedProperties();
+      const properties = propertyManager.getAll();
+      const featuredProperties = propertyManager.getFeatured();
       
       // Load destinations
       const destinations = destinationManager.getAllDestinations();
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ 
-          fontFamily: 'Gilda Display, serif',
+          fontFamily: 'Playfair Display, serif',
           fontWeight: 700,
           color: 'var(--primary-dark)',
           mb: 1
@@ -345,32 +345,42 @@ export default function AdminDashboard() {
                 </Button>
               </Box>
               <List>
-                {recentProperties.map((property) => (
-                  <ListItem key={property.id} sx={{ px: 0 }}>
-                    <ListItemAvatar>
-                      <Avatar src={property.image} alt={property.name}>
-                        <Villa />
-                      </Avatar>
-                    </ListItemAvatar>
+                {recentProperties.length > 0 ? (
+                  recentProperties.map((property) => (
+                    <ListItem key={property.id} sx={{ px: 0 }}>
+                      <ListItemAvatar>
+                        <Avatar src={property.image} alt={property.name}>
+                          <Villa />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={property.name}
+                        secondary={`${property.location} • ₹${property.price.toLocaleString()}/night`}
+                      />
+                      <Box>
+                        {property.featured && (
+                          <Chip 
+                            label="Featured" 
+                            size="small" 
+                            sx={{ 
+                              backgroundColor: 'var(--primary-light)',
+                              color: 'white',
+                              fontSize: '0.75rem'
+                            }} 
+                          />
+                        )}
+                      </Box>
+                    </ListItem>
+                  ))
+                ) : (
+                  <ListItem>
                     <ListItemText
-                      primary={property.name}
-                      secondary={`${property.location} • ₹${property.price.toLocaleString()}/night`}
+                      primary="No properties yet"
+                      secondary="Add your first property to get started"
+                      sx={{ textAlign: 'center', color: 'text.secondary' }}
                     />
-                    <Box>
-                      {property.featured && (
-                        <Chip 
-                          label="Featured" 
-                          size="small" 
-                          sx={{ 
-                            backgroundColor: 'var(--primary-light)',
-                            color: 'white',
-                            fontSize: '0.75rem'
-                          }} 
-                        />
-                      )}
-                    </Box>
                   </ListItem>
-                ))}
+                )}
               </List>
             </CardContent>
           </Card>
@@ -393,24 +403,34 @@ export default function AdminDashboard() {
                 </Button>
               </Box>
               <List>
-                {recentCallbacks.map((callback) => (
-                  <ListItem key={callback.id} sx={{ px: 0 }}>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: 'var(--primary-light)' }}>
-                        <Phone />
-                      </Avatar>
-                    </ListItemAvatar>
+                {recentCallbacks.length > 0 ? (
+                  recentCallbacks.map((callback) => (
+                    <ListItem key={callback.id} sx={{ px: 0 }}>
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: 'var(--primary-light)' }}>
+                          <Phone />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={callback.name}
+                        secondary={`${callback.phone} • ${callback.numberOfGuests} guests`}
+                      />
+                      <Chip 
+                        label={callback.status} 
+                        size="small" 
+                        color={callback.status === 'pending' ? 'warning' : 'success'}
+                      />
+                    </ListItem>
+                  ))
+                ) : (
+                  <ListItem>
                     <ListItemText
-                      primary={callback.name}
-                      secondary={`${callback.phone} • ${callback.numberOfGuests} guests`}
-                    />
-                    <Chip 
-                      label={callback.status} 
-                      size="small" 
-                      color={callback.status === 'pending' ? 'warning' : 'success'}
+                      primary="No callback requests yet"
+                      secondary="Callback requests will appear here when customers reach out"
+                      sx={{ textAlign: 'center', color: 'text.secondary' }}
                     />
                   </ListItem>
-                ))}
+                )}
               </List>
             </CardContent>
           </Card>

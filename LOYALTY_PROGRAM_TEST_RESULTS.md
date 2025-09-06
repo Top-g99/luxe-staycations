@@ -154,3 +154,6 @@ If you encounter issues after running the schema setup:
 **🎯 Goal:** Complete the loyalty program implementation and achieve 5/5 test score
 
 
+
+
+

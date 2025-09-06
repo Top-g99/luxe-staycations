@@ -7,6 +7,7 @@ interface SearchFormData {
   checkIn: string;
   checkOut: string;
   guests: string;
+  amenities?: string[];
 }
 
 interface GuestInfo {
@@ -125,6 +126,33 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         : booking
     ));
     console.log('Booking updated:', id, updates);
+    
+    // Also sync with DataManager-based bookingManager for admin dashboard
+    if (typeof window !== 'undefined') {
+      import('@/lib/dataManager').then(({ bookingManager }) => {
+        try {
+          const existingBooking = bookingManager.getById(id);
+          if (existingBooking) {
+            // Update the booking in bookingManager (automatically saves to Supabase)
+            bookingManager.update(id, {
+              guestName: updates.guestInfo ? `${updates.guestInfo.firstName || ''} ${updates.guestInfo.lastName || ''}`.trim() : existingBooking.guestName,
+              guestEmail: updates.guestInfo?.email || existingBooking.guestEmail,
+              guestPhone: updates.guestInfo?.phone || existingBooking.guestPhone,
+              propertyId: updates.bookingDetails?.propertyId || existingBooking.propertyId,
+              checkIn: updates.bookingDetails?.checkIn || existingBooking.checkIn,
+              checkOut: updates.bookingDetails?.checkOut || existingBooking.checkOut,
+              guests: updates.bookingDetails?.guests ? parseInt(updates.bookingDetails.guests) : (typeof existingBooking.guests === 'string' ? parseInt(existingBooking.guests) : existingBooking.guests),
+              totalAmount: updates.bookingDetails?.total || existingBooking.totalAmount,
+              status: 'confirmed',
+              specialRequests: updates.guestInfo?.specialRequests || existingBooking.specialRequests || ''
+            });
+            console.log('Successfully synced booking update to admin dashboard via DataManager');
+          }
+        } catch (error) {
+          console.error('Error syncing booking update to admin dashboard:', error);
+        }
+      });
+    }
   };
 
   const getBookingById = (id: string) => {
@@ -161,7 +189,10 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const syncToAdminDashboard = () => {
     // This will trigger real-time updates to admin dashboard
     console.log('Syncing booking data to admin dashboard...');
-    // The admin dashboard will automatically pick up changes through localStorage
+    
+    // The DataManager-based managers automatically sync to Supabase
+    // and notify subscribers, so no manual sync is needed
+    console.log('DataManager automatically handles Supabase sync and real-time updates');
   };
 
   return (

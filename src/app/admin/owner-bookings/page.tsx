@@ -37,6 +37,7 @@ import {
   Refresh,
   Notifications
 } from '@mui/icons-material';
+import { supabaseHostManager } from '@/lib/supabaseHostManager';
 import { ownerBookingManager } from '@/lib/ownerBookingManager';
 import { typographyStyles, buttonStyles, cardStyles, iconStyles } from '@/components/BrandStyles';
 
@@ -52,19 +53,26 @@ export default function OwnerBookingsPage() {
 
   useEffect(() => {
     loadOwnerBookings();
-    const unsubscribe = ownerBookingManager.subscribe(loadOwnerBookings);
-    return unsubscribe;
+    // Set up auto-refresh every 30 seconds to get latest bookings
+    const interval = setInterval(loadOwnerBookings, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const loadOwnerBookings = () => {
+  const loadOwnerBookings = async () => {
     try {
-      const allBookings = ownerBookingManager.getAllOwnerBookings();
+      setLoading(true);
+      // Fetch all owner bookings from Supabase
+      const allBookings = await supabaseHostManager.getAllOwnerBookings();
       setOwnerBookings(allBookings);
       setLoading(false);
     } catch (error) {
       console.error('Error loading owner bookings:', error);
       setLoading(false);
     }
+  };
+
+  const handleRefresh = () => {
+    loadOwnerBookings();
   };
 
   const handleViewBooking = (booking: any) => {
@@ -111,7 +119,7 @@ export default function OwnerBookingsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved': return 'success';
+      case 'confirmed': return 'success';
       case 'rejected': return 'error';
       case 'pending': return 'warning';
       case 'completed': return 'info';
@@ -121,7 +129,7 @@ export default function OwnerBookingsPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved': return <CheckCircle />;
+      case 'confirmed': return <CheckCircle />;
       case 'rejected': return <Cancel />;
       case 'pending': return <Notifications />;
       default: return <Notifications />;
@@ -188,7 +196,7 @@ export default function OwnerBookingsPage() {
           <Card sx={{ ...cardStyles.primary }}>
             <CardContent>
               <Typography variant="h4" sx={{ color: 'success.main', fontWeight: 'bold' }}>
-                {ownerBookings.filter(b => b.status === 'approved').length}
+                {ownerBookings.filter(b => b.status === 'confirmed').length}
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 Approved
@@ -227,7 +235,7 @@ export default function OwnerBookingsPage() {
                   <TableCell>Check-in</TableCell>
                   <TableCell>Check-out</TableCell>
                   <TableCell>Guests</TableCell>
-                  <TableCell>Purpose</TableCell>
+                  <TableCell>Special Requests</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
@@ -238,10 +246,10 @@ export default function OwnerBookingsPage() {
                     <TableCell>
                       <Box>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {booking.ownerName}
+                          {booking.hostName || 'Unknown Host'}
                         </Typography>
                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                          {booking.ownerEmail}
+                          {booking.guestEmail}
                         </Typography>
                       </Box>
                     </TableCell>
@@ -263,11 +271,9 @@ export default function OwnerBookingsPage() {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={booking.purpose}
-                        size="small"
-                        variant="outlined"
-                      />
+                      <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                        {booking.specialRequests || 'None'}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip

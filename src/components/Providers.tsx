@@ -3,6 +3,8 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { BookingProvider } from '@/contexts/BookingContext';
+import { NotificationsProvider } from '@/contexts/NotificationsContext';
+import { HostProvider } from '@/contexts/HostContext';
 
 const theme = createTheme({
   palette: {
@@ -40,9 +42,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BookingProvider>
-        {children}
-      </BookingProvider>
+      <NotificationsProvider>
+        <HostProvider>
+          <BookingProvider>
+            {children}
+          </BookingProvider>
+        </HostProvider>
+      </NotificationsProvider>
     </ThemeProvider>
   );
 }

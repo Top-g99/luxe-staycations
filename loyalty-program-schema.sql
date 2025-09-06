@@ -323,3 +323,6 @@ GRANT EXECUTE ON FUNCTION redeem_jewels(UUID, INTEGER) TO authenticated;
 SELECT 'Loyalty Program Schema Created Successfully!' as status;
 
 
+
+
+

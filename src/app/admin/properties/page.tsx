@@ -19,13 +19,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Switch,
-  FormControlLabel,
   Alert,
   Snackbar,
   LinearProgress,
@@ -47,73 +40,80 @@ import {
   LocalParking,
   Kitchen
 } from '@mui/icons-material';
-import { propertyManager } from '@/lib/propertyManager';
+import { propertyManager } from '@/lib/dataManager';
+import PropertyEditDialog from '@/components/PropertyEditDialog';
 
 interface Property {
   id: string;
   name: string;
   location: string;
   description: string;
-  image: string;
   price: number;
   rating: number;
   reviews: number;
-  type: string;
+  maxGuests: number;
   amenities: string[];
-  featured?: boolean;
-  bedrooms?: number;
-  bathrooms?: number;
-  maxGuests?: number;
-  hostName?: string;
-  hostImage?: string;
-  images?: string[];
-  highlights?: string[];
-  squareFootage?: number;
-  yearBuilt?: number;
-  distanceToBeach?: number;
-  distanceToCity?: number;
-  primaryView?: string;
-  propertyStyle?: string;
-  policies?: {
-    checkIn: string;
-    checkOut: string;
-    cancellation: string;
-  };
+  image: string;
+  featured: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function PropertiesAdmin() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [propertyEditDialogOpen, setPropertyEditDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as any });
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    location: '',
-    description: '',
-    image: '',
-    price: '',
-    type: '',
-    bedrooms: '',
-    bathrooms: '',
-    maxGuests: '',
-    hostName: '',
-    featured: false,
-    amenities: [] as string[],
-    highlights: [] as string[]
-  });
-
   useEffect(() => {
     loadProperties();
   }, []);
 
-  const loadProperties = () => {
+  const loadProperties = async () => {
     try {
-      const allProperties = propertyManager.getAllProperties();
+      console.log('Loading properties...');
+      console.log('PropertyManager instance:', propertyManager);
+      
+      // Ensure the property manager is initialized
+      await propertyManager.initialize();
+      
+      const allProperties = propertyManager.getAll();
+      console.log('All properties loaded:', allProperties);
+      
+      // Check for duplicate properties
+      const duplicates = findDuplicateProperties(allProperties);
+      if (duplicates.length > 0) {
+        console.log('Found duplicate properties:', duplicates);
+        setSnackbar({
+          open: true,
+          message: `Found ${duplicates.length} duplicate properties. Check the console for details.`,
+          severity: 'warning'
+        });
+      }
+      
+      // If no properties found, check localStorage directly
+      if (allProperties.length === 0) {
+        console.log('No properties found in DataManager, checking localStorage...');
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('luxe_properties');
+          console.log('localStorage data:', stored);
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored);
+              console.log('Parsed localStorage data:', parsed);
+              setProperties(parsed);
+              setLoading(false);
+              return;
+            } catch (e) {
+              console.error('Error parsing localStorage:', e);
+            }
+          }
+        }
+      }
+      
       setProperties(allProperties);
       setLoading(false);
     } catch (error) {
@@ -122,44 +122,50 @@ export default function PropertiesAdmin() {
     }
   };
 
+  // Helper function to find duplicate properties
+  const findDuplicateProperties = (properties: Property[]) => {
+    const duplicates: Property[][] = [];
+    const seen = new Map<string, Property[]>();
+    
+    properties.forEach(property => {
+      const key = `${property.name}-${property.location}`;
+      if (seen.has(key)) {
+        seen.get(key)!.push(property);
+      } else {
+        seen.set(key, [property]);
+      }
+    });
+    
+    // Find groups with more than one property
+    seen.forEach((group, key) => {
+      if (group.length > 1) {
+        duplicates.push(group);
+        console.log(`Duplicate properties found for key "${key}":`, group);
+      }
+    });
+    
+    return duplicates;
+  };
+
   const handleAddProperty = () => {
     setEditingProperty(null);
-    setFormData({
-      name: '',
-      location: '',
-      description: '',
-      image: '',
-      price: '',
-      type: '',
-      bedrooms: '',
-      bathrooms: '',
-      maxGuests: '',
-      hostName: '',
-      featured: false,
-      amenities: [],
-      highlights: []
-    });
-    setDialogOpen(true);
+    setPropertyEditDialogOpen(true);
   };
 
   const handleEditProperty = (property: Property) => {
     setEditingProperty(property);
-    setFormData({
-      name: property.name,
-      location: property.location,
-      description: property.description,
-      image: property.image,
-      price: property.price.toString(),
-      type: property.type,
-      bedrooms: property.bedrooms?.toString() || '',
-      bathrooms: property.bathrooms?.toString() || '',
-      maxGuests: property.maxGuests?.toString() || '',
-      hostName: property.hostName || '',
-      featured: property.featured || false,
-      amenities: property.amenities || [],
-      highlights: property.highlights || []
+    setPropertyEditDialogOpen(true);
+  };
+
+  const handlePropertySaved = () => {
+    loadProperties();
+    setPropertyEditDialogOpen(false);
+    setEditingProperty(null);
+    setSnackbar({
+      open: true,
+      message: editingProperty ? 'Property updated successfully!' : 'Property created successfully!',
+      severity: 'success'
     });
-    setDialogOpen(true);
   };
 
   const handleDeleteProperty = (property: Property) => {
@@ -167,447 +173,237 @@ export default function PropertiesAdmin() {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (propertyToDelete) {
       try {
-        propertyManager.deleteProperty(propertyToDelete.id);
-        loadProperties();
-        setSnackbar({ open: true, message: 'Property deleted successfully', severity: 'success' });
+        console.log('Deleting property:', propertyToDelete.id);
+        
+        // Use the DataManager to delete the property
+        const deleted = await propertyManager.delete(propertyToDelete.id);
+        
+        if (deleted) {
+          // Remove from local state
+          setProperties(properties.filter(p => p.id !== propertyToDelete.id));
+          
+          setSnackbar({
+            open: true,
+            message: 'Property deleted successfully!',
+            severity: 'success'
+          });
+        } else {
+          setSnackbar({
+            open: true,
+            message: 'Failed to delete property',
+            severity: 'error'
+          });
+        }
       } catch (error) {
-        setSnackbar({ open: true, message: 'Error deleting property', severity: 'error' });
+        console.error('Error deleting property:', error);
+        setSnackbar({
+          open: true,
+          message: 'Failed to delete property',
+          severity: 'error'
+        });
       }
     }
     setDeleteDialogOpen(false);
     setPropertyToDelete(null);
   };
 
-  const handleSaveProperty = () => {
-    try {
-      const propertyData = {
-        name: formData.name,
-        location: formData.location,
-        description: formData.description,
-        image: formData.image,
-        price: parseInt(formData.price),
-        type: formData.type,
-        bedrooms: parseInt(formData.bedrooms) || undefined,
-        bathrooms: parseInt(formData.bathrooms) || undefined,
-        maxGuests: parseInt(formData.maxGuests) || undefined,
-        hostName: formData.hostName,
-        featured: formData.featured,
-        amenities: formData.amenities,
-        highlights: formData.highlights,
-        rating: 4.5,
-        reviews: 0,
-        images: [formData.image],
-        squareFootage: 2000,
-        yearBuilt: 2020,
-        distanceToBeach: 0,
-        distanceToCity: 5,
-        primaryView: 'Mountain',
-        propertyStyle: 'Modern',
-        policies: {
-          checkIn: '3:00 PM',
-          checkOut: '11:00 AM',
-          cancellation: 'Free cancellation up to 7 days before check-in'
-        }
-      };
-
-      if (editingProperty) {
-        propertyManager.updateProperty(editingProperty.id, propertyData);
-        setSnackbar({ open: true, message: 'Property updated successfully', severity: 'success' });
-      } else {
-        propertyManager.addProperty(propertyData);
-        setSnackbar({ open: true, message: 'Property added successfully', severity: 'success' });
-      }
-
-      loadProperties();
-      setDialogOpen(false);
-      setEditingProperty(null);
-    } catch (error) {
-      setSnackbar({ open: true, message: 'Error saving property', severity: 'error' });
-    }
-  };
-
-  const handleSnackbarClose = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
-
   const getAmenityIcon = (amenity: string) => {
-    switch (amenity.toLowerCase()) {
-      case 'wifi': return <Wifi />;
-      case 'pool': return <Pool />;
-      case 'parking': return <LocalParking />;
-      case 'kitchen': return <Kitchen />;
-      case 'garden': return <Villa />;
-      default: return <Villa />;
-    }
+    const amenityLower = amenity.toLowerCase();
+    if (amenityLower.includes('pool')) return <Pool />;
+    if (amenityLower.includes('wifi')) return <Wifi />;
+    if (amenityLower.includes('parking')) return <LocalParking />;
+    if (amenityLower.includes('kitchen')) return <Kitchen />;
+    return <Villa />;
   };
 
   if (loading) {
     return (
-      <Box sx={{ width: '100%' }}>
+      <Box sx={{ p: 3 }}>
         <LinearProgress />
+        <Typography variant="h6" sx={{ mt: 2, textAlign: 'center' }}>
+          Loading properties...
+        </Typography>
       </Box>
     );
   }
 
   return (
-    <Box>
+    <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ 
-          fontFamily: 'Gilda Display, serif',
-          fontWeight: 700,
-          color: 'var(--primary-dark)',
-          mb: 1
-        }}>
-          Property Management
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" sx={{ color: 'var(--primary-dark)', fontWeight: 600 }}>
+          🏠 Property Management
         </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          Manage your villa properties, update details, and control featured listings.
-        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={handleAddProperty}
+          sx={{
+            bgcolor: 'var(--primary-dark)',
+            '&:hover': { bgcolor: 'var(--primary-light)' }
+          }}
+        >
+          Add New Property
+        </Button>
       </Box>
 
-      {/* Stats */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {properties.length}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                    Total Properties
-                  </Typography>
-                </Box>
-                <Villa sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {properties.filter(p => p.featured).length}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                    Featured Properties
-                  </Typography>
-                </Box>
-                <Star sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {properties.reduce((sum, p) => sum + (p.bedrooms || 0), 0)}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                    Total Bedrooms
-                  </Typography>
-                </Box>
-                <Hotel sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', color: 'white' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    ₹{properties.reduce((sum, p) => sum + p.price, 0).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                    Total Value
-                  </Typography>
-                </Box>
-                <AttachMoney sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
       {/* Properties List */}
-      <Card>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              All Properties ({properties.length})
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={handleAddProperty}
-              sx={{
-                background: 'var(--primary-dark)',
-                '&:hover': { background: 'var(--primary-light)' }
-              }}
-            >
-              Add Property
-            </Button>
-          </Box>
+      <Grid container spacing={3}>
+        {properties.map((property) => (
+          <Grid item xs={12} md={6} lg={4} key={property.id}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ flexGrow: 1 }}>
+                {/* Property Header */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 1 }}>
+                      {property.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <LocationOn fontSize="small" />
+                      {property.location}
+                    </Typography>
+                  </Box>
+                  {property.featured && (
+                    <Chip 
+                      label="Featured" 
+                      color="secondary" 
+                      size="small"
+                      sx={{ ml: 1 }}
+                    />
+                  )}
+                </Box>
 
-          <List>
-            {properties.map((property) => (
-              <ListItem
-                key={property.id}
-                sx={{
-                  border: '1px solid #e0e0e0',
-                  borderRadius: 2,
-                  mb: 2,
-                  backgroundColor: 'white'
-                }}
-              >
-                <ListItemAvatar>
-                  <Avatar src={property.image} alt={property.name} sx={{ width: 80, height: 80 }}>
-                    <Villa />
-                  </Avatar>
-                </ListItemAvatar>
-                
-                <ListItemText
-                  primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <Typography component="span" variant="h6" sx={{ fontWeight: 600 }}>
-                        {property.name}
-                      </Typography>
-                      {property.featured && (
-                        <Chip 
-                          label="Featured" 
-                          size="small" 
-                          sx={{ 
-                            backgroundColor: 'var(--primary-light)',
-                            color: 'white'
-                          }} 
+                {/* Property Description */}
+                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                  {property.description}
+                </Typography>
+
+                {/* Property Stats */}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  <Chip 
+                    icon={<AttachMoney />} 
+                    label={`₹${property.price}/night`} 
+                    size="small" 
+                    color="primary"
+                  />
+                  <Chip 
+                    icon={<Group />} 
+                    label={`${property.maxGuests} guests`} 
+                    size="small" 
+                    variant="outlined"
+                  />
+                  {property.rating > 0 && (
+                    <Chip 
+                      icon={<Star />} 
+                      label={`${property.rating}★`} 
+                      size="small" 
+                      variant="outlined"
+                    />
+                  )}
+                </Box>
+
+                {/* Top Amenities */}
+                {property.amenities && property.amenities.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', mb: 1 }}>
+                      Key Amenities ({property.amenities.length})
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {property.amenities.slice(0, 4).map((amenity, index) => (
+                        <Chip
+                          key={index}
+                          icon={getAmenityIcon(amenity)}
+                          label={amenity}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontSize: '0.7rem' }}
+                        />
+                      ))}
+                      {property.amenities.length > 4 && (
+                        <Chip
+                          label={`+${property.amenities.length - 4} more`}
+                          size="small"
+                          color="primary"
+                          sx={{ fontSize: '0.7rem' }}
                         />
                       )}
                     </Box>
-                  }
-                  secondary={
-                    <Box component="span">
-                      <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />
-                          <Typography component="span" variant="body2" sx={{ color: 'text.secondary' }}>
-                            {property.location}
-                          </Typography>
-                        </Box>
-                        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Star sx={{ fontSize: 16, color: '#ffd700' }} />
-                          <Typography component="span" variant="body2">
-                            {property.rating} ({property.reviews} reviews)
-                          </Typography>
-                        </Box>
-                        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Group sx={{ fontSize: 16, color: 'text.secondary' }} />
-                          <Typography component="span" variant="body2" sx={{ color: 'text.secondary' }}>
-                            {property.maxGuests} guests
-                          </Typography>
-                        </Box>
-                      </Box>
-                      
-                      <Typography component="span" variant="body2" sx={{ mb: 1 }}>
-                        {property.description}
-                      </Typography>
-                      
-                      <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                        {property.amenities.slice(0, 5).map((amenity, index) => (
-                          <Chip
-                            key={index}
-                            icon={getAmenityIcon(amenity)}
-                            label={amenity}
-                            size="small"
-                            variant="outlined"
-                            sx={{ fontSize: '0.75rem' }}
-                          />
-                        ))}
-                        {property.amenities.length > 5 && (
-                          <Chip
-                            label={`+${property.amenities.length - 5} more`}
-                            size="small"
-                            variant="outlined"
-                            sx={{ fontSize: '0.75rem' }}
-                          />
-                        )}
-                      </Box>
-                    </Box>
-                  }
-                />
-                
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: 'var(--primary-dark)' }}>
-                    ₹{property.price.toLocaleString()}/night
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEditProperty(property)}
-                      sx={{ color: 'var(--primary-dark)' }}
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteProperty(property)}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <Delete />
-                    </IconButton>
                   </Box>
-                </Box>
-              </ListItem>
-            ))}
-          </List>
-        </CardContent>
-      </Card>
+                )}
 
-      {/* Add/Edit Property Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editingProperty ? 'Edit Property' : 'Add New Property'}
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Property Name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Description"
-                multiline
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Image URL"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Price per Night"
-                type="number"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Property Type</InputLabel>
-                <Select
-                  value={formData.type}
-                  label="Property Type"
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                >
-                  <MenuItem value="Villa">Villa</MenuItem>
-                  <MenuItem value="Cottage">Cottage</MenuItem>
-                  <MenuItem value="Apartment">Apartment</MenuItem>
-                  <MenuItem value="Bungalow">Bungalow</MenuItem>
-                  <MenuItem value="Luxury Villa">Luxury Villa</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Bedrooms"
-                type="number"
-                value={formData.bedrooms}
-                onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Bathrooms"
-                type="number"
-                value={formData.bathrooms}
-                onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Max Guests"
-                type="number"
-                value={formData.maxGuests}
-                onChange={(e) => setFormData({ ...formData, maxGuests: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Host Name"
-                value={formData.hostName}
-                onChange={(e) => setFormData({ ...formData, hostName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.featured}
-                    onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                  />
-                }
-                label="Featured Property"
-              />
-            </Grid>
+                {/* Action Buttons */}
+                <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Edit />}
+                    onClick={() => handleEditProperty(property)}
+                    fullWidth
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Delete />}
+                    onClick={() => handleDeleteProperty(property)}
+                    color="error"
+                    fullWidth
+                  >
+                    Delete
+                  </Button>
+                </Box>
+                
+                {/* Duplicate Warning */}
+                {properties.filter(p => p.name === property.name && p.location === property.location).length > 1 && (
+                  <Box sx={{ mt: 1, p: 1, bgcolor: 'warning.light', borderRadius: 1 }}>
+                    <Typography variant="caption" sx={{ color: 'warning.dark', fontWeight: 600 }}>
+                      ⚠️ Duplicate Property Detected
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>
-            Cancel
-          </Button>
+        ))}
+      </Grid>
+
+      {/* Empty State */}
+      {properties.length === 0 && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Villa sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+            No properties found
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Start by adding your first luxury villa property
+          </Typography>
           <Button
-            onClick={handleSaveProperty}
             variant="contained"
+            startIcon={<Add />}
+            onClick={handleAddProperty}
             sx={{
-              background: 'var(--primary-dark)',
-              '&:hover': { background: 'var(--primary-light)' }
+              bgcolor: 'var(--primary-dark)',
+              '&:hover': { bgcolor: 'var(--primary-light)' }
             }}
           >
-            {editingProperty ? 'Update' : 'Add'} Property
+            Add Your First Property
           </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      )}
+
+      {/* Enhanced Property Edit Dialog */}
+      <PropertyEditDialog
+        open={propertyEditDialogOpen}
+        onClose={() => setPropertyEditDialogOpen(false)}
+        property={editingProperty}
+        mode={editingProperty ? 'edit' : 'create'}
+        onPropertySaved={handlePropertySaved}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
@@ -631,9 +427,9 @@ export default function PropertiesAdmin() {
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
-        onClose={handleSnackbarClose}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
           {snackbar.message}
         </Alert>
       </Snackbar>
@@ -641,14 +437,14 @@ export default function PropertiesAdmin() {
       {/* Floating Action Button */}
       <Fab
         color="primary"
-        aria-label="add"
+        aria-label="add property"
         onClick={handleAddProperty}
         sx={{
           position: 'fixed',
           bottom: 16,
           right: 16,
-          backgroundColor: 'var(--primary-dark)',
-          '&:hover': { backgroundColor: 'var(--primary-light)' }
+          bgcolor: 'var(--primary-dark)',
+          '&:hover': { bgcolor: 'var(--primary-light)' }
         }}
       >
         <Add />

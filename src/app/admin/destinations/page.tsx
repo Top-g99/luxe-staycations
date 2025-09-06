@@ -38,16 +38,18 @@ import {
   Image,
   PhotoCamera
 } from '@mui/icons-material';
-import { destinationManager } from '@/lib/destinationManager';
+import { destinationManager } from '@/lib/dataManager';
 
 interface Destination {
   id: string;
   name: string;
+  description: string;
   image: string;
-  description?: string;
-  featured?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  location: string;
+  attractions: string[];
+  featured: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function DestinationsAdmin() {
@@ -77,7 +79,8 @@ export default function DestinationsAdmin() {
 
   const loadDestinations = async () => {
     try {
-      const allDestinations = destinationManager.getAllDestinations();
+      await destinationManager.initialize();
+      const allDestinations = destinationManager.getAll();
       setDestinations(allDestinations);
       setLoading(false);
     } catch (error) {
@@ -117,7 +120,7 @@ export default function DestinationsAdmin() {
   const confirmDelete = async () => {
     if (destinationToDelete) {
       try {
-        await destinationManager.deleteDestination(destinationToDelete.id);
+        await destinationManager.delete(destinationToDelete.id);
         loadDestinations();
         setSnackbar({ open: true, message: 'Destination deleted successfully', severity: 'success' });
       } catch (error) {
@@ -134,14 +137,16 @@ export default function DestinationsAdmin() {
         name: formData.name,
         image: formData.image,
         description: formData.description,
+        location: formData.name, // Using name as location for now
+        attractions: [], // Empty array for now
         featured: formData.featured
       };
 
       if (editingDestination) {
-        await destinationManager.updateDestination(editingDestination.id, destinationData);
+        await destinationManager.update(editingDestination.id, destinationData);
         setSnackbar({ open: true, message: 'Destination updated successfully', severity: 'success' });
       } else {
-        await destinationManager.addDestination(destinationData);
+        await destinationManager.create(destinationData);
         setSnackbar({ open: true, message: 'Destination added successfully', severity: 'success' });
       }
 
@@ -197,7 +202,7 @@ export default function DestinationsAdmin() {
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ 
-          fontFamily: 'Gilda Display, serif',
+          fontFamily: 'Playfair Display, serif',
           fontWeight: 700,
           color: '#5D4037',
           mb: 1,
@@ -230,7 +235,7 @@ export default function DestinationsAdmin() {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: 'Gilda Display, serif' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: 'Playfair Display, serif' }}>
                     {destinations.length}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9, fontFamily: 'Nunito, sans-serif' }}>
@@ -257,7 +262,7 @@ export default function DestinationsAdmin() {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: 'Gilda Display, serif' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: 'Playfair Display, serif' }}>
                     {destinations.filter(d => d.featured).length}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9, fontFamily: 'Nunito, sans-serif' }}>
@@ -284,7 +289,7 @@ export default function DestinationsAdmin() {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: 'Gilda Display, serif' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: 'Playfair Display, serif' }}>
                     {destinations.filter(d => d.description && d.description.length > 0).length}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9, fontFamily: 'Nunito, sans-serif' }}>
@@ -311,7 +316,7 @@ export default function DestinationsAdmin() {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: 'Gilda Display, serif' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: 'Playfair Display, serif' }}>
                     {destinations.filter(d => d.image && d.image.length > 0).length}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.8, fontFamily: 'Nunito, sans-serif' }}>
@@ -335,7 +340,7 @@ export default function DestinationsAdmin() {
             <Typography variant="h5" sx={{ 
               fontWeight: 600, 
               color: '#5D4037',
-              fontFamily: 'Gilda Display, serif',
+              fontFamily: 'Playfair Display, serif',
               letterSpacing: '0.5px'
             }}>
               All Destinations ({destinations.length})
@@ -496,7 +501,7 @@ export default function DestinationsAdmin() {
         <DialogTitle sx={{ 
           background: 'linear-gradient(135deg, #5D4037 0%, #8D6E63 100%)',
           color: 'white',
-          fontFamily: 'Gilda Display, serif',
+          fontFamily: 'Playfair Display, serif',
           fontWeight: 600
         }}>
           {editingDestination ? 'Edit Destination' : 'Add New Destination'}

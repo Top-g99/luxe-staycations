@@ -1,0 +1,747 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Grid,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tabs,
+  Tab,
+  Alert,
+  CircularProgress,
+  IconButton,
+  Tooltip,
+  Divider,
+  LinearProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Switch,
+  FormControlLabel,
+  TextField,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl
+} from '@mui/material';
+import {
+  Add,
+  Edit,
+  Delete,
+  Download,
+  Upload,
+  Refresh,
+  Storage,
+  Cloud,
+  CheckCircle,
+  Error,
+  Warning,
+  Visibility,
+  VisibilityOff,
+  Backup,
+  Restore,
+  Analytics,
+  Settings,
+  Sync,
+  Clear,
+  Search,
+  FilterList
+} from '@mui/icons-material';
+import {
+  masterDataManager,
+  propertyManager,
+  destinationManager,
+  bookingManager,
+  callbackManager,
+  dealBannerManager,
+  heroBackgroundManager,
+  settingsManager,
+  userManager,
+  profileManager,
+  reviewManager,
+  paymentManager,
+  loyaltyManager,
+  couponManager,
+  specialRequestManager
+} from '@/lib/dataManager';
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`admin-tabpanel-${index}`}
+      aria-labelledby={`admin-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
+export default function AdminDataMonitorPage() {
+  const [tabValue, setTabValue] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking');
+  const [stats, setStats] = useState<any>({});
+  const [syncStatus, setSyncStatus] = useState<Record<string, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [showInactive, setShowInactive] = useState(false);
+  const [alert, setAlert] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [backupDialogOpen, setBackupDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+
+  const managers = [
+    { name: 'Properties', manager: propertyManager, type: 'properties', icon: '🏠' },
+    { name: 'Destinations', manager: destinationManager, type: 'destinations', icon: '🌍' },
+    { name: 'Bookings', manager: bookingManager, type: 'bookings', icon: '📅' },
+    { name: 'Callbacks', manager: callbackManager, type: 'callback_requests', icon: '📞' },
+    { name: 'Banners', manager: dealBannerManager, type: 'deal_banners', icon: '🎯' },
+    { name: 'Hero Backgrounds', manager: heroBackgroundManager, type: 'hero_backgrounds', icon: '🖼️' },
+    { name: 'Users', manager: userManager, type: 'users', icon: '👥' },
+    { name: 'Profiles', manager: profileManager, type: 'profiles', icon: '👤' },
+    { name: 'Reviews', manager: reviewManager, type: 'reviews', icon: '⭐' },
+    { name: 'Payments', manager: paymentManager, type: 'payments', icon: '💳' },
+    { name: 'Loyalty', manager: loyaltyManager, type: 'loyalty_transactions', icon: '🎁' },
+    { name: 'Coupons', manager: couponManager, type: 'coupons', icon: '🎫' },
+    { name: 'Requests', manager: specialRequestManager, type: 'special_requests', icon: '📝' },
+    { name: 'Settings', manager: settingsManager, type: 'settings', icon: '⚙️' }
+  ];
+
+  useEffect(() => {
+    initializeData();
+  }, []);
+
+  const initializeData = async () => {
+    setIsLoading(true);
+    try {
+      await masterDataManager.initializeAll();
+      setConnectionStatus('connected');
+      updateStats();
+      updateSyncStatus();
+    } catch (error) {
+      console.error('Error initializing data:', error);
+      setConnectionStatus('error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateStats = () => {
+    const newStats = masterDataManager.getStats();
+    setStats(newStats);
+  };
+
+  const updateSyncStatus = () => {
+    const status: Record<string, boolean> = {};
+    managers.forEach(({ type, manager }) => {
+      status[type] = manager.getAll().length > 0;
+    });
+    setSyncStatus(status);
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  const handleBackup = async () => {
+    try {
+      const data = await masterDataManager.exportAllData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `luxe_backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setAlert({ type: 'success', message: 'Backup created successfully!' });
+      setBackupDialogOpen(false);
+    } catch (error) {
+      setAlert({ type: 'error', message: 'Error creating backup' });
+    }
+  };
+
+  const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const content = e.target?.result as string;
+          const data = JSON.parse(content);
+          await masterDataManager.importAllData(data);
+          updateStats();
+          updateSyncStatus();
+          setAlert({ type: 'success', message: 'Data restored successfully!' });
+          setRestoreDialogOpen(false);
+        } catch (error) {
+          setAlert({ type: 'error', message: 'Error restoring data' });
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (window.confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+      try {
+        managers.forEach(({ manager }) => manager.clear());
+        updateStats();
+        updateSyncStatus();
+        setAlert({ type: 'success', message: 'All data cleared successfully!' });
+      } catch (error) {
+        setAlert({ type: 'error', message: 'Error clearing data' });
+      }
+    }
+  };
+
+  const handleSyncAll = async () => {
+    try {
+      await masterDataManager.initializeAll();
+      updateStats();
+      updateSyncStatus();
+      setAlert({ type: 'success', message: 'All data synchronized successfully!' });
+    } catch (error) {
+      setAlert({ type: 'error', message: 'Error synchronizing data' });
+    }
+  };
+
+  const getFilteredData = () => {
+    const currentManager = managers[tabValue].manager;
+    let data: any[] = currentManager.getAll();
+
+    // Apply search filter
+    if (searchQuery) {
+      const searchableFields = getSearchableFields(managers[tabValue].type);
+      data = currentManager.search(searchQuery, searchableFields);
+    }
+
+    // Apply status filter
+    if (filterStatus !== 'all') {
+      data = data.filter(item => (item as any).status === filterStatus);
+    }
+
+    // Apply active/inactive filter
+    if (!showInactive) {
+      data = data.filter(item => (item as any).active !== false);
+    }
+
+    return data;
+  };
+
+  const getSearchableFields = (type: string): any[] => {
+    switch (type) {
+      case 'properties':
+        return ['name', 'location', 'description'];
+      case 'destinations':
+        return ['name', 'location', 'description'];
+      case 'bookings':
+        return ['guestName', 'guestEmail', 'guestPhone'];
+      case 'callback_requests':
+        return ['name', 'email', 'phone', 'message'];
+      case 'hero_backgrounds':
+        return ['title', 'subtitle', 'alt_text'];
+      case 'users':
+        return ['name', 'email'];
+      default:
+        return ['name', 'description'];
+    }
+  };
+
+  const getStatusOptions = () => {
+    const currentManager = managers[tabValue].manager;
+    const data = currentManager.getAll();
+    const statuses = [...new Set(data.map(item => (item as any).status).filter(Boolean))];
+    return statuses;
+  };
+
+  const renderDataTable = () => {
+    const data = getFilteredData();
+    const currentType = managers[tabValue].type;
+
+    return (
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              {currentType === 'properties' && (
+                <>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Location</TableCell>
+                  <TableCell>Price</TableCell>
+                  <TableCell>Rating</TableCell>
+                  <TableCell>Status</TableCell>
+                </>
+              )}
+              {currentType === 'destinations' && (
+                <>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Location</TableCell>
+                  <TableCell>Featured</TableCell>
+                </>
+              )}
+              {currentType === 'bookings' && (
+                <>
+                  <TableCell>Guest</TableCell>
+                  <TableCell>Property</TableCell>
+                  <TableCell>Dates</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Amount</TableCell>
+                </>
+              )}
+              {currentType === 'callback_requests' && (
+                <>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Phone</TableCell>
+                  <TableCell>Status</TableCell>
+                </>
+              )}
+                             {currentType === 'users' && (
+                 <>
+                   <TableCell>Name</TableCell>
+                   <TableCell>Email</TableCell>
+                   <TableCell>Role</TableCell>
+                 </>
+               )}
+               {currentType === 'hero_backgrounds' && (
+                 <>
+                   <TableCell>Title</TableCell>
+                   <TableCell>Subtitle</TableCell>
+                   <TableCell>Priority</TableCell>
+                   <TableCell>Status</TableCell>
+                 </>
+               )}
+              <TableCell>Created</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.map((item: any) => (
+              <TableRow key={item.id}>
+                <TableCell>{item.id.substring(0, 8)}...</TableCell>
+                {currentType === 'properties' && (
+                  <>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{item.location}</TableCell>
+                    <TableCell>₹{item.price?.toLocaleString()}</TableCell>
+                    <TableCell>{item.rating} ⭐</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={item.featured ? 'Featured' : 'Regular'} 
+                        size="small" 
+                        color={item.featured ? 'primary' : 'default'}
+                      />
+                    </TableCell>
+                  </>
+                )}
+                {currentType === 'destinations' && (
+                  <>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{item.location}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={item.featured ? 'Featured' : 'Regular'} 
+                        size="small" 
+                        color={item.featured ? 'primary' : 'default'}
+                      />
+                    </TableCell>
+                  </>
+                )}
+                {currentType === 'bookings' && (
+                  <>
+                    <TableCell>{item.guestName}</TableCell>
+                    <TableCell>{item.propertyId}</TableCell>
+                    <TableCell>{item.checkIn} - {item.checkOut}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={item.status} 
+                        size="small" 
+                        color={
+                          item.status === 'confirmed' ? 'success' : 
+                          item.status === 'cancelled' ? 'error' : 
+                          item.status === 'completed' ? 'primary' : 'default'
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>₹{item.totalAmount?.toLocaleString()}</TableCell>
+                  </>
+                )}
+                {currentType === 'callback_requests' && (
+                  <>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{item.email}</TableCell>
+                    <TableCell>{item.phone}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={item.status} 
+                        size="small" 
+                        color={
+                          item.status === 'resolved' ? 'success' : 
+                          item.status === 'contacted' ? 'primary' : 'default'
+                        }
+                      />
+                    </TableCell>
+                  </>
+                )}
+                                 {currentType === 'users' && (
+                   <>
+                     <TableCell>{item.name}</TableCell>
+                     <TableCell>{item.email}</TableCell>
+                     <TableCell>
+                       <Chip 
+                         label={item.role} 
+                         size="small" 
+                         color={item.role === 'admin' ? 'error' : 'default'}
+                       />
+                     </TableCell>
+                   </>
+                 )}
+                 {currentType === 'hero_backgrounds' && (
+                   <>
+                     <TableCell>{item.title}</TableCell>
+                     <TableCell>{item.subtitle || '-'}</TableCell>
+                     <TableCell>
+                       <Chip 
+                         label={`Priority ${item.priority}`} 
+                         size="small" 
+                         color={item.priority === 1 ? 'primary' : 'default'}
+                       />
+                     </TableCell>
+                     <TableCell>
+                       <Chip 
+                         label={item.active ? 'Active' : 'Inactive'} 
+                         size="small" 
+                         color={item.active ? 'success' : 'default'}
+                       />
+                     </TableCell>
+                   </>
+                 )}
+                <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <Tooltip title="View Details">
+                    <IconButton size="small">
+                      <Visibility />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Edit">
+                    <IconButton size="small">
+                      <Edit />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton size="small" color="error">
+                      <Delete />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Data Monitor & Management
+      </Typography>
+
+      {/* Connection Status */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {connectionStatus === 'connected' ? (
+                <CheckCircle color="success" />
+              ) : connectionStatus === 'error' ? (
+                <Error color="error" />
+              ) : (
+                <Warning color="warning" />
+              )}
+              <Typography variant="h6">
+                Connection Status: {connectionStatus === 'connected' ? 'Connected' : 
+                                  connectionStatus === 'error' ? 'Error' : 'Checking...'}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                startIcon={<Sync />}
+                onClick={handleSyncAll}
+                disabled={isLoading}
+              >
+                Sync All
+              </Button>
+              <Button
+                startIcon={<Backup />}
+                onClick={() => setBackupDialogOpen(true)}
+                variant="outlined"
+              >
+                Backup
+              </Button>
+              <Button
+                startIcon={<Restore />}
+                onClick={() => setRestoreDialogOpen(true)}
+                variant="outlined"
+              >
+                Restore
+              </Button>
+              <Button
+                startIcon={<Clear />}
+                onClick={handleClearAll}
+                variant="outlined"
+                color="error"
+              >
+                Clear All
+              </Button>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Statistics Overview */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Data Statistics Overview
+          </Typography>
+          <Grid container spacing={2}>
+            {Object.entries(stats).map(([tableName, stat]: [string, any]) => (
+              <Grid item xs={12} sm={6} md={3} key={tableName}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <Typography variant="h6">
+                        {managers.find(m => m.type === tableName)?.icon || '📊'}
+                      </Typography>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {tableName}
+                      </Typography>
+                    </Box>
+                    <Typography variant="h4" sx={{ mb: 1 }}>
+                      {stat.total}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {stat.active} active • {stat.featured} featured
+                    </Typography>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={(stat.active / Math.max(stat.total, 1)) * 100} 
+                      sx={{ mt: 1 }}
+                    />
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Alert */}
+      {alert && (
+        <Alert 
+          severity={alert.type} 
+          sx={{ mb: 3 }}
+          onClose={() => setAlert(null)}
+        >
+          {alert.message}
+        </Alert>
+      )}
+
+      {/* Sync Status */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Sync Status
+          </Typography>
+          <Grid container spacing={2}>
+            {managers.map(({ name, type, icon }) => (
+              <Grid item xs={12} sm={6} md={3} key={type}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="h6">{icon}</Typography>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body2">{name}</Typography>
+                    <Chip 
+                      label={syncStatus[type] ? 'Synced' : 'Empty'} 
+                      size="small" 
+                      color={syncStatus[type] ? 'success' : 'default'}
+                    />
+                  </Box>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Data Management Tabs */}
+      <Card>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
+            {managers.map((manager, index) => (
+              <Tab 
+                key={index} 
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography>{manager.icon}</Typography>
+                    <Typography>{manager.name}</Typography>
+                    <Chip 
+                      label={stats[manager.type]?.total || 0} 
+                      size="small" 
+                      sx={{ ml: 1 }}
+                    />
+                  </Box>
+                } 
+              />
+            ))}
+          </Tabs>
+        </Box>
+
+        {managers.map((manager, index) => (
+          <TabPanel key={index} value={tabValue} index={index}>
+            {/* Filters */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+              <TextField
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+                }}
+                sx={{ minWidth: 200 }}
+              />
+              
+              {getStatusOptions().length > 0 && (
+                <FormControl sx={{ minWidth: 120 }}>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    label="Status"
+                  >
+                    <MenuItem value="all">All</MenuItem>
+                    {getStatusOptions().map(status => (
+                      <MenuItem key={status} value={status}>{status}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+              
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={showInactive}
+                    onChange={(e) => setShowInactive(e.target.checked)}
+                  />
+                }
+                label="Show Inactive"
+              />
+              
+              <Button
+                startIcon={<Refresh />}
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilterStatus('all');
+                  setShowInactive(false);
+                }}
+              >
+                Clear Filters
+              </Button>
+            </Box>
+
+            {/* Data Table */}
+            {renderDataTable()}
+
+            {/* Empty State */}
+            {getFilteredData().length === 0 && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography color="text.secondary">
+                  No {manager.name.toLowerCase()} found
+                </Typography>
+              </Box>
+            )}
+          </TabPanel>
+        ))}
+      </Card>
+
+      {/* Backup Dialog */}
+      <Dialog open={backupDialogOpen} onClose={() => setBackupDialogOpen(false)}>
+        <DialogTitle>Create Backup</DialogTitle>
+        <DialogContent>
+          <Typography>
+            This will create a backup of all your data. The backup will be downloaded as a JSON file.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBackupDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleBackup} variant="contained">
+            Create Backup
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Restore Dialog */}
+      <Dialog open={restoreDialogOpen} onClose={() => setRestoreDialogOpen(false)}>
+        <DialogTitle>Restore Data</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            This will restore data from a backup file. This action will replace all existing data.
+          </Typography>
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={<Upload />}
+            fullWidth
+          >
+            Choose Backup File
+            <input
+              type="file"
+              accept=".json"
+              style={{ display: 'none' }}
+              onChange={handleRestore}
+            />
+          </Button>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRestoreDialogOpen(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}

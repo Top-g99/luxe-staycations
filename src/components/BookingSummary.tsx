@@ -22,7 +22,7 @@ import {
   Payment,
   Message
 } from '@mui/icons-material';
-import { Property } from '@/lib/propertyManager';
+import { Property } from '@/lib/dataManager';
 
 interface GuestInfo {
   firstName: string;
@@ -271,5 +271,7 @@ export default function BookingSummary({ guestInfo, bookingDetails, property }: 
     </Box>
   );
 }
+
+
 
 

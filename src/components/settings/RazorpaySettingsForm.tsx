@@ -323,7 +323,7 @@ export default function RazorpaySettingsForm() {
                     label="Default Contact"
                     value={config.prefill.contact}
                     onChange={(e) => handlePrefillChange('contact', e.target.value)}
-                    placeholder="9876543210"
+                    placeholder="8828279739"
                   />
                 </Grid>
               </Grid>
@@ -339,7 +339,7 @@ export default function RazorpaySettingsForm() {
         <Button
           variant="contained"
           startIcon={<Save />}
-          onClick={handleSaveConfig}
+          onClick={() => handleSaveConfig()}
           disabled={isLoading}
           sx={{
             background: 'linear-gradient(45deg, #5a3d35, #d97706)',
@@ -354,7 +354,7 @@ export default function RazorpaySettingsForm() {
         <Button
           variant="outlined"
           startIcon={<PlayArrow />}
-          onClick={handleTestPayment}
+          onClick={() => handleTestPayment()}
           disabled={isLoading || !isConfigured}
         >
           Test Payment Gateway
@@ -362,7 +362,7 @@ export default function RazorpaySettingsForm() {
 
         <Button
           variant="outlined"
-          onClick={handleResetConfig}
+          onClick={() => handleResetConfig()}
           disabled={isLoading}
         >
           Reset to Default

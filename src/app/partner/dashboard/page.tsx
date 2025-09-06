@@ -159,7 +159,7 @@ export default function PartnerDashboardPage() {
               <Button
                 variant="outlined"
                 startIcon={<Logout />}
-                onClick={handleLogout}
+                onClick={() => handleLogout()}
                 sx={buttonStyles.outline}
               >
                 Logout
@@ -256,7 +256,7 @@ export default function PartnerDashboardPage() {
                   </Typography>
                   <Button
                     startIcon={<Refresh />}
-                    onClick={handleRefresh}
+                    onClick={() => handleRefresh()}
                     sx={buttonStyles.text}
                   >
                     Refresh
@@ -465,7 +465,7 @@ export default function PartnerDashboardPage() {
          <DialogTitle sx={{ 
            bgcolor: 'var(--primary-dark)',
            color: 'white',
-           fontFamily: 'Gilda Display, serif'
+           fontFamily: 'Playfair Display, serif'
          }}>
            Book Your Own Property
          </DialogTitle>

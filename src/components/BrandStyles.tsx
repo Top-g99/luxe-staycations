@@ -18,42 +18,42 @@ export const brandColors = {
 // Typography Styles
 export const typographyStyles = {
   h1: {
-    fontFamily: 'Gilda Display, serif',
+    fontFamily: 'Playfair Display, serif',
     fontSize: { xs: '2.5rem', sm: '3rem', md: '4rem', lg: '5rem' },
     fontWeight: 400,
     lineHeight: 1.2,
     color: brandColors.primaryDark
   },
   h2: {
-    fontFamily: 'Gilda Display, serif',
+    fontFamily: 'Playfair Display, serif',
     fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem', lg: '3.5rem' },
     fontWeight: 400,
     lineHeight: 1.3,
     color: brandColors.primaryDark
   },
   h3: {
-    fontFamily: 'Gilda Display, serif',
+    fontFamily: 'Playfair Display, serif',
     fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem', lg: '2.25rem' },
     fontWeight: 400,
     lineHeight: 1.3,
     color: brandColors.primaryDark
   },
   h4: {
-    fontFamily: 'Gilda Display, serif',
+    fontFamily: 'Playfair Display, serif',
     fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem', lg: '2rem' },
     fontWeight: 400,
     lineHeight: 1.3,
     color: brandColors.primaryDark
   },
   h5: {
-    fontFamily: 'Gilda Display, serif',
+    fontFamily: 'Playfair Display, serif',
     fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem', lg: '1.75rem' },
     fontWeight: 400,
     lineHeight: 1.4,
     color: brandColors.primaryDark
   },
   h6: {
-    fontFamily: 'Gilda Display, serif',
+    fontFamily: 'Playfair Display, serif',
     fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem', lg: '1.5rem' },
     fontWeight: 400,
     lineHeight: 1.4,

@@ -19,11 +19,19 @@ class BookingManager {
   private subscribers: (() => void)[] = [];
 
   initialize() {
-    // Force clear any existing bookings and start fresh
+    // Load existing bookings from localStorage instead of clearing
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('luxeBookings');
+      const savedBookings = localStorage.getItem('luxeBookings');
+      if (savedBookings) {
+        try {
+          this.bookings = JSON.parse(savedBookings);
+          console.log('Loaded existing bookings:', this.bookings.length);
+        } catch (error) {
+          console.error('Error loading bookings from localStorage:', error);
+          this.bookings = [];
+        }
+      }
     }
-    this.bookings = [];
   }
 
   getAllBookings(): Booking[] {
@@ -43,6 +51,12 @@ class BookingManager {
     };
     
     this.bookings.push(newBooking);
+    
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('luxeBookings', JSON.stringify(this.bookings));
+    }
+    
     this.notifySubscribers();
     return newBooking;
   }
@@ -57,6 +71,11 @@ class BookingManager {
       updatedAt: new Date().toISOString()
     };
 
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('luxeBookings', JSON.stringify(this.bookings));
+    }
+
     this.notifySubscribers();
     return this.bookings[index];
   }
@@ -66,6 +85,12 @@ class BookingManager {
     if (index === -1) return false;
 
     this.bookings.splice(index, 1);
+    
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('luxeBookings', JSON.stringify(this.bookings));
+    }
+    
     this.notifySubscribers();
     return true;
   }

@@ -10,7 +10,7 @@ INSERT INTO deal_banners (id, title, description, video_url, button_text, button
     'banner-001',
     'Summer Special',
     'Get 20% off on luxury villas',
-    '/videos/6271140-uhd_2160_4096_30fps.mp4',
+    '', -- No hardcoded video URL
     'Book Now',
     '/villas',
     true,

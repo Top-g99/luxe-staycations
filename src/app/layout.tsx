@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
+import SEOHead from "@/components/SEOHead";
 
 export const metadata: Metadata = {
   title: "Luxe Staycations",
@@ -16,6 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <SEOHead />
       <body
         className="font-nunito antialiased"
         style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}

@@ -92,6 +92,30 @@ CREATE TABLE IF NOT EXISTS deal_banners (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Consultations Table
+CREATE TABLE IF NOT EXISTS consultations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  phone VARCHAR(50) NOT NULL,
+  property_type VARCHAR(100) NOT NULL,
+  location VARCHAR(255) NOT NULL,
+  bedrooms INTEGER DEFAULT 1,
+  bathrooms INTEGER DEFAULT 1,
+  max_guests INTEGER DEFAULT 1,
+  property_description TEXT,
+  consultation_type VARCHAR(50) NOT NULL CHECK (consultation_type IN ('phone', 'video', 'in-person')),
+  preferred_date DATE NOT NULL,
+  preferred_time VARCHAR(50) NOT NULL,
+  additional_notes TEXT,
+  status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'scheduled', 'completed', 'cancelled')),
+  submitted_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  scheduled_date TIMESTAMP WITH TIME ZONE,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Settings Table
 CREATE TABLE IF NOT EXISTS settings (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -159,5 +183,8 @@ INSERT INTO destinations (id, name, description, image, featured) VALUES
   ('kerala', 'Kerala, India', 'God''s Own Country with backwaters and Ayurvedic wellness', 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&q=80', false),
   ('rishikesh', 'Rishikesh, Uttarakhand', 'Yoga capital with spiritual retreats and river adventures', 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=400&q=80', false)
 ON CONFLICT (id) DO NOTHING;
+
+
+
 
 

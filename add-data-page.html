@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Data Directly</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .info {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+        
+        #results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🚀 Add Missing Data Directly</h1>
+        <p>This page will add the missing deal banner and hero background data to your Supabase database.</p>
+
+        <div>
+            <button onclick="addDealBanner()">🎯 Add Deal Banner</button>
+            <button onclick="addHeroBackground()">🖼️ Add Hero Background</button>
+            <button onclick="addAllData()">✨ Add All Data</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Your Supabase credentials (from .env.local)
+        const SUPABASE_URL = 'https://okphwjvhzofxevtmlapn.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rcGh3anZoem9meGV2dG1sYXBuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTg4NTg2MywiZXhwIjoyMDcxNDYxODYzfQ.N2HiHya_yuS3hsWt8GJsDK9P8nZ1jpaKlUxj6ST-SVw';
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = message;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        async function addDealBanner() {
+            try {
+                log('🎯 Adding deal banner...', 'info');
+
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/deal_banners`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'apikey': SUPABASE_KEY,
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        title: 'Ready to Find a Great Villa Deal?',
+                        subtitle: 'Save up to 25% on your next luxury villa stay',
+                        button_text: 'Explore Deals',
+                        button_link: '/villas',
+                        video_url: '',
+                        fallback_image_url: 'https://i.pinimg.com/736x/6d/a3/a3/6da3a3ded69f943f7d4df7b33e2d6086.jpg',
+                        is_active: true
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Deal banner added successfully! ID: ${data[0].id}`, 'success');
+                } else {
+                    const error = await response.text();
+                    log(`❌ Deal banner error: ${error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Deal banner error: ${error.message}`, 'error');
+            }
+        }
+
+        async function addHeroBackground() {
+            try {
+                log('🖼️ Adding hero background...', 'info');
+
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/hero_backgrounds`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'apikey': SUPABASE_KEY,
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        title: 'Ready to Find a Great Villa Deal?',
+                        subtitle: 'Save up to 25% on your next luxury villa stay',
+                        image: 'https://i.pinimg.com/736x/6d/a3/a3/6da3a3ded69f943f7d4df7b33e2d6086.jpg',
+                        alt_text: 'Luxury villa with mountain view',
+                        active: true,
+                        priority: 1
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Hero background added successfully! ID: ${data[0].id}`, 'success');
+                } else {
+                    const error = await response.text();
+                    log(`❌ Hero background error: ${error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Hero background error: ${error.message}`, 'error');
+            }
+        }
+
+        async function addAllData() {
+            log('✨ Adding all data...', 'info');
+            await addDealBanner();
+            await addHeroBackground();
+            log('🎉 All data added! Check your home page now.', 'success');
+        }
+    </script>
+</body>
+
+</html>

@@ -139,3 +139,6 @@ INSERT INTO destinations (id, name, description, image, featured) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 
+
+
+

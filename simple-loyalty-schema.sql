@@ -168,3 +168,6 @@ INSERT INTO loyalty_transactions (user_id, jewels_earned, reason, expires_at) VA
 SELECT 'Loyalty Program Schema Created Successfully!' as status;
 
 
+
+
+

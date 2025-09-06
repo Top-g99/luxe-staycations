@@ -22,6 +22,11 @@ class UserManager {
   private subscribers: (() => void)[] = [];
 
   initialize() {
+    // For server-side rendering, always load default users
+    if (this.users.length === 0) {
+      this.loadDefaultUsers();
+    }
+    
     if (typeof window !== 'undefined') {
       const savedUsers = localStorage.getItem('luxeUsers');
       if (savedUsers) {

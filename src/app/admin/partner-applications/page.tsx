@@ -93,7 +93,7 @@ export default function AdminPartnerApplicationsPage() {
         let partnerManager;
         try {
           const module = await import('@/lib/partnerManager');
-          partnerManager = module.partnerManager || module.default;
+          partnerManager = module.partnerManager;
         } catch (importError) {
           console.error('Failed to import partnerManager:', importError);
           setLoading(false);
@@ -137,7 +137,7 @@ export default function AdminPartnerApplicationsPage() {
     const setupSubscription = async () => {
       try {
         const module = await import('@/lib/partnerManager');
-        const partnerManager = module.partnerManager || module.default;
+        const partnerManager = module.partnerManager;
         
         if (partnerManager && typeof partnerManager.subscribe === 'function') {
           unsubscribe = partnerManager.subscribe(() => {
@@ -176,7 +176,7 @@ export default function AdminPartnerApplicationsPage() {
   const handleStatusChange = async (applicationId: string, newStatus: string) => {
     try {
       const module = await import('@/lib/partnerManager');
-      const partnerManager = module.partnerManager || module.default;
+      const partnerManager = module.partnerManager;
       
       if (!partnerManager) {
         throw new Error('partnerManager not available');

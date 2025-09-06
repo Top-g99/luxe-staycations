@@ -75,3 +75,6 @@ if (envContent.includes('demo-luxe-staycations.supabase.co')) {
 
 console.log('\n📖 For detailed setup instructions, see: SUPABASE_SETUP_INSTRUCTIONS.md');
 
+
+
+

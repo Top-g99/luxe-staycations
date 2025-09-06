@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { propertyManager } from '@/lib/propertyManager';
+import { propertyManager } from '@/lib/dataManager';
 
 export async function GET(
   request: NextRequest,
@@ -7,7 +7,10 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const properties = propertyManager.getAllProperties();
+    // Initialize the property manager if needed
+    await propertyManager.initialize();
+    
+    const properties = propertyManager.getAll();
     const property = properties.find(p => p.id === id);
     
     if (!property) {
@@ -20,12 +23,12 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: property,
-      source: 'local'
+      source: 'dataManager'
     });
   } catch (error) {
     console.error('Error fetching property:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch property' },
+      { success: false, error: 'Failed to fetch property', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -38,10 +41,11 @@ export async function PUT(
   const { id } = await params;
   try {
     const body = await request.json();
-    propertyManager.updateProperty(id, body);
     
-    // Get the updated property
-    const updatedProperty = propertyManager.getPropertyById(id);
+    // Initialize the property manager if needed
+    await propertyManager.initialize();
+    
+    const updatedProperty = await propertyManager.update(id, body);
     
     if (!updatedProperty) {
       return NextResponse.json(
@@ -55,14 +59,15 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       data: updatedProperty,
-      source: 'local'
+      source: 'dataManager'
     });
   } catch (error) {
     console.error('Error updating property:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to update property' 
+        error: 'Failed to update property',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
@@ -75,19 +80,30 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
-    propertyManager.deleteProperty(id);
+    // Initialize the property manager if needed
+    await propertyManager.initialize();
+    
+    const deleted = await propertyManager.delete(id);
+    
+    if (!deleted) {
+      return NextResponse.json(
+        { success: false, error: 'Property not found' },
+        { status: 404 }
+      );
+    }
     
     return NextResponse.json({
       success: true,
       message: 'Property deleted successfully',
-      source: 'local'
+      source: 'dataManager'
     });
   } catch (error) {
     console.error('Error deleting property:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to delete property' 
+        error: 'Failed to delete property',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

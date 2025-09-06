@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { consultationManager } from '@/lib/consultationManager';
+import { supabaseConsultationService } from '@/lib/supabaseConsultationService';
+import { emailService } from '@/lib/emailService';
 
 export async function GET() {
   try {
-    const consultations = consultationManager.getAllConsultations();
+    const consultations = await supabaseConsultationService.getAllConsultations();
     return NextResponse.json(consultations);
   } catch (error) {
     console.error('Error fetching consultations:', error);
@@ -35,21 +36,49 @@ export async function POST(request: NextRequest) {
     }
 
     // Add consultation
-    const consultation = consultationManager.addConsultation({
+    const consultation = await supabaseConsultationService.createConsultation({
       name: body.name,
       email: body.email,
       phone: body.phone,
-      propertyType: body.propertyType,
+      property_type: body.propertyType,
       location: body.location,
       bedrooms: parseInt(body.bedrooms),
       bathrooms: parseInt(body.bathrooms),
-      maxGuests: parseInt(body.maxGuests),
-      propertyDescription: body.propertyDescription,
-      consultationType: body.consultationType,
-      preferredDate: body.preferredDate,
-      preferredTime: body.preferredTime,
-      additionalNotes: body.additionalNotes || ''
+      max_guests: parseInt(body.maxGuests),
+      property_description: body.propertyDescription,
+      consultation_type: body.consultationType,
+      preferred_date: body.preferredDate,
+      preferred_time: body.preferredTime,
+      additional_notes: body.additionalNotes || ''
     });
+
+    // Send consultation confirmation email
+    try {
+      if (emailService.isConfigured) {
+        const emailResult = await emailService.sendConsultationConfirmation({
+          requestId: consultation.id,
+          name: consultation.name,
+          email: consultation.email,
+          phone: consultation.phone,
+          propertyType: consultation.property_type,
+          location: consultation.location,
+          preferredDate: consultation.preferred_date,
+          preferredTime: consultation.preferred_time,
+          consultationType: consultation.consultation_type
+        });
+
+        if (emailResult.success) {
+          console.log('Consultation confirmation email sent successfully');
+        } else {
+          console.error('Failed to send consultation confirmation email:', emailResult.message);
+        }
+      } else {
+        console.log('Email service not configured, skipping consultation confirmation email');
+      }
+    } catch (emailError) {
+      console.error('Error sending consultation confirmation email:', emailError);
+      // Don't fail the consultation creation if email fails
+    }
 
     return NextResponse.json(consultation, { status: 201 });
   } catch (error) {

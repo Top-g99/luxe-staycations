@@ -98,7 +98,7 @@ const RedeemJewelsModal: React.FC<RedeemJewelsModalProps> = ({
         display: 'flex', 
         alignItems: 'center', 
         gap: 1,
-        fontFamily: 'Gilda Display, serif',
+        fontFamily: 'Playfair Display, serif',
         fontWeight: 600
       }}>
         <Diamond sx={{ color: 'var(--primary-light)' }} />

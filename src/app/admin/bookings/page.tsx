@@ -26,27 +26,50 @@ export default function AdminBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [propertyManager, setPropertyManager] = useState<any>(null);
+  
+  // Initialize propertyManager for getting property names
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('@/lib/dataManager').then(({ propertyManager }) => {
+        propertyManager.initialize();
+        setPropertyManager(propertyManager);
+      });
+    }
+  }, []);
+  
+  // Helper function to get property name from propertyId
+  const getPropertyName = (propertyId: string) => {
+    try {
+      const property = propertyManager?.getById(propertyId);
+      return property ? property.name : `Property ${propertyId}`;
+    } catch (error) {
+      return `Property ${propertyId}`;
+    }
+  };
 
-  // Load real-time bookings from BookingManager
+  // Load real-time bookings from DataManager-based bookingManager
   useEffect(() => {
     const loadBookings = async () => {
       try {
-        const { bookingManager } = await import('@/lib/bookingManager');
+        const { bookingManager } = await import('@/lib/dataManager');
         
         if (typeof window !== 'undefined') {
-          bookingManager.initialize();
+          await bookingManager.initialize();
         }
         
-        const allBookings = bookingManager.getAllBookings();
+        const allBookings = bookingManager.getAll();
+        
         // Filter out any invalid bookings and ensure all required fields exist
         const validBookings = allBookings.filter(booking => 
           booking && 
           booking.id && 
           booking.guestName && 
-          booking.propertyName &&
-          typeof booking.amount === 'number'
+          booking.propertyId &&
+          typeof booking.totalAmount === 'number'
         );
+        
         setBookings(validBookings);
         setLoading(false);
       } catch (error) {
@@ -59,18 +82,18 @@ export default function AdminBookingsPage() {
 
     // Subscribe to real-time updates
     let unsubscribe: (() => void) | null = null;
-    import('@/lib/bookingManager').then(({ bookingManager }) => {
+    import('@/lib/dataManager').then(({ bookingManager }) => {
       unsubscribe = bookingManager.subscribe(() => {
-        const updatedBookings = bookingManager.getAllBookings();
+        const updatedBookings = bookingManager.getAll();
+        
         // Filter out any invalid bookings and ensure all required fields exist
         const validBookings = updatedBookings.filter(booking => 
           booking && 
           booking.id && 
           booking.guestName && 
-          booking.propertyName &&
-          typeof booking.amount === 'number'
+          booking.propertyId &&
+          typeof booking.totalAmount === 'number'
         );
-        console.log('Bookings updated in real-time:', validBookings);
         setBookings(validBookings);
       });
     });
@@ -91,11 +114,32 @@ export default function AdminBookingsPage() {
         <Box>
           <Button
             startIcon={<Refresh />}
-            onClick={() => window.location.reload()}
+            onClick={async () => {
+              try {
+                setLoading(true);
+                const { bookingManager } = await import('@/lib/dataManager');
+                const allBookings = bookingManager.getAll();
+                
+                const validBookings = allBookings.filter(booking => 
+                  booking && 
+                  booking.id && 
+                  booking.guestName && 
+                  booking.propertyId &&
+                  typeof booking.totalAmount === 'number'
+                );
+                setBookings(validBookings);
+              } catch (error) {
+                console.error('Error refreshing bookings:', error);
+              } finally {
+                setLoading(false);
+              }
+            }}
             sx={{ mr: 2 }}
           >
             Refresh
           </Button>
+          
+
                   <Button
           variant="contained"
           startIcon={<Add />}
@@ -121,6 +165,8 @@ export default function AdminBookingsPage() {
           <LinearProgress />
         </Box>
       )}
+      
+
 
       <Card>
         <CardContent>
@@ -152,21 +198,29 @@ export default function AdminBookingsPage() {
                     <TableRow key={booking.id}>
                       <TableCell>{booking.id || 'N/A'}</TableCell>
                       <TableCell>{booking.guestName || 'N/A'}</TableCell>
-                      <TableCell>{booking.propertyName || 'N/A'}</TableCell>
+                      <TableCell>{getPropertyName(booking.propertyId) || 'N/A'}</TableCell>
                       <TableCell>{booking.checkIn || 'N/A'}</TableCell>
                       <TableCell>{booking.checkOut || 'N/A'}</TableCell>
-                      <TableCell>₹{(booking.amount || 0).toLocaleString()}</TableCell>
+                      <TableCell>₹{(booking.totalAmount || 0).toLocaleString()}</TableCell>
                       <TableCell>
                         <Chip
                           label={booking.status || 'Unknown'}
-                          color={booking.status === 'Confirmed' ? 'success' : 
-                                 booking.status === 'Pending' ? 'warning' : 
-                                 booking.status === 'Cancelled' ? 'error' : 'default'}
+                          color={booking.status === 'confirmed' ? 'success' : 
+                                 booking.status === 'pending' ? 'warning' : 
+                                 booking.status === 'cancelled' ? 'error' : 'default'}
                           size="small"
                         />
                       </TableCell>
                       <TableCell>
-                        <IconButton size="small">
+                        <IconButton 
+                          size="small"
+                          onClick={() => {
+                            setSelectedBooking(booking);
+                            setDialogMode('view');
+                            setDialogOpen(true);
+                          }}
+                          sx={{ color: '#1976d2' }}
+                        >
                           <Visibility />
                         </IconButton>
                         <IconButton 
@@ -176,6 +230,7 @@ export default function AdminBookingsPage() {
                             setDialogMode('edit');
                             setDialogOpen(true);
                           }}
+                          sx={{ color: '#d97706' }}
                         >
                           <Edit />
                         </IconButton>

@@ -23,9 +23,20 @@ class ConsultationManager {
   private consultations: ConsultationRequest[] = [];
   private subscribers: (() => void)[] = [];
   private storageKey = 'luxe_consultations';
+  
+  // Singleton instance for server-side persistence
+  private static instance: ConsultationManager;
 
   constructor() {
     this.loadFromStorage();
+  }
+
+  // Get singleton instance
+  static getInstance(): ConsultationManager {
+    if (!ConsultationManager.instance) {
+      ConsultationManager.instance = new ConsultationManager();
+    }
+    return ConsultationManager.instance;
   }
 
   private loadFromStorage() {
@@ -45,6 +56,10 @@ class ConsultationManager {
   private saveToStorage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem(this.storageKey, JSON.stringify(this.consultations));
+    } else {
+      // Server-side: store in memory (this will be lost on server restart)
+      // In production, you'd want to use a database
+      console.log('Server-side storage - consultations saved to memory:', this.consultations.length);
     }
   }
 
@@ -102,6 +117,47 @@ class ConsultationManager {
     return true;
   }
 
+  // Clear all consultations (useful for resetting the system)
+  clearAllConsultations(): void {
+    this.consultations = [];
+    this.saveToStorage();
+    this.notifySubscribers();
+  }
+
+  // Reset to empty state (removes all data including sample data)
+  reset(): void {
+    this.consultations = [];
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(this.storageKey);
+      // Also clear any other consultation-related data
+      localStorage.removeItem('luxe_consultations');
+      localStorage.removeItem('consultation_requests');
+    }
+    this.notifySubscribers();
+  }
+
+  // Force clear all consultation data (for debugging)
+  forceClearAll(): void {
+    this.consultations = [];
+    if (typeof window !== 'undefined') {
+      // Clear all possible consultation storage keys
+      const keysToRemove = [
+        this.storageKey,
+        'luxe_consultations',
+        'consultation_requests',
+        'consultations',
+        'consultation_data'
+      ];
+      
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+      });
+      
+      console.log('All consultation data cleared from localStorage');
+    }
+    this.notifySubscribers();
+  }
+
   // Status Management
   scheduleConsultation(id: string, scheduledDate: string, notes?: string): ConsultationRequest | null {
     return this.updateConsultation(id, {
@@ -157,48 +213,14 @@ class ConsultationManager {
     };
   }
 
-  // Initialize with sample data if empty
+  // Initialize consultation manager
   initialize() {
-    if (this.consultations.length === 0) {
-      const sampleConsultations: Omit<ConsultationRequest, 'id' | 'submittedDate' | 'status'>[] = [
-        {
-          name: "Rajesh Kumar",
-          email: "rajesh.kumar@email.com",
-          phone: "+91 98765 43210",
-          propertyType: "Villa",
-          location: "Goa, India",
-          bedrooms: 4,
-          bathrooms: 3,
-          maxGuests: 8,
-          propertyDescription: "Luxury beachfront villa with private pool and ocean views. Perfect for high-end travelers seeking exclusivity.",
-          consultationType: "video",
-          preferredDate: "2024-02-15",
-          preferredTime: "14:00",
-          additionalNotes: "Interested in premium pricing strategy and marketing support."
-        },
-        {
-          name: "Priya Sharma",
-          email: "priya.sharma@email.com",
-          phone: "+91 87654 32109",
-          propertyType: "Apartment",
-          location: "Mumbai, India",
-          bedrooms: 2,
-          bathrooms: 2,
-          maxGuests: 4,
-          propertyDescription: "Modern apartment in Bandra with city skyline views. Ideal for business travelers and couples.",
-          consultationType: "phone",
-          preferredDate: "2024-02-16",
-          preferredTime: "10:00",
-          additionalNotes: "Looking for guidance on property optimization and guest experience enhancement."
-        }
-      ];
-
-      sampleConsultations.forEach(consultation => {
-        this.addConsultation(consultation);
-      });
+    // Only load from storage, no sample data
+    if (typeof window !== 'undefined') {
+      this.loadFromStorage();
     }
   }
 }
 
-export const consultationManager = new ConsultationManager();
+export const consultationManager = ConsultationManager.getInstance();
 

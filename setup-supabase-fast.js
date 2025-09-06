@@ -17,7 +17,7 @@ class FastSupabaseSetup {
     displayCompleteInstructions() {
         console.log('\n📋 COMPLETE SUPABASE SETUP GUIDE');
         console.log('===============================');
-        
+
         console.log('\n🎯 STEP 1: CREATE SUPABASE PROJECT');
         console.log('==================================');
         console.log('1. Go to: https://supabase.com');
@@ -28,7 +28,7 @@ class FastSupabaseSetup {
         console.log('6. Region: [Choose closest to your users]');
         console.log('7. Click "Create new project"');
         console.log('8. Wait for project to be ready (2-3 minutes)');
-        
+
         console.log('\n🎯 STEP 2: GET YOUR CREDENTIALS');
         console.log('===============================');
         console.log('1. Go to Settings → API in your dashboard');
@@ -36,13 +36,13 @@ class FastSupabaseSetup {
         console.log('   • Project URL: https://your-project-id.supabase.co');
         console.log('   • Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
         console.log('   • Service Role Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
-        
+
         console.log('\n🎯 STEP 3: UPDATE ENVIRONMENT FILE');
         console.log('==================================');
         console.log('1. Edit .env.local file');
         console.log('2. Replace placeholder values with your real credentials');
         console.log('3. Save the file');
-        
+
         console.log('\n🎯 STEP 4: SET UP DATABASE');
         console.log('==========================');
         if (fs.existsSync(this.schemaFile)) {
@@ -57,7 +57,7 @@ class FastSupabaseSetup {
         } else {
             console.log('⚠️ Database schema file not found');
         }
-        
+
         console.log('\n🎯 STEP 5: CREATE STORAGE BUCKETS');
         console.log('==================================');
         const buckets = [
@@ -67,19 +67,19 @@ class FastSupabaseSetup {
             { name: 'luxe-banners', public: true, description: 'Banner media' },
             { name: 'luxe-documents', public: false, description: 'Private documents' }
         ];
-        
+
         console.log('Create these storage buckets:');
         buckets.forEach((bucket, index) => {
             console.log(`${index + 1}. ${bucket.name} (${bucket.public ? 'Public' : 'Private'}) - ${bucket.description}`);
         });
-        
+
         console.log('\nSteps:');
         console.log('1. Go to your Supabase dashboard');
         console.log('2. Click on "Storage" in the left sidebar');
         console.log('3. Click "Create a new bucket"');
         console.log('4. Enter bucket name and settings');
         console.log('5. Repeat for all buckets listed above');
-        
+
         console.log('\n🎯 STEP 6: TEST YOUR APPLICATION');
         console.log('===============================');
         console.log('1. Run: npm run dev');
@@ -92,19 +92,19 @@ class FastSupabaseSetup {
     showEnvironmentStatus() {
         console.log('\n🔍 CURRENT ENVIRONMENT STATUS');
         console.log('=============================');
-        
+
         try {
             const envContent = fs.readFileSync(this.envFile, 'utf8');
-            
+
             if (envContent.includes('your-project-id.supabase.co')) {
                 console.log('⚠️  Environment file has placeholder values');
                 console.log('📝 You need to update .env.local with your real Supabase credentials');
             } else {
                 console.log('✅ Environment file appears to be configured');
             }
-            
+
             console.log('\n📄 Current .env.local location:', this.envFile);
-            
+
         } catch (error) {
             console.log('❌ Could not read environment file:', error.message);
         }
@@ -129,12 +129,12 @@ class FastSupabaseSetup {
         console.log('   • Install: npm i -g vercel');
         console.log('   • Deploy: vercel --prod');
         console.log('   • Benefits: Automatic deployments, great performance');
-        
+
         console.log('\n2️⃣ NETLIFY');
         console.log('   • Build: npm run build:prod');
         console.log('   • Upload: out/ folder to Netlify');
         console.log('   • Benefits: Easy setup, good performance');
-        
+
         console.log('\n3️⃣ SELF-HOSTED');
         console.log('   • Build: npm run build:prod');
         console.log('   • Start: npm run start:prod');
@@ -145,19 +145,19 @@ class FastSupabaseSetup {
     showMigrationInstructions() {
         console.log('\n📊 DATA MIGRATION');
         console.log('=================');
-        
+
         const migrationDir = path.join(this.projectRoot, 'migration-data');
         if (fs.existsSync(migrationDir)) {
             console.log('✅ Migration files found in migration-data/ folder');
             console.log('📄 Available migration scripts:');
-            
+
             const files = fs.readdirSync(migrationDir);
             files.forEach(file => {
                 if (file.endsWith('.sql')) {
                     console.log(`   • ${file}`);
                 }
             });
-            
+
             console.log('\n📝 To migrate data:');
             console.log('1. Go to Supabase SQL Editor');
             console.log('2. Run migration scripts in order (01, 02, 03, 04)');
@@ -171,26 +171,26 @@ class FastSupabaseSetup {
     generateQuickStartSummary() {
         console.log('\n🎉 QUICK START SUMMARY');
         console.log('=====================');
-        
+
         console.log('\n✅ What\'s Ready:');
         console.log('• Production environment configured');
         console.log('• Supabase services activated');
         console.log('• File upload system ready');
         console.log('• Admin dashboard functional');
         console.log('• Migration scripts prepared');
-        
+
         console.log('\n📋 Immediate Actions:');
         console.log('1. Create Supabase project at https://supabase.com');
         console.log('2. Update .env.local with your credentials');
         console.log('3. Run database schema in Supabase');
         console.log('4. Create storage buckets');
         console.log('5. Test with: npm run dev');
-        
+
         console.log('\n🚀 Ready to Deploy:');
         console.log('• Run: npm run build:prod');
         console.log('• Deploy to Vercel: vercel --prod');
         console.log('• Or deploy to your preferred platform');
-        
+
         console.log('\n📖 Documentation:');
         console.log('• PRODUCTION_DEPLOYMENT_GUIDE.md - Complete guide');
         console.log('• PRODUCTION_SETUP_INSTRUCTIONS.md - Setup instructions');
@@ -204,26 +204,26 @@ class FastSupabaseSetup {
 
             // Display all instructions
             this.displayCompleteInstructions();
-            
+
             // Show current status
             this.showEnvironmentStatus();
-            
+
             // Show available commands
             this.showAvailableCommands();
-            
+
             // Show deployment options
             this.showDeploymentOptions();
-            
+
             // Show migration instructions
             this.showMigrationInstructions();
-            
+
             // Generate summary
             this.generateQuickStartSummary();
-            
+
             console.log('\n🎉 Fast Supabase setup guide completed!');
             console.log('Follow the instructions above to complete your setup.');
             console.log('\n💡 Need help? Check the documentation files listed above.');
-            
+
         } catch (error) {
             console.error('\n❌ Fast setup failed:', error.message);
             process.exit(1);

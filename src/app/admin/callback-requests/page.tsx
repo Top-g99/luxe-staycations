@@ -156,7 +156,7 @@ export default function CallbackRequestsPage() {
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ 
-          fontFamily: 'Gilda Display, serif',
+          fontFamily: 'Playfair Display, serif',
           color: 'var(--primary-dark)',
           mb: 2 
         }}>
@@ -374,7 +374,7 @@ export default function CallbackRequestsPage() {
         <DialogTitle sx={{ 
           bgcolor: 'var(--primary-light)', 
           color: 'white',
-          fontFamily: 'Gilda Display, serif'
+          fontFamily: 'Playfair Display, serif'
         }}>
           Update Callback Request
         </DialogTitle>

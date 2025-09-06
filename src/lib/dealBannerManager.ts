@@ -55,7 +55,7 @@ class DealBannerManager {
       title: 'Flash Sale: 25% Off Luxury Villas',
       subtitle: 'Limited Time Offer - Book Now!',
       description: 'Experience luxury at unbeatable prices. Book your dream villa today and save up to 25% on your stay.',
-      videoUrl: '/videos/6271140-uhd_2160_4096_30fps.mp4',
+      videoUrl: '', // No hardcoded video URL
       fallbackImageUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&q=80',
       buttonText: 'Book Now',
       buttonLink: '/villas?deal=flash-sale',

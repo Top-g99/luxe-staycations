@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { Save, Refresh, PhotoCamera } from '@mui/icons-material';
 import { settingsManager, BusinessProfile } from '@/lib/settingsManager';
+import { contactManager } from '@/lib/contactManager';
 
 export default function BusinessProfileForm() {
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
@@ -24,6 +25,11 @@ export default function BusinessProfileForm() {
 
   useEffect(() => {
     loadProfile();
+    
+    // Initialize contact manager
+    if (typeof window !== 'undefined') {
+      contactManager.initialize();
+    }
   }, []);
 
   const loadProfile = async () => {
@@ -73,7 +79,9 @@ export default function BusinessProfileForm() {
       const success = settingsManager.updateBusinessProfile(profile);
 
       if (success) {
-        setMessage({ type: 'success', text: 'Business profile updated successfully!' });
+        // Sync contact information with contact manager
+        contactManager.syncWithBusinessProfile(profile);
+        setMessage({ type: 'success', text: 'Business profile updated successfully! Contact information has been synced across all pages.' });
       } else {
         setMessage({ type: 'error', text: 'Failed to update business profile. Please try again.' });
       }

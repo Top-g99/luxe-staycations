@@ -3,10 +3,8 @@ import { partnerManager } from '@/lib/partnerManager';
 
 export async function GET(request: NextRequest) {
   try {
-    // Initialize PartnerManager if not already done
-    if (typeof window === 'undefined') {
-      partnerManager.initialize();
-    }
+    // Initialize PartnerManager safely for server-side
+    partnerManager.initialize();
     
     // Get all partner applications
     const applications = partnerManager.getAllApplications();

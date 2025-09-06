@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useNotifications } from '@/contexts/NotificationsContext';
+import NotificationsPanel from '@/components/NotificationsPanel';
 import {
   Box,
   Drawer,
@@ -39,10 +41,17 @@ import {
   People,
   PhotoCamera,
   CalendarToday,
-  Home
+  Home,
+  Storage,
+  Diamond,
+  Search,
+  Security,
+  Email
 } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import AdminAuthGuard from '@/components/AdminAuthGuard';
+import { AdminAuthManager } from '@/lib/adminAuth';
 
 const drawerWidth = 280;
 
@@ -51,6 +60,10 @@ const menuItems = [
   { text: 'Properties', icon: <Villa />, path: '/admin/properties' },
   { text: 'Destinations', icon: <LocationOn />, path: '/admin/destinations' },
   { text: 'Bookings', icon: <BookOnline />, path: '/admin/bookings' },
+  { text: 'Profile Management', icon: <AccountCircle />, path: '/admin/profile-management' },
+  { text: 'Host Management', icon: <People />, path: '/admin/host-management' },
+  { text: 'Security Dashboard', icon: <Security />, path: '/admin/security' },
+  { text: 'Email Templates', icon: <Email />, path: '/admin/email-templates' },
   { text: 'Callback Requests', icon: <Phone />, path: '/admin/callback-requests' },
   { text: 'Deal Banner', icon: <Campaign />, path: '/admin/deal-banner' },
   { text: 'Hero Backgrounds', icon: <PhotoCamera />, path: '/admin/hero-backgrounds' },
@@ -59,7 +72,11 @@ const menuItems = [
   { text: 'Partner Applications', icon: <Business />, path: '/admin/partner-applications' },
   { text: 'Owner Bookings', icon: <CalendarToday />, path: '/admin/owner-bookings' },
   { text: 'Payments', icon: <Payment />, path: '/admin/payments' },
+          { text: 'Loyalty Redemption', icon: <Diamond />, path: '/admin/loyalty-redemption' },
+        { text: 'Loyalty Rules', icon: <Settings />, path: '/admin/loyalty-rules' },
+  { text: 'Data Monitor', icon: <Storage />, path: '/admin/data-monitor' },
   { text: 'Analytics', icon: <Analytics />, path: '/admin/analytics' },
+  { text: 'SEO Management', icon: <Search />, path: '/admin/seo' },
   { text: 'Settings', icon: <Settings />, path: '/admin/settings' }
 ];
 
@@ -70,8 +87,14 @@ export default function AdminLayout({
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationsAnchorEl, setNotificationsAnchorEl] = useState<null | HTMLElement>(null);
+  const { unreadCount } = useNotifications();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Don't apply auth guard to login page
+  const isLoginPage = pathname === '/admin/login';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -85,10 +108,19 @@ export default function AdminLayout({
     setAnchorEl(null);
   };
 
+  const handleNotificationsOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setNotificationsAnchorEl(event.currentTarget);
+    setNotificationsOpen(true);
+  };
+
+  const handleNotificationsClose = () => {
+    setNotificationsOpen(false);
+    setNotificationsAnchorEl(null);
+  };
+
   const handleLogout = () => {
-    // Handle logout logic here
-    console.log('Logging out...');
-    router.push('/');
+    AdminAuthManager.logout();
+    router.push('/admin/login');
   };
 
   const drawer = (
@@ -100,7 +132,7 @@ export default function AdminLayout({
         color: 'white'
       }}>
         <Typography variant="h5" sx={{ 
-          fontFamily: 'Gilda Display, serif',
+          fontFamily: 'Playfair Display, serif',
           fontWeight: 700,
           mb: 1
         }}>
@@ -162,11 +194,51 @@ export default function AdminLayout({
           );
         })}
       </List>
+      
+      {/* Sign Out Section */}
+      <Box sx={{ mt: 'auto', p: 2 }}>
+        <Divider sx={{ mb: 2 }} />
+        <ListItem disablePadding>
+          <ListItemButton
+            onClick={() => handleLogout()}
+            sx={{
+              mx: 1,
+              borderRadius: 2,
+              backgroundColor: 'rgba(220, 38, 38, 0.1)',
+              color: '#dc2626',
+              '&:hover': {
+                backgroundColor: 'rgba(220, 38, 38, 0.2)',
+              }
+            }}
+          >
+            <ListItemIcon sx={{ 
+              color: '#dc2626',
+              minWidth: 40
+            }}>
+              <Logout />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Sign Out" 
+              sx={{ 
+                '& .MuiListItemText-primary': {
+                  fontWeight: 600
+                }
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+      </Box>
     </Box>
   );
 
+  // If it's the login page, render without auth guard and layout
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
   return (
-    <Box sx={{ display: 'flex' }}>
+    <AdminAuthGuard>
+      <Box sx={{ display: 'flex' }}>
       <AppBar
         position="fixed"
         sx={{
@@ -182,7 +254,7 @@ export default function AdminLayout({
             color="inherit"
             aria-label="open drawer"
             edge="start"
-            onClick={handleDrawerToggle}
+            onClick={() => handleDrawerToggle()}
             sx={{ mr: 2, display: { sm: 'none' } }}
           >
             <MenuIcon />
@@ -206,10 +278,34 @@ export default function AdminLayout({
               <Home />
             </IconButton>
             
-            <IconButton color="inherit">
-              <Badge badgeContent={4} color="error">
+            <IconButton 
+              color="inherit"
+              onClick={handleNotificationsOpen}
+              sx={{ 
+                '&:hover': { 
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)' 
+                } 
+              }}
+              title="Notifications"
+            >
+              <Badge badgeContent={unreadCount} color="error">
                 <Notifications />
               </Badge>
+            </IconButton>
+            
+            <IconButton 
+              color="inherit"
+              onClick={() => handleLogout()}
+              sx={{ 
+                ml: 1,
+                '&:hover': { 
+                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                  color: '#dc2626'
+                } 
+              }}
+              title="Sign Out"
+            >
+              <Logout />
             </IconButton>
             
             <IconButton
@@ -281,24 +377,32 @@ export default function AdminLayout({
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleProfileMenuClose}
-        onClick={handleProfileMenuClose}
+        onClick={() => handleProfileMenuClose()}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <MenuItem onClick={handleProfileMenuClose}>
+        <MenuItem onClick={() => handleProfileMenuClose()}>
           <AccountCircle sx={{ mr: 2 }} />
           Profile
         </MenuItem>
-        <MenuItem onClick={handleProfileMenuClose}>
+        <MenuItem onClick={() => handleProfileMenuClose()}>
           <Settings sx={{ mr: 2 }} />
           Settings
         </MenuItem>
         <Divider />
-        <MenuItem onClick={handleLogout}>
+        <MenuItem onClick={() => handleLogout()}>
           <Logout sx={{ mr: 2 }} />
           Logout
         </MenuItem>
       </Menu>
-    </Box>
+
+      {/* Notifications Panel */}
+      <NotificationsPanel
+        open={notificationsOpen}
+        anchorEl={notificationsAnchorEl}
+        onClose={handleNotificationsClose}
+      />
+      </Box>
+    </AdminAuthGuard>
   );
 }

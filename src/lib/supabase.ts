@@ -23,7 +23,16 @@ export const TABLES = {
   CALLBACK_REQUESTS: 'callback_requests',
   DEAL_BANNERS: 'deal_banners',
   SETTINGS: 'settings',
-  SPECIAL_REQUESTS: 'special_requests'
+  SPECIAL_REQUESTS: 'special_requests',
+  CONSULTATIONS: 'consultations',
+  EMAIL_CONFIGURATIONS: 'email_configurations',
+  EMAIL_TEMPLATES: 'email_templates',
+  WHATSAPP_CONFIGURATIONS: 'whatsapp_configurations',
+  WHATSAPP_TEMPLATES: 'whatsapp_templates',
+  INSTAGRAM_CONFIGURATIONS: 'instagram_configurations',
+  INSTAGRAM_POSTS: 'instagram_posts',
+  INSTAGRAM_STORIES: 'instagram_stories',
+  INSTAGRAM_ANALYTICS: 'instagram_analytics'
 } as const;
 
 // Types for database tables
@@ -96,6 +105,29 @@ export interface DatabaseDealBanner {
   updated_at: string;
 }
 
+export interface DatabaseConsultation {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  property_type: string;
+  location: string;
+  bedrooms: number;
+  bathrooms: number;
+  max_guests: number;
+  property_description: string;
+  consultation_type: 'phone' | 'video' | 'in-person';
+  preferred_date: string;
+  preferred_time: string;
+  additional_notes: string;
+  status: 'pending' | 'scheduled' | 'completed' | 'cancelled';
+  submitted_date: string;
+  scheduled_date?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DatabaseSettings {
   id: string;
   key: string;
@@ -111,6 +143,115 @@ export interface DatabaseSpecialRequest {
   phone: string;
   message: string;
   status: 'pending' | 'resolved';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseEmailConfiguration {
+  id: string;
+  smtp_host: string;
+  smtp_port: number;
+  smtp_user: string;
+  smtp_password: string;
+  enable_ssl: boolean;
+  from_name: string;
+  from_email: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseEmailTemplate {
+  id: string;
+  name: string;
+  type: string;
+  subject: string;
+  html_content: string;
+  text_content?: string;
+  variables: string[];
+  is_active: boolean;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseWhatsAppConfiguration {
+  id: string;
+  business_account_id: string;
+  access_token: string;
+  phone_number_id: string;
+  webhook_verify_token: string;
+  api_version: string;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseWhatsAppTemplate {
+  id: string;
+  name: string;
+  type: string;
+  language_code: string;
+  template_content: any;
+  variables: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseInstagramConfiguration {
+  id: string;
+  access_token: string;
+  business_account_id: string;
+  instagram_account_id: string;
+  webhook_verify_token: string;
+  api_version: string;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseInstagramPost {
+  id: string;
+  instagram_post_id: string;
+  media_type: string;
+  media_url: string;
+  permalink: string;
+  caption: string;
+  timestamp: string;
+  like_count: number;
+  comments_count: number;
+  thumbnail_url?: string;
+  hashtags: string[];
+  engagement_rate: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseInstagramStory {
+  id: string;
+  instagram_story_id: string;
+  media_type: string;
+  media_url: string;
+  permalink: string;
+  timestamp: string;
+  thumbnail_url?: string;
+  views_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseInstagramAnalytics {
+  id: string;
+  period: string;
+  impressions: number;
+  reach: number;
+  profile_views: number;
+  website_clicks: number;
+  email_contacts: number;
+  phone_calls: number;
+  text_messages: number;
+  get_directions: number;
   created_at: string;
   updated_at: string;
 }

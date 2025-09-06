@@ -25,7 +25,7 @@ import {
   Computer,
   CloudSync
 } from '@mui/icons-material';
-import { propertyManager } from '@/lib/propertyManager';
+import { propertyManager } from '@/lib/dataManager';
 
 interface DataStatus {
   localProperties: number;
@@ -58,7 +58,7 @@ export default function DataManagementPanel() {
   const loadDataStatus = async () => {
     try {
       // Get local properties
-      const localProps = propertyManager.getAllProperties();
+              const localProps = propertyManager.getAll();
       setProperties(localProps);
       
       // Get API properties

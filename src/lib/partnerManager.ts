@@ -36,24 +36,33 @@ class PartnerManager {
   private initialized = false;
 
   constructor() {
-    this.loadFromStorage();
+    // Only load from storage if we're in the browser
+    if (typeof window !== 'undefined') {
+      this.loadFromStorage();
+    }
   }
 
   initialize() {
     if (this.initialized) return;
-    this.loadFromStorage();
+    // Only load from storage if we're in the browser
+    if (typeof window !== 'undefined') {
+      this.loadFromStorage();
+    }
     this.initialized = true;
   }
 
   private loadFromStorage() {
     try {
-      const stored = localStorage.getItem('luxe_partner_applications');
-      if (stored) {
-        this.applications = JSON.parse(stored).map((app: any) => ({
-          ...app,
-          createdAt: new Date(app.createdAt),
-          updatedAt: new Date(app.updatedAt)
-        }));
+      // Only access localStorage if we're in the browser
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('luxe_partner_applications');
+        if (stored) {
+          this.applications = JSON.parse(stored).map((app: any) => ({
+            ...app,
+            createdAt: new Date(app.createdAt),
+            updatedAt: new Date(app.updatedAt)
+          }));
+        }
       }
     } catch (error) {
       console.error('Error loading partner applications:', error);
@@ -63,7 +72,10 @@ class PartnerManager {
 
   private saveToStorage() {
     try {
-      localStorage.setItem('luxe_partner_applications', JSON.stringify(this.applications));
+      // Only access localStorage if we're in the browser
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('luxe_partner_applications', JSON.stringify(this.applications));
+      }
     } catch (error) {
       console.error('Error saving partner applications:', error);
     }
@@ -94,6 +106,10 @@ class PartnerManager {
   }
 
   getAllApplications(): PartnerApplication[] {
+    // If not initialized and we're on the server, return empty array
+    if (!this.initialized && typeof window === 'undefined') {
+      return [];
+    }
     return [...this.applications];
   }
 

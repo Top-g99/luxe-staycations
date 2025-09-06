@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Gilda+Display:wght@400&family=Nunito:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gilda+Display:wght@400&family=Nunito:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -43,7 +43,11 @@ a {
 /* Brand Typography */
 
 .font-gilda {
-    font-family: 'Gilda Display', serif;
+    font-family: 'Playfair Display', serif;
+}
+
+.font-playfair {
+    font-family: 'Playfair Display', serif;
 }
 
 .font-nunito {
@@ -107,7 +111,7 @@ a {
 .header-brand {
     background-color: var(--primary-light);
     color: var(--background-light);
-    font-family: 'Gilda Display', serif;
+    font-family: 'Playfair Display', serif;
 }
 
 

@@ -30,7 +30,8 @@ interface Booking {
   checkIn: string;
   checkOut: string;
   guests: number;
-  amount: number;
+  totalAmount?: number;
+  amount?: number;
   status: string;
   specialRequests?: string;
 }
@@ -39,7 +40,7 @@ interface BookingEditDialogProps {
   open: boolean;
   onClose: () => void;
   booking?: Booking | null;
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
 }
 
 export default function BookingEditDialog({ open, onClose, booking, mode }: BookingEditDialogProps) {
@@ -52,6 +53,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
     checkIn: '',
     checkOut: '',
     guests: 1,
+    totalAmount: 0,
     amount: 0,
     status: 'Pending',
     specialRequests: ''
@@ -72,6 +74,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
         checkIn: '',
         checkOut: '',
         guests: 1,
+        totalAmount: 0,
         amount: 0,
         status: 'Pending',
         specialRequests: ''
@@ -91,7 +94,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
     try {
       // Validate required fields
       if (!formData.guestName || !formData.guestEmail || !formData.propertyId || 
-          !formData.checkIn || !formData.checkOut || formData.amount <= 0) {
+          !formData.checkIn || !formData.checkOut || (formData.totalAmount || formData.amount || 0) <= 0) {
         setError('Please fill in all required fields');
         return;
       }
@@ -115,7 +118,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        {mode === 'create' ? 'Create New Booking' : 'Edit Booking'}
+        {mode === 'create' ? 'Create New Booking' : mode === 'edit' ? 'Edit Booking' : 'View Booking Details'}
         <Button onClick={onClose} sx={{ color: 'white', minWidth: 'auto' }}>
           <Close />
         </Button>
@@ -143,6 +146,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
               value={formData.guestName}
               onChange={(e) => handleChange('guestName', e.target.value)}
               required
+              disabled={mode === 'view'}
             />
           </Grid>
           
@@ -154,6 +158,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
               value={formData.guestEmail}
               onChange={(e) => handleChange('guestEmail', e.target.value)}
               required
+              disabled={mode === 'view'}
             />
           </Grid>
           
@@ -163,6 +168,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
               label="Guest Phone"
               value={formData.guestPhone}
               onChange={(e) => handleChange('guestPhone', e.target.value)}
+              disabled={mode === 'view'}
             />
           </Grid>
           
@@ -174,6 +180,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
               value={formData.guests}
               onChange={(e) => handleChange('guests', parseInt(e.target.value))}
               required
+              disabled={mode === 'view'}
             />
           </Grid>
 
@@ -191,6 +198,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
               value={formData.propertyId}
               onChange={(e) => handleChange('propertyId', e.target.value)}
               required
+              disabled={mode === 'view'}
             />
           </Grid>
           
@@ -200,6 +208,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
               label="Property Name"
               value={formData.propertyName}
               onChange={(e) => handleChange('propertyName', e.target.value)}
+              disabled={mode === 'view'}
             />
           </Grid>
 
@@ -219,6 +228,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
               onChange={(e) => handleChange('checkIn', e.target.value)}
               required
               InputLabelProps={{ shrink: true }}
+              disabled={mode === 'view'}
             />
           </Grid>
           
@@ -231,6 +241,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
               onChange={(e) => handleChange('checkOut', e.target.value)}
               required
               InputLabelProps={{ shrink: true }}
+              disabled={mode === 'view'}
             />
           </Grid>
           
@@ -239,9 +250,10 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
               fullWidth
               label="Total Amount *"
               type="number"
-              value={formData.amount}
-              onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
+              value={formData.totalAmount || formData.amount || 0}
+              onChange={(e) => handleChange('totalAmount', parseFloat(e.target.value))}
               required
+              disabled={mode === 'view'}
             />
           </Grid>
           
@@ -252,6 +264,7 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
                 value={formData.status}
                 onChange={(e) => handleChange('status', e.target.value)}
                 label="Status"
+                disabled={mode === 'view'}
               >
                 <MenuItem value="Pending">Pending</MenuItem>
                 <MenuItem value="Confirmed">Confirmed</MenuItem>
@@ -269,28 +282,37 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
               rows={3}
               value={formData.specialRequests}
               onChange={(e) => handleChange('specialRequests', e.target.value)}
+              disabled={mode === 'view'}
             />
           </Grid>
         </Grid>
       </DialogContent>
 
       <DialogActions sx={{ p: 3, background: '#f5f5f5' }}>
-        <Button onClick={onClose} variant="outlined">
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained"
-          startIcon={<Save />}
-          sx={{
-            background: 'linear-gradient(45deg, #5a3d35, #d97706)',
-            '&:hover': {
-              background: 'linear-gradient(45deg, #4a332c, #b45309)',
-            }
-          }}
-        >
-          {mode === 'create' ? 'Create Booking' : 'Save Changes'}
-        </Button>
+        {mode === 'view' ? (
+          <Button onClick={onClose} variant="contained" sx={{ ml: 'auto' }}>
+            Close
+          </Button>
+        ) : (
+          <>
+            <Button onClick={onClose} variant="outlined">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmit} 
+              variant="contained"
+              startIcon={<Save />}
+              sx={{
+                background: 'linear-gradient(45deg, #5a3d35, #d97706)',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #4a332c, #b45309)',
+                }
+              }}
+            >
+              {mode === 'create' ? 'Create Booking' : 'Save Changes'}
+            </Button>
+          </>
+        )}
       </DialogActions>
     </Dialog>
   );

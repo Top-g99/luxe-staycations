@@ -40,7 +40,7 @@ import {
   CalendarToday
 } from '@mui/icons-material';
 import { useParams, useRouter } from 'next/navigation';
-import { propertyManager, Property } from '@/lib/propertyManager';
+import { propertyManager, Property } from '@/lib/dataManager';
 import { useBookingContext } from '@/contexts/BookingContext';
 
 export default function VillaDetailPage() {
@@ -63,12 +63,10 @@ export default function VillaDetailPage() {
   useEffect(() => {
     const loadProperty = async () => {
       try {
-        if (typeof window !== 'undefined') {
-          propertyManager.initialize();
-        }
+        await propertyManager.initialize();
         
         const propertyId = params.id as string;
-        const propertyData = propertyManager.getPropertyById(propertyId);
+        const propertyData = propertyManager.getById(propertyId);
         
         if (propertyData) {
           setProperty(propertyData);
@@ -170,7 +168,7 @@ export default function VillaDetailPage() {
             {property.rating} ({property.reviews} reviews)
           </Typography>
         </Box>
-        <Chip label={property.type} color="primary" />
+        <Chip label="Villa" color="primary" />
       </Box>
 
       <Grid container spacing={4}>
@@ -180,7 +178,7 @@ export default function VillaDetailPage() {
           <Box sx={{ mb: 4 }}>
             <Box sx={{ position: 'relative', height: 400, borderRadius: 3, overflow: 'hidden', mb: 2 }}>
               <img
-                src={property.images ? property.images[selectedImage] : property.image}
+                src={property.image}
                 alt={property.name}
                 style={{
                   width: '100%',
@@ -190,37 +188,7 @@ export default function VillaDetailPage() {
               />
             </Box>
             
-            {property.images && property.images.length > 1 && (
-              <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto' }}>
-                {property.images.map((image, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      width: 80,
-                      height: 60,
-                      borderRadius: 1,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      border: selectedImage === index ? '2px solid #d97706' : '2px solid transparent',
-                      '&:hover': {
-                        border: '2px solid #d97706'
-                      }
-                    }}
-                    onClick={() => setSelectedImage(index)}
-                  >
-                    <img
-                      src={image}
-                      alt={`${property.name} ${index + 1}`}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                      }}
-                    />
-                  </Box>
-                ))}
-              </Box>
-            )}
+
           </Box>
 
           {/* Property Details */}
@@ -232,23 +200,7 @@ export default function VillaDetailPage() {
               {property.description}
             </Typography>
             
-            {property.highlights && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Highlights
-                </Typography>
-                <Grid container spacing={2}>
-                  {property.highlights.map((highlight, index) => (
-                    <Grid item xs={12} sm={6} key={index}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CheckCircle sx={{ color: '#d97706', fontSize: 20 }} />
-                        <Typography variant="body2">{highlight}</Typography>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
+
 
             {/* Amenities */}
             <Box sx={{ mb: 3 }}>
@@ -273,22 +225,7 @@ export default function VillaDetailPage() {
                 Property Information
               </Typography>
               <Grid container spacing={2}>
-                {property.bedrooms && (
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Bed sx={{ color: 'text.secondary' }} />
-                      <Typography variant="body2">{property.bedrooms} Bedrooms</Typography>
-                    </Box>
-                  </Grid>
-                )}
-                {property.bathrooms && (
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Bathtub sx={{ color: 'text.secondary' }} />
-                      <Typography variant="body2">{property.bathrooms} Bathrooms</Typography>
-                    </Box>
-                  </Grid>
-                )}
+
                 {property.maxGuests && (
                   <Grid item xs={6} sm={3}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -300,53 +237,9 @@ export default function VillaDetailPage() {
               </Grid>
             </Box>
 
-            {/* Host Information */}
-            {property.hostName && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Hosted by {property.hostName}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  {property.hostImage && (
-                    <Avatar
-                      src={property.hostImage}
-                      sx={{ width: 60, height: 60 }}
-                    />
-                  )}
-                  <Box>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {property.hostName}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Superhost
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-            )}
 
-            {/* Policies */}
-            {property.policies && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  House Rules
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="subtitle2">Check-in</Typography>
-                    <Typography variant="body2">{property.policies.checkIn}</Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="subtitle2">Check-out</Typography>
-                    <Typography variant="body2">{property.policies.checkOut}</Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="subtitle2">Cancellation</Typography>
-                    <Typography variant="body2">{property.policies.cancellation}</Typography>
-                  </Grid>
-                </Grid>
-              </Box>
-            )}
+
+
           </Box>
         </Grid>
 

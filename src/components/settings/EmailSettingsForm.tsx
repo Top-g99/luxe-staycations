@@ -45,6 +45,12 @@ export default function EmailSettingsForm() {
     if (savedConfig) {
       try {
         const parsedConfig = JSON.parse(savedConfig);
+        // Ensure smtpPort is a valid number
+        if (parsedConfig.smtpPort && !isNaN(parsedConfig.smtpPort)) {
+          parsedConfig.smtpPort = Number(parsedConfig.smtpPort);
+        } else {
+          parsedConfig.smtpPort = 587; // Default port
+        }
         setConfig(parsedConfig);
         setIsConfigured(true);
       } catch (error) {
@@ -56,31 +62,53 @@ export default function EmailSettingsForm() {
   const handleConfigChange = (field: keyof EmailConfig, value: string | number | boolean) => {
     setConfig(prev => ({
       ...prev,
-      [field]: value
+      [field]: field === 'smtpPort' ? (isNaN(Number(value)) ? 587 : Number(value)) : value
     }));
   };
 
   const handleSaveConfig = async () => {
     setIsLoading(true);
     try {
-      // Save to localStorage
-      localStorage.setItem('luxeEmailConfig', JSON.stringify(config));
+      // Configure email service (now saves to Supabase)
+      const success = await emailService.configure(config);
       
-      // Configure email service
-      emailService.configure(config);
-      
-      setIsConfigured(true);
-      setTestResult({
-        success: true,
-        message: 'Email configuration saved successfully!'
-      });
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setTestResult(null), 3000);
+      if (success) {
+        setIsConfigured(true);
+        setTestResult({
+          success: true,
+          message: 'Email configuration saved successfully to Supabase!'
+        });
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setTestResult(null), 3000);
+      } else {
+        setTestResult({
+          success: false,
+          message: 'Failed to save email configuration to Supabase'
+        });
+      }
     } catch (error) {
       setTestResult({
         success: false,
         message: 'Error saving email configuration'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    setIsLoading(true);
+    try {
+      const result = await emailService.testConnection();
+      setTestResult({
+        success: result.success,
+        message: result.message
+      });
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: 'Error testing SMTP connection'
       });
     } finally {
       setIsLoading(false);
@@ -199,8 +227,8 @@ export default function EmailSettingsForm() {
                 fullWidth
                 label="SMTP Port"
                 type="number"
-                value={config.smtpPort}
-                onChange={(e) => handleConfigChange('smtpPort', parseInt(e.target.value))}
+                value={config.smtpPort || ''}
+                onChange={(e) => handleConfigChange('smtpPort', e.target.value)}
                 placeholder="587"
                 helperText="SMTP server port (587 for TLS, 465 for SSL)"
               />
@@ -262,7 +290,7 @@ export default function EmailSettingsForm() {
             <Button
               variant="contained"
               startIcon={<Save />}
-              onClick={handleSaveConfig}
+              onClick={() => handleSaveConfig()}
               disabled={isLoading}
               sx={{
                 background: 'linear-gradient(45deg, #5a3d35, #d97706)',
@@ -276,7 +304,7 @@ export default function EmailSettingsForm() {
 
             <Button
               variant="outlined"
-              onClick={handleResetConfig}
+              onClick={() => handleResetConfig()}
               disabled={isLoading}
             >
               Reset to Default
@@ -311,8 +339,20 @@ export default function EmailSettingsForm() {
               <Button
                 fullWidth
                 variant="outlined"
+                startIcon={<CheckCircle />}
+                onClick={() => handleTestConnection()}
+                disabled={isLoading || !isConfigured}
+                sx={{ mb: 1 }}
+              >
+                Test Connection
+              </Button>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Button
+                fullWidth
+                variant="outlined"
                 startIcon={<PlayArrow />}
-                onClick={handleTestEmail}
+                onClick={() => handleTestEmail()}
                 disabled={isLoading || !isConfigured}
               >
                 Send Test Email
@@ -356,6 +396,28 @@ export default function EmailSettingsForm() {
             <li>SMTP Port: 587</li>
             <li>Use an App Password</li>
           </ul>
+
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            <strong>For Hostinger:</strong>
+          </Typography>
+          <ul style={{ margin: '0 0 16px 0', paddingLeft: '20px' }}>
+            <li>SMTP Host: smtp.hostinger.com</li>
+            <li>SMTP Port: 587 (TLS) or 465 (SSL)</li>
+            <li>Username: Your full email address (e.g., info@yourdomain.com)</li>
+            <li>Password: Your email account password</li>
+            <li>Enable SSL/TLS: Yes (for port 465) or No (for port 587)</li>
+          </ul>
+
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            <strong>Hostinger Troubleshooting:</strong>
+            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+              <li>Make sure your email account is created in Hostinger control panel</li>
+              <li>Try port 587 with SSL disabled first</li>
+              <li>If port 587 fails, try port 465 with SSL enabled</li>
+              <li>Ensure your email account is not suspended or disabled</li>
+              <li>Check if your hosting plan includes email services</li>
+            </ul>
+          </Alert>
 
           <Alert severity="info" sx={{ mt: 2 }}>
             <strong>Note:</strong> For production use, consider using email services like SendGrid, AWS SES, or Mailgun for better deliverability and features.

@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { propertyManager } from '@/lib/propertyManager';
+import { propertyManager } from '@/lib/dataManager';
 
 export async function GET(request: NextRequest) {
   try {
-    // Use local property manager for now
-    const properties = propertyManager.getAllProperties();
+    // Initialize the property manager if needed
+    await propertyManager.initialize();
+    
+    // Use data manager property manager for consistency
+    const properties = propertyManager.getAll();
     
     return NextResponse.json({
       success: true,
       data: properties,
       count: properties.length,
-      source: 'local'
+      source: 'dataManager'
     });
   } catch (error) {
     console.error('Error fetching properties:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch properties' },
+      { success: false, error: 'Failed to fetch properties', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -36,20 +39,24 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Use local property manager for now
-    const newProperty = propertyManager.addProperty(body);
+    // Initialize the property manager if needed
+    await propertyManager.initialize();
+    
+    // Use data manager property manager for consistency
+    const newProperty = await propertyManager.create(body);
     
     return NextResponse.json({
       success: true,
       data: newProperty,
-      source: 'local'
+      source: 'dataManager'
     });
   } catch (error) {
     console.error('Error adding property:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to add property' 
+        error: 'Failed to add property', 
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

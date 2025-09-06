@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Box, 
@@ -25,12 +25,16 @@ import {
   LocationOn,
   ExpandMore,
   KeyboardArrowDown,
-  KeyboardArrowUp
+  KeyboardArrowUp,
+  AdminPanelSettings,
+  Business
 } from '@mui/icons-material';
+import { contactManager, ContactInfo } from '@/lib/contactManager';
 
 export default function Footer() {
   const [selectedTab, setSelectedTab] = useState(0);
   const [expandedCity, setExpandedCity] = useState<string | null>('Lonavala');
+  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
@@ -39,6 +43,21 @@ export default function Footer() {
   const toggleCity = (city: string) => {
     setExpandedCity(expandedCity === city ? null : city);
   };
+
+  useEffect(() => {
+    // Initialize contact manager and load contact info
+    if (typeof window !== 'undefined') {
+      contactManager.initialize();
+      setContactInfo(contactManager.getContactInfo());
+      
+      // Subscribe to contact info changes
+      const unsubscribe = contactManager.subscribe((newContactInfo) => {
+        setContactInfo(newContactInfo);
+      });
+      
+      return unsubscribe;
+    }
+  }, []);
 
   return (
     <Box
@@ -136,7 +155,7 @@ export default function Footer() {
           <Grid item xs={12} md={4}>
             <Box sx={{ mb: 3 }}>
               <Typography variant="h5" sx={{ 
-                fontFamily: 'Gilda Display, serif',
+                fontFamily: 'Playfair Display, serif',
                 fontWeight: 700,
                 mb: 2
               }}>
@@ -156,19 +175,19 @@ export default function Footer() {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Phone sx={{ mr: 2, fontSize: 20 }} />
                 <Typography variant="body2">
-                  +91 98765 43210
+                  {contactInfo?.phone || '+91 98765 43210'}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Email sx={{ mr: 2, fontSize: 20 }} />
                 <Typography variant="body2">
-                  info@luxestaycations.com
+                  {contactInfo?.email || 'info@luxestaycations.com'}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <LocationOn sx={{ mr: 2, fontSize: 20 }} />
                 <Typography variant="body2">
-                  Mumbai, Maharashtra, India
+                  {contactInfo?.address || 'Mumbai, Maharashtra, India'}
                 </Typography>
               </Box>
             </Box>
@@ -306,7 +325,65 @@ export default function Footer() {
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
               © 2025 Luxe Staycations. All rights reserved.
             </Typography>
-            <Box sx={{ display: 'flex', gap: 3 }}>
+            <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+              {/* Host Login Button */}
+              <Link href="/host/login" style={{ textDecoration: 'none' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  px: 2,
+                  py: 1,
+                  borderRadius: 1,
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': { 
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    borderColor: 'var(--accent)'
+                  }
+                }}>
+                  <Business sx={{ fontSize: 16 }} />
+                  <Typography variant="body2" sx={{ 
+                    color: 'rgba(255,255,255,0.8)',
+                    fontWeight: 500,
+                    '&:hover': { color: 'var(--accent)' }
+                  }}>
+                    Host Login
+                  </Typography>
+                </Box>
+              </Link>
+
+              {/* Admin Login Button */}
+              <Link href="/admin/login" style={{ textDecoration: 'none' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  px: 2,
+                  py: 1,
+                  borderRadius: 1,
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': { 
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    borderColor: 'var(--accent)'
+                  }
+                }}>
+                  <AdminPanelSettings sx={{ fontSize: 16 }} />
+                  <Typography variant="body2" sx={{ 
+                    color: 'rgba(255,255,255,0.8)',
+                    fontWeight: 500,
+                    '&:hover': { color: 'var(--accent)' }
+                  }}>
+                    Admin
+                  </Typography>
+                </Box>
+              </Link>
+
+              {/* Separator */}
+              <Box sx={{ width: '1px', height: '20px', backgroundColor: 'rgba(255,255,255,0.3)' }} />
+
+              {/* Policy Links */}
               <Link href="/privacy-policy" style={{ textDecoration: 'none' }}>
                 <Typography variant="body2" sx={{ 
                   color: 'rgba(255,255,255,0.7)',

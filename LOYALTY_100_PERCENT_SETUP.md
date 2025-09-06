@@ -213,3 +213,6 @@ If you encounter any issues:
 **Your loyalty program will be 100% working after following this guide!** 💎🎯
 
 
+
+
+
