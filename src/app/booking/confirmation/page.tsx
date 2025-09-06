@@ -14,6 +14,7 @@ import {
 import { CheckCircle, Email, WhatsApp } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { emailService } from '@/lib/emailService';
+import { emailTriggerManager } from '@/lib/emailTriggers';
 import { whatsappService } from '@/lib/whatsappService';
 import WhatsAppButton from '@/components/WhatsAppButton';
 
@@ -47,10 +48,27 @@ function ConfirmationContent() {
   };
 
   useEffect(() => {
-    // Send confirmation email and WhatsApp message automatically
-    if (bookingData.guestEmail && emailService.isConfigured) {
-      sendConfirmationEmail();
-    }
+    // Initialize email service and send confirmation email
+    const initializeAndSendEmail = async () => {
+      if (bookingData.guestEmail) {
+        try {
+          await emailService.initialize();
+          if (emailService.isEmailConfigured()) {
+            sendConfirmationEmail();
+          } else {
+            console.log('Email service not configured, skipping email send');
+            setEmailStatus('error');
+            setEmailMessage('Email service not configured. Please configure email settings in admin panel.');
+          }
+        } catch (error) {
+          console.error('Error initializing email service:', error);
+          setEmailStatus('error');
+          setEmailMessage('Failed to initialize email service');
+        }
+      }
+    };
+
+    initializeAndSendEmail();
     
     // Send WhatsApp confirmation if phone number is available
     const guestPhone = searchParams.get('guestPhone');
@@ -64,7 +82,8 @@ function ConfirmationContent() {
     
     setEmailStatus('sending');
     try {
-      const result = await emailService.sendBookingConfirmation(bookingData);
+      // Use email trigger manager for better template handling
+      const result = await emailTriggerManager.triggerBookingConfirmation(bookingData);
       if (result.success) {
         setEmailStatus('sent');
         setEmailMessage('Confirmation email sent successfully!');

@@ -74,6 +74,7 @@ import {
 } from '@mui/icons-material';
 import { partnerManager } from '@/lib/partnerManager';
 import { emailService } from '@/lib/emailService';
+import { emailTriggerManager } from '@/lib/emailTriggers';
 import ImageUpload from '@/components/ImageUpload';
 import ConsultationForm from '@/components/ConsultationForm';
 import { contactManager, ContactInfo } from '@/lib/contactManager';
@@ -202,29 +203,29 @@ export default function PartnerWithUs() {
     try {
       await partnerManager.addPartnerApplication(formData);
       
-      // Send confirmation email
-      if (emailService.isConfigured) {
-        const partnerData = {
-          businessName: formData.businessName,
-          contactName: formData.contactPerson,
-          email: formData.email,
-          phone: formData.phone,
-          propertyType: formData.businessType,
-          location: formData.location,
-          experience: formData.experience,
-          message: formData.description,
-          requestId: 'PR-' + Date.now()
-        };
-        
-        try {
-          await emailService.sendPartnerRequestConfirmation(partnerData);
+      // Send confirmation email using trigger manager
+      const partnerData = {
+        businessName: formData.businessName,
+        contactName: formData.contactPerson,
+        email: formData.email,
+        phone: formData.phone,
+        propertyType: formData.businessType,
+        location: formData.location,
+        experience: formData.experience,
+        message: formData.description,
+        requestId: 'PR-' + Date.now()
+      };
+      
+      try {
+        const emailResult = await emailTriggerManager.triggerPartnerRequest(partnerData);
+        if (emailResult.success) {
           setSnackbar({ open: true, message: 'Application submitted successfully! Confirmation email sent.', severity: 'success' });
-        } catch (emailError) {
-          console.error('Email sending failed:', emailError);
+        } else {
           setSnackbar({ open: true, message: 'Application submitted successfully! (Email notification failed)', severity: 'warning' });
         }
-      } else {
-        setSnackbar({ open: true, message: 'Application submitted successfully!', severity: 'success' });
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+        setSnackbar({ open: true, message: 'Application submitted successfully! (Email notification failed)', severity: 'warning' });
       }
       
       // Reset form

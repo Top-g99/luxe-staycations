@@ -50,6 +50,7 @@ import { propertyManager } from '@/lib/dataManager';
 import { destinationManager } from '@/lib/destinationManager';
 import { callbackManager } from '@/lib/callbackManager';
 import { dealBannerManager } from '@/lib/dealBannerManager';
+import EmailStatusIndicator from '@/components/EmailStatusIndicator';
 
 interface DashboardStats {
   totalProperties: number;
@@ -250,6 +251,9 @@ export default function AdminDashboard() {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Email Status */}
+      <EmailStatusIndicator />
 
       {/* Quick Actions */}
       <Card sx={{ mb: 4 }}>

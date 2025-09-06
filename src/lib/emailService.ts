@@ -37,6 +37,11 @@ export interface BookingEmailData {
   totalAmount: number;
   transactionId: string;
   paymentMethod: string;
+  hostName?: string;
+  hostPhone?: string;
+  hostEmail?: string;
+  specialRequests?: string;
+  amenities?: string[];
 }
 
 export interface BookingCancellationData {
@@ -146,30 +151,38 @@ export class EmailService {
     }
 
     try {
-      // Try to use Supabase template first
-      const templates = supabaseEmailManager.getTemplatesByType('booking_confirmation');
+      // Try to use template manager first
+      const templates = emailTemplateManager.getTemplatesByType('booking_confirmation');
       let template;
 
       if (templates.length > 0) {
         const templateData = templates[0];
         const variables = {
           guestName: data.guestName,
+          guestEmail: data.guestEmail,
           bookingId: data.bookingId,
           propertyName: data.propertyName,
-          propertyLocation: data.propertyLocation,
+          propertyAddress: data.propertyLocation,
           checkIn: data.checkIn,
           checkOut: data.checkOut,
           guests: data.guests.toString(),
-          totalAmount: `₹${data.totalAmount.toLocaleString()}`
+          totalAmount: `₹${data.totalAmount.toLocaleString()}`,
+          hostName: data.hostName || 'Property Host',
+          hostPhone: data.hostPhone || '+91-8828279739',
+          hostEmail: data.hostEmail || 'host@luxestaycations.in',
+          specialRequests: data.specialRequests || '',
+          amenities: data.amenities?.join(', ') || '',
+          transactionId: data.transactionId,
+          paymentMethod: data.paymentMethod
         };
 
-        const processed = supabaseEmailManager.processTemplate(templateData.id, variables);
+        const processed = emailTemplateManager.processTemplate(templateData.id, variables);
         if (processed) {
           template = processed;
         }
       }
 
-      // Fallback to default template if Supabase template fails
+      // Fallback to default template if template manager fails
       if (!template) {
         template = {
           subject: `🎉 Booking Confirmed - ${data.bookingId} | Luxe Staycations`,
@@ -318,8 +331,8 @@ export class EmailService {
     }
 
     try {
-      // Try to use Supabase template first
-      const templates = supabaseEmailManager.getTemplatesByType('consultation_request');
+      // Try to use template manager first
+      const templates = emailTemplateManager.getTemplatesByType('consultation_request');
       let template;
 
       if (templates.length > 0) {
@@ -336,13 +349,13 @@ export class EmailService {
           consultationType: data.consultationType
         };
 
-        const processed = supabaseEmailManager.processTemplate(templateData.id, variables);
+        const processed = emailTemplateManager.processTemplate(templateData.id, variables);
         if (processed) {
           template = processed;
         }
       }
 
-      // Fallback to default template if Supabase template fails
+      // Fallback to default template if template manager fails
       if (!template) {
         template = {
           subject: `🏡 Host Partnership Consultation Confirmed - ${data.requestId} | Luxe Staycations`,
