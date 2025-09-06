@@ -218,7 +218,7 @@ export default function PartnerWithUs() {
       
       try {
         // Send email directly using email service
-        const emailResult = await emailService.sendPartnerRequest(partnerData);
+        const emailResult = await emailService.sendPartnerRequestConfirmation(partnerData);
         if (emailResult.success) {
           setSnackbar({ open: true, message: 'Application submitted successfully! Confirmation email sent.', severity: 'success' });
         } else {
