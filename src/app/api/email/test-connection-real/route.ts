@@ -3,9 +3,12 @@ import nodemailer from 'nodemailer';
 
 export async function POST(request: NextRequest) {
   try {
-    const { config } = await request.json();
+    const body = await request.json();
+    
+    // Handle both { config: ... } and direct config formats
+    const config = body.config || body;
 
-    if (!config) {
+    if (!config || !config.smtpHost || !config.smtpUser || !config.smtpPassword) {
       return NextResponse.json(
         { success: false, message: 'Missing configuration' },
         { status: 400 }

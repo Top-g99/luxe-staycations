@@ -252,7 +252,7 @@ export default function EnhancedEmailSettingsForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ config: configForm }),
+        body: JSON.stringify(configForm),
       });
 
       const result = await response.json();
@@ -297,6 +297,7 @@ export default function EnhancedEmailSettingsForm() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          ...configForm,
           to: testEmail,
           subject: 'Test Email from Luxe Staycations',
           html: `
@@ -1040,5 +1041,3 @@ export default function EnhancedEmailSettingsForm() {
       </TabPanel>
     </Box>
   );
-}
- 

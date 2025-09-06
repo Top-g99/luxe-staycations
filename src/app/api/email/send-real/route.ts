@@ -3,9 +3,13 @@ import nodemailer from 'nodemailer';
 
 export async function POST(request: NextRequest) {
   try {
-    const { to, subject, html, config } = await request.json();
+    const body = await request.json();
+    
+    // Handle both { config: ... } and direct config formats
+    const { to, subject, html } = body;
+    const config = body.config || body;
 
-    if (!to || !subject || !html || !config) {
+    if (!to || !subject || !html || !config.smtpHost || !config.smtpUser || !config.smtpPassword) {
       return NextResponse.json(
         { success: false, message: 'Missing required fields' },
         { status: 400 }
