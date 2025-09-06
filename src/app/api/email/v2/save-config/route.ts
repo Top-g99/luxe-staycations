@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: NextRequest) {
   try {
+    // Check if required environment variables are available
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Missing required environment variables');
+      return NextResponse.json({
+        success: false,
+        error: 'Missing required environment variables for Supabase connection'
+      }, { status: 500 });
+    }
+
     const config = await request.json();
     
     // Validate required fields
@@ -17,6 +21,12 @@ export async function POST(request: NextRequest) {
         error: 'Missing required configuration fields'
       }, { status: 400 });
     }
+
+    // Create Supabase client inside the function
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
 
     // Save configuration to Supabase
     const { data, error } = await supabase
