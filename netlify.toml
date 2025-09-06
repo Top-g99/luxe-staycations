@@ -12,11 +12,8 @@
   # NEXT_PUBLIC_SUPABASE_ANON_KEY = "your-supabase-anon-key"
   # NEXT_PUBLIC_BASE_URL = "https://your-netlify-site.netlify.app"
 
-# Handle Next.js routing (API routes are handled by Next.js)
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 [[headers]]
   for = "/*"
