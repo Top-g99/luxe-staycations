@@ -194,8 +194,8 @@ export default function AdminPartnerApplicationsPage() {
       const module = await import('@/lib/partnerManager');
       const partnerManager = module.partnerManager;
       
-      if (partnerManager && typeof partnerManager.delete === 'function') {
-        partnerManager.delete(application.id);
+      if (partnerManager && typeof partnerManager.deleteApplication === 'function') {
+        partnerManager.deleteApplication(application.id);
       }
 
       // Remove from local state
