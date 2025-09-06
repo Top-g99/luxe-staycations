@@ -114,9 +114,42 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     }
   }, [allBookings]);
 
-  const addBooking = (booking: CompleteBooking) => {
+  const addBooking = async (booking: CompleteBooking) => {
     setAllBookings(prev => [...prev, booking]);
     console.log('Booking added:', booking);
+    
+    // Also save to Supabase via API
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          guestName: `${booking.guestInfo.firstName} ${booking.guestInfo.lastName}`,
+          guestEmail: booking.guestInfo.email,
+          guestPhone: booking.guestInfo.phone,
+          propertyId: booking.bookingDetails.propertyId,
+          propertyName: booking.bookingDetails.propertyName,
+          checkIn: booking.bookingDetails.checkIn,
+          checkOut: booking.bookingDetails.checkOut,
+          guests: parseInt(booking.bookingDetails.guests),
+          amount: booking.bookingDetails.total,
+          status: booking.status,
+          paymentStatus: booking.paymentStatus,
+          specialRequests: booking.guestInfo.specialRequests
+        }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Booking saved to Supabase:', result);
+      } else {
+        console.error('Failed to save booking to Supabase:', await response.text());
+      }
+    } catch (error) {
+      console.error('Error saving booking to Supabase:', error);
+    }
   };
 
   const updateBooking = (id: string, updates: Partial<CompleteBooking>) => {

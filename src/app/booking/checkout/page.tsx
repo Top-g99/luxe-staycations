@@ -178,8 +178,8 @@ function BookingCheckoutContent() {
         paymentDetails: paymentDetails
       };
 
-      // Add booking to context (this will also save to localStorage)
-      addBooking(completeBooking);
+      // Add booking to context (this will also save to localStorage and Supabase)
+      await addBooking(completeBooking);
 
       // Also save to BookingManager for backward compatibility
       const { bookingManager } = await import('@/lib/bookingManager');
