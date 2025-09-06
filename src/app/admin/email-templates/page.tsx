@@ -196,10 +196,24 @@ export default function EmailTemplatesPage() {
     const colors = {
       booking_confirmation: 'success',
       booking_cancellation: 'warning',
+      payment_confirmation: 'success',
+      payment_receipt: 'info',
+      payment_refund: 'warning',
+      guest_welcome: 'primary',
+      guest_checkin: 'info',
+      guest_feedback: 'secondary',
+      host_booking_alert: 'primary',
+      host_earnings: 'success',
+      host_management: 'info',
+      admin_notification: 'error',
+      admin_report: 'error',
+      admin_alert: 'error',
+      newsletter_welcome: 'primary',
+      newsletter_promotion: 'secondary',
+      loyalty_program: 'success',
       partner_request: 'info',
       consultation_request: 'primary',
       special_request: 'secondary',
-      admin_notification: 'error',
       custom: 'default'
     };
     return colors[type] as any;
@@ -209,10 +223,24 @@ export default function EmailTemplatesPage() {
     const labels = {
       booking_confirmation: 'Booking Confirmation',
       booking_cancellation: 'Booking Cancellation',
+      payment_confirmation: 'Payment Confirmation',
+      payment_receipt: 'Payment Receipt',
+      payment_refund: 'Payment Refund',
+      guest_welcome: 'Guest Welcome',
+      guest_checkin: 'Guest Check-in',
+      guest_feedback: 'Guest Feedback',
+      host_booking_alert: 'Host Booking Alert',
+      host_earnings: 'Host Earnings',
+      host_management: 'Host Management',
+      admin_notification: 'Admin Notification',
+      admin_report: 'Admin Report',
+      admin_alert: 'Admin Alert',
+      newsletter_welcome: 'Newsletter Welcome',
+      newsletter_promotion: 'Newsletter Promotion',
+      loyalty_program: 'Loyalty Program',
       partner_request: 'Partner Request',
       consultation_request: 'Consultation Request',
       special_request: 'Special Request',
-      admin_notification: 'Admin Notification',
       custom: 'Custom'
     };
     return labels[type];
@@ -363,13 +391,43 @@ export default function EmailTemplatesPage() {
                   onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as EmailTemplate['type'] }))}
                   label="Template Type"
                 >
-                  <MenuItem value="booking_confirmation">Booking Confirmation</MenuItem>
-                  <MenuItem value="booking_cancellation">Booking Cancellation</MenuItem>
-                  <MenuItem value="partner_request">Partner Request</MenuItem>
-                  <MenuItem value="consultation_request">Consultation Request</MenuItem>
-                  <MenuItem value="special_request">Special Request</MenuItem>
-                  <MenuItem value="admin_notification">Admin Notification</MenuItem>
-                  <MenuItem value="custom">Custom</MenuItem>
+                  <optgroup label="Booking Templates">
+                    <MenuItem value="booking_confirmation">Booking Confirmation</MenuItem>
+                    <MenuItem value="booking_cancellation">Booking Cancellation</MenuItem>
+                  </optgroup>
+                  <optgroup label="Payment Templates">
+                    <MenuItem value="payment_confirmation">Payment Confirmation</MenuItem>
+                    <MenuItem value="payment_receipt">Payment Receipt</MenuItem>
+                    <MenuItem value="payment_refund">Payment Refund</MenuItem>
+                  </optgroup>
+                  <optgroup label="Guest Templates">
+                    <MenuItem value="guest_welcome">Guest Welcome</MenuItem>
+                    <MenuItem value="guest_checkin">Guest Check-in</MenuItem>
+                    <MenuItem value="guest_feedback">Guest Feedback</MenuItem>
+                  </optgroup>
+                  <optgroup label="Host Templates">
+                    <MenuItem value="host_booking_alert">Host Booking Alert</MenuItem>
+                    <MenuItem value="host_earnings">Host Earnings</MenuItem>
+                    <MenuItem value="host_management">Host Management</MenuItem>
+                  </optgroup>
+                  <optgroup label="Admin Templates">
+                    <MenuItem value="admin_notification">Admin Notification</MenuItem>
+                    <MenuItem value="admin_report">Admin Report</MenuItem>
+                    <MenuItem value="admin_alert">Admin Alert</MenuItem>
+                  </optgroup>
+                  <optgroup label="Marketing Templates">
+                    <MenuItem value="newsletter_welcome">Newsletter Welcome</MenuItem>
+                    <MenuItem value="newsletter_promotion">Newsletter Promotion</MenuItem>
+                    <MenuItem value="loyalty_program">Loyalty Program</MenuItem>
+                  </optgroup>
+                  <optgroup label="Request Templates">
+                    <MenuItem value="partner_request">Partner Request</MenuItem>
+                    <MenuItem value="consultation_request">Consultation Request</MenuItem>
+                    <MenuItem value="special_request">Special Request</MenuItem>
+                  </optgroup>
+                  <optgroup label="Other">
+                    <MenuItem value="custom">Custom</MenuItem>
+                  </optgroup>
                 </Select>
               </FormControl>
               
