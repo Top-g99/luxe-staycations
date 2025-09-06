@@ -139,7 +139,7 @@ export default function EnhancedEmailSettingsForm() {
     smtpHost: 'smtp.hostinger.com',
     smtpPort: 587,
     smtpUser: 'info@luxestaycations.in',
-    smtpPassword: '',
+    smtpPassword: 'Mamata&1234',
     enableSSL: false, // This will be determined by port in the API
     fromName: 'Luxe Staycations',
     fromEmail: 'info@luxestaycations.in',
