@@ -331,8 +331,12 @@ export const getSupabaseClient = () => {
         },
       } as any;
     }
-    // Client-side - throw error
-    throw new Error('Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.');
+    // Client-side - throw error with more details
+    const missingVars = [];
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missingVars.push('NEXT_PUBLIC_SUPABASE_URL');
+    if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    
+    throw new Error(`Supabase is not configured. Missing environment variables: ${missingVars.join(', ')}. Please add these to your Netlify environment variables.`);
   }
   return supabase;
 };
