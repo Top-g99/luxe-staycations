@@ -210,7 +210,7 @@ export class EmailService {
         };
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send-real`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -248,7 +248,7 @@ export class EmailService {
         text: this.getDefaultPartnerRequestText(data)
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send-real`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -383,7 +383,7 @@ export class EmailService {
         };
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send-real`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -666,7 +666,7 @@ Luxe Staycations Partnership Team`;
         };
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send-real`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -825,7 +825,7 @@ Email: info@luxestaycations.in | Phone: +91-8828279739`;
 
     try {
       const template = generateSpecialRequestEmail(data);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send-real`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -897,7 +897,7 @@ Email: info@luxestaycations.in | Phone: +91-8828279739`;
         };
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send-real`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -930,7 +930,7 @@ Email: info@luxestaycations.in | Phone: +91-8828279739`;
 
     try {
       const template = generateAdminNotificationEmail(type, data);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/email/send-real`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -61,8 +61,40 @@ export default function OwnerBookingsPage() {
   const loadOwnerBookings = async () => {
     try {
       setLoading(true);
-      // Fetch all owner bookings from Supabase
-      const allBookings = await supabaseHostManager.getAllOwnerBookings();
+      
+      // First try to get host bookings
+      let allBookings = await supabaseHostManager.getAllOwnerBookings();
+      
+      // If no host bookings, get all bookings from main bookings table
+      if (allBookings.length === 0) {
+        const response = await fetch('/api/bookings');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          // Convert main bookings to owner booking format
+          allBookings = result.data.map((booking: any) => ({
+            id: booking.id,
+            guestName: booking.guestName,
+            guestEmail: booking.guestEmail,
+            guestPhone: booking.guestPhone,
+            propertyName: booking.propertyName || `Property ${booking.propertyId.slice(0, 8)}...`,
+            propertyId: booking.propertyId,
+            checkIn: booking.checkIn,
+            checkOut: booking.checkOut,
+            guests: booking.guests,
+            totalAmount: booking.amount,
+            status: booking.status,
+            paymentStatus: booking.paymentStatus,
+            specialRequests: booking.specialRequests,
+            createdAt: booking.createdAt,
+            updatedAt: booking.updatedAt,
+            hostName: 'Luxe Staycations',
+            hostEmail: 'info@luxestaycations.in',
+            hostPhone: '+91-9876543210'
+          }));
+        }
+      }
+      
       setOwnerBookings(allBookings);
       setLoading(false);
     } catch (error) {
