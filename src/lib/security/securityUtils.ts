@@ -1,5 +1,5 @@
 // Security Utilities for Luxe Staycations
-import crypto from 'crypto';
+// Using Web Crypto API instead of Node.js crypto for Edge Runtime compatibility
 
 // Input validation and sanitization
 export class InputValidator {
@@ -93,50 +93,106 @@ export class InputValidator {
 
 // Encryption utilities
 export class EncryptionUtils {
-  private static readonly ALGORITHM = 'aes-256-gcm';
   private static readonly SECRET_KEY = process.env.ENCRYPTION_KEY || 'default-secret-key-change-in-production';
 
-  // Hash password using bcrypt-like approach
+  // Hash password using Web Crypto API
   static async hashPassword(password: string): Promise<string> {
-    const salt = crypto.randomBytes(16).toString('hex');
-    const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+    const salt = this.generateRandomBytes(16);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password + salt);
+    const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return `${salt}:${hash}`;
   }
 
   // Verify password
   static async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
     const [salt, hash] = hashedPassword.split(':');
-    const verifyHash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password + salt);
+    const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const verifyHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return hash === verifyHash;
   }
 
-  // Encrypt sensitive data
-  static encrypt(text: string): string {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher(this.ALGORITHM, this.SECRET_KEY);
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return iv.toString('hex') + ':' + encrypted;
+  // Encrypt sensitive data using Web Crypto API
+  static async encrypt(text: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const iv = this.generateRandomBytesArray(16);
+    const key = await this.getKey();
+    
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: iv as BufferSource },
+      key,
+      data
+    );
+    
+    const encryptedArray = new Uint8Array(encrypted);
+    const combined = new Uint8Array(iv.length + encryptedArray.length);
+    combined.set(iv);
+    combined.set(encryptedArray, iv.length);
+    
+    return Array.from(combined).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  // Decrypt sensitive data
-  static decrypt(encryptedText: string): string {
-    const [ivHex, encrypted] = encryptedText.split(':');
-    const iv = Buffer.from(ivHex, 'hex');
-    const decipher = crypto.createDecipher(this.ALGORITHM, this.SECRET_KEY);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
+  // Decrypt sensitive data using Web Crypto API
+  static async decrypt(encryptedText: string): Promise<string> {
+    const encryptedArray = new Uint8Array(
+      encryptedText.match(/.{2}/g)!.map(byte => parseInt(byte, 16))
+    );
+    
+    const iv = encryptedArray.slice(0, 16);
+    const encrypted = encryptedArray.slice(16);
+    
+    const key = await this.getKey();
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: iv as BufferSource },
+      key,
+      encrypted
+    );
+    
+    const decoder = new TextDecoder();
+    return decoder.decode(decrypted);
   }
 
   // Generate secure random token
   static generateSecureToken(length: number = 32): string {
-    return crypto.randomBytes(length).toString('hex');
+    return this.generateRandomBytes(length);
   }
 
   // Generate CSRF token
   static generateCSRFToken(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return this.generateRandomBytes(32);
+  }
+
+  // Helper method to generate random bytes
+  private static generateRandomBytes(length: number): string {
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Helper method to generate random bytes as Uint8Array
+  private static generateRandomBytesArray(length: number): Uint8Array {
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    return array;
+  }
+
+  // Helper method to get encryption key
+  private static async getKey(): Promise<CryptoKey> {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(this.SECRET_KEY);
+    return await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'AES-GCM' },
+      false,
+      ['encrypt', 'decrypt']
+    );
   }
 }
 

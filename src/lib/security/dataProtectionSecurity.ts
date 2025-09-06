@@ -68,11 +68,11 @@ export class DataProtectionSecurityManager {
   }
 
   // Process personal data with GDPR compliance
-  processPersonalData(data: PersonalData, purpose: string, legalBasis: string, processorId: string): {
+  async processPersonalData(data: PersonalData, purpose: string, legalBasis: string, processorId: string): Promise<{
     isValid: boolean;
     errors: string[];
     processedData?: any;
-  } {
+  }> {
     const errors: string[] = [];
 
     if (this.config.enableGDPRCompliance) {
@@ -94,7 +94,7 @@ export class DataProtectionSecurityManager {
 
       // Encrypt sensitive data
       if (this.config.enableDataEncryption) {
-        processedData = this.encryptSensitiveData(processedData);
+        processedData = await this.encryptSensitiveData(processedData);
       }
 
       return { isValid: true, errors, processedData };
@@ -206,19 +206,19 @@ export class DataProtectionSecurityManager {
   }
 
   // Encrypt sensitive data
-  private encryptSensitiveData(data: PersonalData): PersonalData {
+  private async encryptSensitiveData(data: PersonalData): Promise<PersonalData> {
     const encryptedData = { ...data };
 
     if (encryptedData.email) {
-      encryptedData.email = EncryptionUtils.encrypt(encryptedData.email);
+      encryptedData.email = await EncryptionUtils.encrypt(encryptedData.email);
     }
 
     if (encryptedData.phone) {
-      encryptedData.phone = EncryptionUtils.encrypt(encryptedData.phone);
+      encryptedData.phone = await EncryptionUtils.encrypt(encryptedData.phone);
     }
 
     if (encryptedData.passportNumber) {
-      encryptedData.passportNumber = EncryptionUtils.encrypt(encryptedData.passportNumber);
+      encryptedData.passportNumber = await EncryptionUtils.encrypt(encryptedData.passportNumber);
     }
 
     return encryptedData;
