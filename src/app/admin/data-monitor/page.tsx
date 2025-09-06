@@ -137,6 +137,22 @@ export default function AdminDataMonitorPage() {
 
   useEffect(() => {
     initializeData();
+    
+    // Listen for data update events from other pages
+    const handleDataUpdate = (event: CustomEvent) => {
+      console.log('Data update event received:', event.detail);
+      fetchLiveData();
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('dataUpdated', handleDataUpdate as EventListener);
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('dataUpdated', handleDataUpdate as EventListener);
+      }
+    };
   }, []);
 
   const initializeData = async () => {
@@ -149,7 +165,8 @@ export default function AdminDataMonitorPage() {
       await fetchLiveData();
       
       setConnectionStatus('connected');
-      updateStats();
+      // Don't call updateStats() here as it will override live data stats
+      // updateStats() is already called in fetchLiveData()
       updateSyncStatus();
       setAlert({
         type: 'success',
@@ -169,22 +186,51 @@ export default function AdminDataMonitorPage() {
 
   const fetchLiveData = async () => {
     try {
+      console.log('Fetching live data from APIs...');
+      
       const dataPromises = [
         // Fetch bookings from Supabase
-        fetch('/api/bookings').then(res => res.json()).then(data => data.success ? data.data : []),
+        fetch('/api/bookings').then(res => res.json()).then(data => {
+          console.log('Bookings API response:', data);
+          return data.success ? data.data : [];
+        }),
         // Fetch analytics data
-        fetch('/api/analytics').then(res => res.json()).then(data => data.success ? data.data : {}),
+        fetch('/api/analytics').then(res => res.json()).then(data => {
+          console.log('Analytics API response:', data);
+          return data.success ? data.data : {};
+        }),
         // Fetch users
-        fetch('/api/users').then(res => res.json()).then(data => data.success ? data.data : []),
+        fetch('/api/users').then(res => res.json()).then(data => {
+          console.log('Users API response:', data);
+          return data.success ? data.data : [];
+        }),
         // Fetch destinations
-        fetch('/api/destinations').then(res => res.json()).then(data => data.success ? data.data : []),
+        fetch('/api/destinations').then(res => res.json()).then(data => {
+          console.log('Destinations API response:', data);
+          return data.success ? data.data : [];
+        }),
         // Fetch properties/villas
-        fetch('/api/villas').then(res => res.json()).then(data => data.success ? data.data : []),
+        fetch('/api/villas').then(res => res.json()).then(data => {
+          console.log('Properties API response:', data);
+          return data.success ? data.data : [];
+        }),
         // Fetch partners
-        fetch('/api/partners').then(res => res.json()).then(data => data.success ? data.data : [])
+        fetch('/api/partners').then(res => res.json()).then(data => {
+          console.log('Partners API response:', data);
+          return data.success ? data.data : [];
+        })
       ];
 
       const [bookings, analytics, users, destinations, properties, partners] = await Promise.all(dataPromises);
+
+      console.log('Live data fetched:', {
+        bookings: bookings?.length || 0,
+        users: users?.length || 0,
+        destinations: destinations?.length || 0,
+        properties: properties?.length || 0,
+        partners: partners?.length || 0,
+        analytics: analytics
+      });
 
       setLiveData({
         bookings: bookings || [],
@@ -205,6 +251,8 @@ export default function AdminDataMonitorPage() {
         totalRevenue: analytics?.totalRevenue || 0,
         confirmedBookings: analytics?.confirmedBookings || 0
       });
+
+      console.log('Live data and stats updated successfully');
 
     } catch (error) {
       console.error('Error fetching live data:', error);
@@ -293,7 +341,7 @@ export default function AdminDataMonitorPage() {
       setAlert({ type: 'info', message: 'Synchronizing data...' });
       await masterDataManager.initializeAll();
       await fetchLiveData(); // Also refresh live data
-      updateStats();
+      // Don't call updateStats() here as it will override live data stats
       updateSyncStatus();
       setAlert({ type: 'success', message: 'All data synchronized successfully!' });
     } catch (error) {
@@ -339,6 +387,9 @@ export default function AdminDataMonitorPage() {
         }));
       }
 
+      // Refresh live data to reflect the deletion
+      await fetchLiveData();
+      
       // Update stats
       updateStats();
       updateSyncStatus();

@@ -74,6 +74,13 @@ export default function AdminBookingsPage() {
         // Remove from local state
         setBookings(prev => prev.filter(b => b.id !== booking.id));
         console.log('Booking deleted successfully');
+        
+        // Trigger a custom event to notify data monitor to refresh
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('dataUpdated', { 
+            detail: { type: 'booking', action: 'delete', id: booking.id } 
+          }));
+        }
       } else {
         console.error('Failed to delete booking');
         alert('Failed to delete booking');
