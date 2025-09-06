@@ -13,10 +13,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create transporter with provided configuration
+    const port = parseInt(config.smtpPort);
+    const isSecure = port === 465; // SSL for 465, TLS for 587
+    
     const transporter = nodemailer.createTransport({
       host: config.smtpHost,
-      port: parseInt(config.smtpPort),
-      secure: config.enableSSL, // true for 465, false for other ports
+      port: port,
+      secure: isSecure, // true for 465, false for other ports
       auth: {
         user: config.smtpUser,
         pass: config.smtpPassword,

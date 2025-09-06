@@ -140,9 +140,12 @@ export default function EnhancedEmailSettingsForm() {
     smtpPort: 587,
     smtpUser: 'info@luxestaycations.in',
     smtpPassword: '',
-    enableSSL: false,
+    enableSSL: false, // This will be determined by port in the API
     fromName: 'Luxe Staycations',
-    fromEmail: 'info@luxestaycations.in'
+    fromEmail: 'info@luxestaycations.in',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   });
 
   useEffect(() => {
@@ -420,7 +423,7 @@ export default function EnhancedEmailSettingsForm() {
                 value={configForm.smtpPort}
                 onChange={(e) => handleConfigChange('smtpPort', e.target.value)}
                 placeholder="587"
-                helperText="SMTP server port (587 for TLS, 465 for SSL)"
+                helperText="SMTP server port (587 for TLS, 465 for SSL) - SSL/TLS is auto-detected"
               />
             </Grid>
 
@@ -468,7 +471,7 @@ export default function EnhancedEmailSettingsForm() {
                     onChange={(e) => handleConfigChange('enableSSL', e.target.checked)}
                   />
                 }
-                label="Enable SSL/TLS"
+                label="Enable SSL/TLS (Auto-detected based on port)"
               />
             </Grid>
           </Grid>
