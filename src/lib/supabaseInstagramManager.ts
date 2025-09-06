@@ -76,6 +76,10 @@ export class SupabaseInstagramManager {
   public async initialize(): Promise<void> {
     if (this.isInitialized) return;
     
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       // Test connection by checking if tables exist
       const { error } = await supabase
@@ -97,6 +101,10 @@ export class SupabaseInstagramManager {
 
   // Load Instagram configuration from Supabase
   public async loadConfiguration(): Promise<InstagramConfig | null> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       const { data, error } = await supabase
         .from('instagram_configurations')
@@ -133,6 +141,10 @@ export class SupabaseInstagramManager {
 
   // Save Instagram configuration to Supabase
   public async saveConfiguration(config: InstagramConfig): Promise<boolean> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
     try {
       // First, disable all existing configurations
       await supabase

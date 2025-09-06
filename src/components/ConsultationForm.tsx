@@ -123,14 +123,14 @@ export default function ConsultationForm({ open, onClose, source = 'partner-page
           preferredDate: formData.preferredDate,
           preferredTime: formData.preferredTime,
           propertyType: formData.propertyType,
-          budget: 'To be discussed',
-          message: formData.additionalNotes || `Property: ${formData.propertyType} in ${formData.location}. Consultation type: ${formData.consultationType}`,
+          location: formData.location,
+          consultationType: formData.consultationType,
           requestId: 'CR-' + Date.now()
         };
         
         console.log('Attempting to send consultation email:', consultationData);
         try {
-          const result = await emailService.sendConsultationRequestConfirmation(consultationData);
+          const result = await emailService.sendConsultationConfirmation(consultationData);
           console.log('Email sending result:', result);
         } catch (emailError) {
           console.error('Email sending failed:', emailError);
