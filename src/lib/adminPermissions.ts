@@ -6,7 +6,11 @@ import { userManager } from './userManager';
  */
 export function isAdmin(): boolean {
   const currentUser = userManager.getCurrentUser();
-  return currentUser?.role === 'admin';
+  console.log('Current user in isAdmin():', currentUser);
+  console.log('User role:', currentUser?.role);
+  const isAdminUser = currentUser?.role === 'admin';
+  console.log('Is admin:', isAdminUser);
+  return isAdminUser;
 }
 
 /**

@@ -242,7 +242,11 @@ export default function AdminBookingsPage() {
                           >
                             <Edit />
                           </IconButton>
-                          {isAdmin() && (
+                          {(() => {
+                            const adminStatus = isAdmin();
+                            console.log('Admin status for delete button:', adminStatus);
+                            return adminStatus;
+                          })() && (
                             <IconButton 
                               size="small"
                               onClick={() => handleDeleteBooking(booking)}

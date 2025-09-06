@@ -241,18 +241,93 @@ export default function AdminDataMonitorPage() {
         partners: partners || []
       });
 
-      // Update stats with live data
+      // Update stats with live data in the expected format
+      const totalBookings = bookings?.length || 0;
+      const totalUsers = users?.length || 0;
+      const totalDestinations = destinations?.length || 0;
+      const totalProperties = properties?.length || 0;
+      const totalPartners = partners?.length || 0;
+      
       setStats({
-        bookings: bookings?.length || 0,
-        users: users?.length || 0,
-        destinations: destinations?.length || 0,
-        properties: properties?.length || 0,
-        partners: partners?.length || 0,
-        totalRevenue: analytics?.totalRevenue || 0,
-        confirmedBookings: analytics?.confirmedBookings || 0
+        bookings: {
+          total: totalBookings,
+          active: totalBookings,
+          featured: analytics?.confirmedBookings || 0
+        },
+        users: {
+          total: totalUsers,
+          active: totalUsers,
+          featured: 0
+        },
+        destinations: {
+          total: totalDestinations,
+          active: totalDestinations,
+          featured: destinations?.filter((d: any) => d.featured)?.length || 0
+        },
+        properties: {
+          total: totalProperties,
+          active: totalProperties,
+          featured: properties?.filter((p: any) => p.featured)?.length || 0
+        },
+        partners: {
+          total: totalPartners,
+          active: totalPartners,
+          featured: 0
+        },
+        callback_requests: {
+          total: 0,
+          active: 0,
+          featured: 0
+        },
+        deal_banners: {
+          total: 0,
+          active: 0,
+          featured: 0
+        },
+        hero_backgrounds: {
+          total: 0,
+          active: 0,
+          featured: 0
+        },
+        settings: {
+          total: 0,
+          active: 0,
+          featured: 0
+        },
+        profiles: {
+          total: 0,
+          active: 0,
+          featured: 0
+        },
+        reviews: {
+          total: 0,
+          active: 0,
+          featured: 0
+        },
+        payments: {
+          total: 0,
+          active: 0,
+          featured: 0
+        },
+        loyalty_transactions: {
+          total: 0,
+          active: 0,
+          featured: 0
+        },
+        coupons: {
+          total: 0,
+          active: 0,
+          featured: 0
+        },
+        special_requests: {
+          total: 0,
+          active: 0,
+          featured: 0
+        }
       });
 
       console.log('Live data and stats updated successfully');
+      console.log('Final stats object:', stats);
 
     } catch (error) {
       console.error('Error fetching live data:', error);
