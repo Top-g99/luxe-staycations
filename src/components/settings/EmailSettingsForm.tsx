@@ -58,7 +58,7 @@ export default function EmailSettingsForm() {
           console.log('No valid email configuration found in Supabase');
           setIsConfigured(false);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error loading email config from Supabase:', error);
         setIsConfigured(false);
         
@@ -116,7 +116,7 @@ export default function EmailSettingsForm() {
           message: 'Failed to save email configuration to Supabase'
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving email configuration:', error);
       setTestResult({
         success: false,
@@ -146,7 +146,7 @@ export default function EmailSettingsForm() {
         success: result.success,
         message: result.message
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error testing SMTP connection:', error);
       setTestResult({
         success: false,
@@ -180,7 +180,7 @@ export default function EmailSettingsForm() {
           ? 'Test email sent successfully! Check your inbox.' 
           : 'Failed to send test email. Please check your configuration.'
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error sending test email:', error);
       setTestResult({
         success: false,
@@ -211,7 +211,7 @@ export default function EmailSettingsForm() {
           message: 'Failed to reset configuration'
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error resetting config:', error);
       setTestResult({
         success: false,
