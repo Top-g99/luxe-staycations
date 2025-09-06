@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getSupabaseClient } from '@/lib/supabase';
 import {
   Box,
   Container,
@@ -45,7 +46,7 @@ export default function CheckDatabasePage() {
         return;
       }
 
-      const supabase = createClient(supabaseUrl, supabaseKey);
+      const supabase = getSupabaseClient();
       
       // Test connection
       const { data: testData, error: testError } = await supabase

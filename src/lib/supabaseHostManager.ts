@@ -1,10 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from './supabase';
 
 // Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = getSupabaseClient();
 
 export interface HostProperty {
   id: string;
@@ -424,7 +421,7 @@ export class SupabaseHostManager {
         return [];
       }
 
-      return data.map(booking => ({
+      return data.map((booking: any) => ({
         ...this.transformBookingData(booking),
         propertyName: booking.host_properties?.name || 'Unknown Property',
         hostName: booking.host_properties?.hosts?.name || 'Unknown Host'
@@ -482,7 +479,7 @@ export class SupabaseHostManager {
       }
 
       // Get property IDs
-      const propertyIds = hostProperties.map(prop => prop.id);
+      const propertyIds = hostProperties.map((prop: any) => prop.id);
       console.log('Property IDs to search:', propertyIds);
 
       // Now fetch bookings for these properties
@@ -506,7 +503,7 @@ export class SupabaseHostManager {
       console.log('Found bookings for host:', data);
       
       // Filter for self-bookings if the column exists, otherwise return all
-      const selfBookings = data.filter(booking => {
+      const selfBookings = data.filter((booking: any) => {
         if (booking.is_self_booking !== undefined) {
           return booking.is_self_booking === true;
         }

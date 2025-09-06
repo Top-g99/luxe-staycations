@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from './supabase';
 
 // Types for different data entities
 export interface Property {
@@ -197,12 +198,7 @@ export class DataManager<T> {
 
   private initializeSupabase() {
     if (typeof window !== 'undefined' && !this.shouldUseLocalStorage()) {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      
-      if (supabaseUrl && supabaseKey) {
-        this.supabase = createClient(supabaseUrl, supabaseKey);
-      }
+      this.supabase = getSupabaseClient();
     }
   }
 
