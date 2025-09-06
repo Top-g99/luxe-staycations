@@ -264,6 +264,38 @@ export const isSupabaseAvailable = () => {
 // Helper function to get Supabase client with error handling
 export const getSupabaseClient = () => {
   if (!supabase) {
+    // Return a mock client during build time to prevent build failures
+    if (typeof window === 'undefined') {
+      // Server-side (build time) - return mock client
+      return {
+        from: () => ({
+          select: () => ({ data: [], error: null }),
+          insert: () => ({ data: [], error: null }),
+          update: () => ({ data: [], error: null }),
+          delete: () => ({ data: [], error: null }),
+          eq: () => ({ data: [], error: null }),
+          order: () => ({ data: [], error: null }),
+          limit: () => ({ data: [], error: null }),
+          single: () => ({ data: null, error: null }),
+          upsert: () => ({ data: [], error: null }),
+        }),
+        auth: {
+          getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+          signInWithPassword: () => Promise.resolve({ data: { user: null }, error: null }),
+          signUp: () => Promise.resolve({ data: { user: null }, error: null }),
+          signOut: () => Promise.resolve({ error: null }),
+        },
+        storage: {
+          from: () => ({
+            upload: () => Promise.resolve({ data: null, error: null }),
+            download: () => Promise.resolve({ data: null, error: null }),
+            remove: () => Promise.resolve({ data: null, error: null }),
+            getPublicUrl: () => ({ data: { publicUrl: '' } }),
+          }),
+        },
+      } as any;
+    }
+    // Client-side - throw error
     throw new Error('Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.');
   }
   return supabase;

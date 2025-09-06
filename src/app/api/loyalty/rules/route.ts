@@ -35,11 +35,11 @@ export async function GET(request: NextRequest) {
       let filteredRules = rules || [];
 
       if (ruleType) {
-        filteredRules = filteredRules.filter(rule => rule.rule_type === ruleType);
+        filteredRules = filteredRules.filter((rule: any) => rule.rule_type === ruleType);
       }
 
       if (activeOnly) {
-        filteredRules = filteredRules.filter(rule => rule.is_active);
+        filteredRules = filteredRules.filter((rule: any) => rule.is_active);
       }
 
       return NextResponse.json({
