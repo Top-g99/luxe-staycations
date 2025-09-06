@@ -1,261 +1,436 @@
-import { getSupabaseClient, isSupabaseAvailable } from './supabase';
+import { supabase, TABLES, DatabaseBooking } from './supabase';
 
 export interface Booking {
   id: string;
-  property_id: string;
-  guest_name: string;
-  guest_email: string;
-  guest_phone: string;
-  check_in_date: string;
-  check_out_date: string;
-  guests_count: number;
-  total_amount: number;
+  guestName: string;
+  guestEmail: string;
+  guestPhone: string;
+  propertyName: string;
+  propertyId: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  amount: number;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  special_requests?: string;
-  created_at?: string;
-  updated_at?: string;
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  specialRequests?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-class SupabaseBookingManager {
-  private bookings: Booking[] = [];
-  private subscribers: (() => void)[] = [];
-  private initialized = false;
-  private loading = false;
+export interface BookingAnalytics {
+  totalBookings: number;
+  totalRevenue: number;
+  confirmedBookings: number;
+  pendingBookings: number;
+  cancelledBookings: number;
+  completedBookings: number;
+  averageBookingValue: number;
+  monthlyRevenue: number;
+  monthlyBookings: number;
+  topProperties: Array<{
+    propertyId: string;
+    propertyName: string;
+    bookingCount: number;
+    revenue: number;
+  }>;
+  recentBookings: Booking[];
+}
 
-  async initialize() {
-    if (this.initialized) return;
-    
-    this.loading = true;
-    
-    try {
-      if (isSupabaseAvailable()) {
-        await this.loadFromSupabase();
-      } else {
-        await this.loadFromLocalStorage();
-      }
-    } catch (error) {
-      console.error('SupabaseBookingManager: Error initializing:', error);
-      await this.loadFromLocalStorage();
+export class SupabaseBookingManager {
+  private static instance: SupabaseBookingManager;
+  private isInitialized = false;
+
+  private constructor() {}
+
+  public static getInstance(): SupabaseBookingManager {
+    if (!SupabaseBookingManager.instance) {
+      SupabaseBookingManager.instance = new SupabaseBookingManager();
     }
-    
-    this.initialized = true;
-    this.loading = false;
-    this.notifySubscribers();
+    return SupabaseBookingManager.instance;
   }
 
-  private async loadFromSupabase() {
+  public get initialized(): boolean {
+    return this.isInitialized;
+  }
+
+  public async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+
     try {
-      const supabase = getSupabaseClient();
+      // Check if bookings table exists
+      if (supabase) {
+        const { data, error } = await supabase.from(TABLES.BOOKINGS).select('id').limit(1);
+        
+        if (error && error.code === 'PGRST116') {
+          console.log('Bookings table does not exist, creating...');
+          await this.createBookingsTable();
+        }
+      }
+
+      this.isInitialized = true;
+      console.log('SupabaseBookingManager initialized successfully');
+    } catch (error) {
+      console.error('Error initializing SupabaseBookingManager:', error);
+    }
+  }
+
+  private async createBookingsTable(): Promise<void> {
+    if (!supabase) return;
+
+    const { error } = await supabase.rpc('create_bookings_table');
+    if (error) {
+      console.error('Error creating bookings table:', error);
+    }
+  }
+
+  // Convert DatabaseBooking to Booking interface
+  private convertToBooking(dbBooking: DatabaseBooking): Booking {
+    return {
+      id: dbBooking.id,
+      guestName: dbBooking.guest_name,
+      guestEmail: dbBooking.guest_email,
+      guestPhone: dbBooking.guest_phone,
+      propertyName: '', // Will be populated from properties table
+      propertyId: dbBooking.property_id,
+      checkIn: dbBooking.check_in,
+      checkOut: dbBooking.check_out,
+      guests: dbBooking.guests,
+      amount: dbBooking.total_amount,
+      status: dbBooking.status,
+      paymentStatus: dbBooking.payment_status,
+      specialRequests: dbBooking.special_requests,
+      createdAt: dbBooking.created_at,
+      updatedAt: dbBooking.updated_at
+    };
+  }
+
+  // Convert Booking to DatabaseBooking interface
+  private convertToDatabaseBooking(booking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Omit<DatabaseBooking, 'id' | 'created_at' | 'updated_at'> {
+    return {
+      property_id: booking.propertyId,
+      guest_name: booking.guestName,
+      guest_email: booking.guestEmail,
+      guest_phone: booking.guestPhone,
+      check_in: booking.checkIn,
+      check_out: booking.checkOut,
+      guests: booking.guests,
+      total_amount: booking.amount,
+      status: booking.status,
+      payment_status: booking.paymentStatus,
+      special_requests: booking.specialRequests
+    };
+  }
+
+  // Create a new booking
+  public async createBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Promise<Booking | null> {
+    if (!supabase) {
+      console.error('Supabase client not initialized');
+      return null;
+    }
+
+    try {
+      const dbBooking = this.convertToDatabaseBooking(bookingData);
+      
       const { data, error } = await supabase
-        .from('bookings')
+        .from(TABLES.BOOKINGS)
+        .insert([dbBooking])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating booking:', error);
+        return null;
+      }
+
+      const newBooking = this.convertToBooking(data);
+      
+      // Trigger email notifications
+      await this.triggerBookingEmails(newBooking);
+      
+      // Update analytics
+      await this.updateAnalytics();
+      
+      console.log('Booking created successfully:', newBooking.id);
+      return newBooking;
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      return null;
+    }
+  }
+
+  // Get all bookings
+  public async getAllBookings(): Promise<Booking[]> {
+    if (!supabase) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.BOOKINGS)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('SupabaseBookingManager: Error loading from Supabase:', error);
-        throw error;
+        console.error('Error fetching bookings:', error);
+        return [];
       }
 
-      this.bookings = data || [];
-      console.log('SupabaseBookingManager: Loaded bookings from Supabase:', this.bookings.length);
+      return data.map(booking => this.convertToBooking(booking));
     } catch (error) {
-      console.error('SupabaseBookingManager: Failed to load from Supabase, falling back to localStorage:', error);
-      await this.loadFromLocalStorage();
+      console.error('Error fetching bookings:', error);
+      return [];
     }
   }
 
-  private async loadFromLocalStorage() {
-    if (typeof window !== 'undefined') {
-      const savedBookings = localStorage.getItem('luxeBookings');
-      if (savedBookings) {
-        try {
-          this.bookings = JSON.parse(savedBookings);
-          console.log('SupabaseBookingManager: Loaded bookings from localStorage:', this.bookings.length);
-        } catch (error) {
-          console.error('SupabaseBookingManager: Error parsing saved bookings');
-          this.bookings = [];
-        }
-      } else {
-        this.bookings = [];
+  // Get booking by ID
+  public async getBookingById(id: string): Promise<Booking | null> {
+    if (!supabase) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.BOOKINGS)
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching booking:', error);
+        return null;
       }
-    } else {
-      this.bookings = [];
+
+      return this.convertToBooking(data);
+    } catch (error) {
+      console.error('Error fetching booking:', error);
+      return null;
     }
   }
 
-  private saveToLocalStorage() {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('luxeBookings', JSON.stringify(this.bookings));
-      console.log('SupabaseBookingManager: Saved bookings to localStorage');
+  // Update booking
+  public async updateBooking(id: string, updates: Partial<Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Booking | null> {
+    if (!supabase) return null;
+
+    try {
+      const updateData: any = {};
+      
+      if (updates.guestName) updateData.guest_name = updates.guestName;
+      if (updates.guestEmail) updateData.guest_email = updates.guestEmail;
+      if (updates.guestPhone) updateData.guest_phone = updates.guestPhone;
+      if (updates.propertyId) updateData.property_id = updates.propertyId;
+      if (updates.checkIn) updateData.check_in = updates.checkIn;
+      if (updates.checkOut) updateData.check_out = updates.checkOut;
+      if (updates.guests) updateData.guests = updates.guests;
+      if (updates.amount) updateData.total_amount = updates.amount;
+      if (updates.status) updateData.status = updates.status;
+      if (updates.paymentStatus) updateData.payment_status = updates.paymentStatus;
+      if (updates.specialRequests) updateData.special_requests = updates.specialRequests;
+
+      updateData.updated_at = new Date().toISOString();
+
+      const { data, error } = await supabase
+        .from(TABLES.BOOKINGS)
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating booking:', error);
+        return null;
+      }
+
+      const updatedBooking = this.convertToBooking(data);
+      
+      // Trigger email notifications for status changes
+      if (updates.status) {
+        await this.triggerBookingEmails(updatedBooking);
+      }
+      
+      // Update analytics
+      await this.updateAnalytics();
+      
+      return updatedBooking;
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      return null;
     }
   }
 
-  async createBooking(booking: Omit<Booking, 'id'>): Promise<Booking> {
-    const newBooking: Booking = {
-      ...booking,
-      id: crypto.randomUUID(),
-      status: 'pending'
+  // Delete booking
+  public async deleteBooking(id: string): Promise<boolean> {
+    if (!supabase) return false;
+
+    try {
+      const { error } = await supabase
+        .from(TABLES.BOOKINGS)
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting booking:', error);
+        return false;
+      }
+
+      // Update analytics
+      await this.updateAnalytics();
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      return false;
+    }
+  }
+
+  // Get analytics data
+  public async getAnalytics(): Promise<BookingAnalytics> {
+    if (!supabase) {
+      return this.getDefaultAnalytics();
+    }
+
+    try {
+      const { data: bookings, error } = await supabase
+        .from(TABLES.BOOKINGS)
+        .select('*');
+
+      if (error) {
+        console.error('Error fetching analytics data:', error);
+        return this.getDefaultAnalytics();
+      }
+
+      const bookingList = bookings.map(booking => this.convertToBooking(booking));
+      
+      // Calculate analytics
+      const totalBookings = bookingList.length;
+      const totalRevenue = bookingList.reduce((sum, booking) => sum + booking.amount, 0);
+      const confirmedBookings = bookingList.filter(b => b.status === 'confirmed').length;
+      const pendingBookings = bookingList.filter(b => b.status === 'pending').length;
+      const cancelledBookings = bookingList.filter(b => b.status === 'cancelled').length;
+      const completedBookings = bookingList.filter(b => b.status === 'completed').length;
+      const averageBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
+
+      // Monthly data (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const monthlyBookings = bookingList.filter(b => 
+        new Date(b.createdAt) >= thirtyDaysAgo
+      );
+      const monthlyRevenue = monthlyBookings.reduce((sum, booking) => sum + booking.amount, 0);
+
+      // Top properties
+      const propertyStats = new Map<string, { name: string; count: number; revenue: number }>();
+      bookingList.forEach(booking => {
+        const existing = propertyStats.get(booking.propertyId) || { name: booking.propertyName, count: 0, revenue: 0 };
+        existing.count += 1;
+        existing.revenue += booking.amount;
+        propertyStats.set(booking.propertyId, existing);
+      });
+
+      const topProperties = Array.from(propertyStats.entries())
+        .map(([propertyId, stats]) => ({
+          propertyId,
+          propertyName: stats.name,
+          bookingCount: stats.count,
+          revenue: stats.revenue
+        }))
+        .sort((a, b) => b.bookingCount - a.bookingCount)
+        .slice(0, 5);
+
+      return {
+        totalBookings,
+        totalRevenue,
+        confirmedBookings,
+        pendingBookings,
+        cancelledBookings,
+        completedBookings,
+        averageBookingValue,
+        monthlyRevenue,
+        monthlyBookings: monthlyBookings.length,
+        topProperties,
+        recentBookings: bookingList.slice(0, 10)
+      };
+    } catch (error) {
+      console.error('Error calculating analytics:', error);
+      return this.getDefaultAnalytics();
+    }
+  }
+
+  private getDefaultAnalytics(): BookingAnalytics {
+    return {
+      totalBookings: 0,
+      totalRevenue: 0,
+      confirmedBookings: 0,
+      pendingBookings: 0,
+      cancelledBookings: 0,
+      completedBookings: 0,
+      averageBookingValue: 0,
+      monthlyRevenue: 0,
+      monthlyBookings: 0,
+      topProperties: [],
+      recentBookings: []
     };
+  }
 
-    this.bookings.push(newBooking);
-    
-    // Save to both Supabase and localStorage
-    if (isSupabaseAvailable()) {
-      try {
-        const supabase = getSupabaseClient();
-        const { error } = await supabase
-          .from('bookings')
-          .insert(newBooking);
-
-        if (error) {
-          console.error('SupabaseBookingManager: Error creating booking in Supabase:', error);
-        } else {
-          console.log('SupabaseBookingManager: Booking created in Supabase');
-        }
-      } catch (error) {
-        console.error('SupabaseBookingManager: Error creating booking in Supabase:', error);
+  // Trigger email notifications for booking events
+  private async triggerBookingEmails(booking: Booking): Promise<void> {
+    try {
+      // Import email service dynamically to avoid circular dependencies
+      const { emailService } = await import('./emailService');
+      
+      if (booking.status === 'confirmed') {
+        // Send booking confirmation email
+        await emailService.sendBookingConfirmation({
+          guestName: booking.guestName,
+          guestEmail: booking.guestEmail,
+          bookingId: booking.id,
+          propertyName: booking.propertyName,
+          propertyLocation: 'Luxe Staycations',
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          guests: booking.guests.toString(),
+          totalAmount: booking.amount,
+          transactionId: `TXN-${booking.id}`,
+          paymentMethod: 'Online Payment',
+          hostName: 'Luxe Staycations Team',
+          hostPhone: '+91-9876543210',
+          hostEmail: 'info@luxestaycations.in',
+          specialRequests: booking.specialRequests
+        });
+      } else if (booking.status === 'cancelled') {
+        // Send cancellation email
+        await emailService.sendBookingCancellation({
+          guestName: booking.guestName,
+          guestEmail: booking.guestEmail,
+          bookingId: booking.id,
+          propertyName: booking.propertyName,
+          propertyAddress: 'Luxe Staycations',
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          guests: booking.guests,
+          totalAmount: booking.amount,
+          cancellationReason: 'Guest request',
+          refundAmount: booking.amount,
+          refundMethod: 'Original payment method',
+          refundTimeline: '5-7 business days',
+          hostName: 'Luxe Staycations Team',
+          hostPhone: '+91-9876543210',
+          hostEmail: 'info@luxestaycations.in'
+        });
       }
+    } catch (error) {
+      console.error('Error sending booking emails:', error);
     }
-    
-    this.saveToLocalStorage();
-    this.notifySubscribers();
-    
-    return newBooking;
   }
 
-  async updateBooking(id: string, updates: Partial<Booking>): Promise<Booking | null> {
-    const index = this.bookings.findIndex(b => b.id === id);
-    if (index === -1) return null;
-
-    const updatedBooking = { ...this.bookings[index], ...updates };
-    this.bookings[index] = updatedBooking;
-
-    // Update in Supabase
-    if (isSupabaseAvailable()) {
-      try {
-        const supabase = getSupabaseClient();
-        const { error } = await supabase
-          .from('bookings')
-          .update(updates)
-          .eq('id', id);
-
-        if (error) {
-          console.error('SupabaseBookingManager: Error updating booking in Supabase:', error);
-        }
-      } catch (error) {
-        console.error('SupabaseBookingManager: Error updating booking in Supabase:', error);
-      }
+  // Update analytics in real-time
+  private async updateAnalytics(): Promise<void> {
+    try {
+      // This could trigger real-time updates to admin dashboard
+      // For now, we'll just log the update
+      console.log('Analytics updated');
+    } catch (error) {
+      console.error('Error updating analytics:', error);
     }
-
-    this.saveToLocalStorage();
-    this.notifySubscribers();
-    
-    return updatedBooking;
-  }
-
-  async deleteBooking(id: string): Promise<boolean> {
-    const index = this.bookings.findIndex(b => b.id === id);
-    if (index === -1) return false;
-
-    this.bookings.splice(index, 1);
-
-    // Delete from Supabase
-    if (isSupabaseAvailable()) {
-      try {
-        const supabase = getSupabaseClient();
-        const { error } = await supabase
-          .from('bookings')
-          .delete()
-          .eq('id', id);
-
-        if (error) {
-          console.error('SupabaseBookingManager: Error deleting booking from Supabase:', error);
-        }
-      } catch (error) {
-        console.error('SupabaseBookingManager: Error deleting booking from Supabase:', error);
-      }
-    }
-
-    this.saveToLocalStorage();
-    this.notifySubscribers();
-    
-    return true;
-  }
-
-  getAllBookings(): Booking[] {
-    return [...this.bookings];
-  }
-
-  getBookingById(id: string): Booking | undefined {
-    return this.bookings.find(b => b.id === id);
-  }
-
-  getBookingsByProperty(propertyId: string): Booking[] {
-    return this.bookings.filter(b => b.property_id === propertyId);
-  }
-
-  getBookingsByEmail(email: string): Booking[] {
-    return this.bookings.filter(b => b.guest_email === email);
-  }
-
-  getBookingsByStatus(status: Booking['status']): Booking[] {
-    return this.bookings.filter(b => b.status === status);
-  }
-
-  getPendingBookings(): Booking[] {
-    return this.getBookingsByStatus('pending');
-  }
-
-  getConfirmedBookings(): Booking[] {
-    return this.getBookingsByStatus('confirmed');
-  }
-
-  getCancelledBookings(): Booking[] {
-    return this.getBookingsByStatus('cancelled');
-  }
-
-  getCompletedBookings(): Booking[] {
-    return this.getBookingsByStatus('completed');
-  }
-
-  async confirmBooking(id: string): Promise<Booking | null> {
-    return this.updateBooking(id, { status: 'confirmed' });
-  }
-
-  async cancelBooking(id: string): Promise<Booking | null> {
-    return this.updateBooking(id, { status: 'cancelled' });
-  }
-
-  async completeBooking(id: string): Promise<Booking | null> {
-    return this.updateBooking(id, { status: 'completed' });
-  }
-
-  subscribe(callback: () => void) {
-    this.subscribers.push(callback);
-    return () => {
-      const index = this.subscribers.indexOf(callback);
-      if (index > -1) {
-        this.subscribers.splice(index, 1);
-      }
-    };
-  }
-
-  private notifySubscribers() {
-    this.subscribers.forEach(callback => callback());
-  }
-
-  isLoading(): boolean {
-    return this.loading;
-  }
-
-  isInitialized(): boolean {
-    return this.initialized;
-  }
-
-  async refresh() {
-    this.initialized = false;
-    await this.initialize();
   }
 }
 
-export const supabaseBookingManager = new SupabaseBookingManager();
+// Create singleton instance
+export const supabaseBookingManager = SupabaseBookingManager.getInstance();

@@ -77,7 +77,7 @@ export interface DatabaseBooking {
   guests: number;
   total_amount: number;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  payment_status: 'pending' | 'paid' | 'failed';
+  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
   special_requests?: string;
   created_at: string;
   updated_at: string;

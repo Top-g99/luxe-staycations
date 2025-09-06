@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { bookingManager } from '@/lib/bookingManager';
+import { supabaseBookingManager } from '@/lib/supabaseBookingManager';
 
 export async function GET(request: NextRequest) {
   try {
-    // Initialize BookingManager if not already done
-    if (typeof window === 'undefined') {
-      bookingManager.initialize();
-    }
+    // Initialize SupabaseBookingManager
+    await supabaseBookingManager.initialize();
     
-    // Get all bookings
-    const bookings = bookingManager.getAllBookings();
+    // Get all bookings from Supabase
+    const bookings = await supabaseBookingManager.getAllBookings();
     
     return NextResponse.json({
       success: true,
@@ -43,8 +41,11 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Create new booking
-    const newBooking = bookingManager.addBooking({
+    // Initialize SupabaseBookingManager
+    await supabaseBookingManager.initialize();
+    
+    // Create new booking in Supabase
+    const newBooking = await supabaseBookingManager.createBooking({
       guestName: body.guestName,
       guestEmail: body.guestEmail,
       guestPhone: body.guestPhone || '',
@@ -54,13 +55,25 @@ export async function POST(request: NextRequest) {
       checkOut: body.checkOut,
       guests: body.guests || 1,
       amount: body.amount,
-      status: 'pending'
+      status: 'pending',
+      paymentStatus: 'pending',
+      specialRequests: body.specialRequests || ''
     });
+    
+    if (!newBooking) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Failed to create booking in database' 
+        },
+        { status: 500 }
+      );
+    }
     
     return NextResponse.json({
       success: true,
       data: newBooking,
-      message: 'Booking created successfully'
+      message: 'Booking created successfully and saved to Supabase'
     });
   } catch (error) {
     console.error('Error creating booking:', error);
@@ -68,6 +81,101 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to create booking' 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, ...updates } = body;
+    
+    if (!id) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Booking ID is required' 
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Initialize SupabaseBookingManager
+    await supabaseBookingManager.initialize();
+    
+    // Update booking in Supabase
+    const updatedBooking = await supabaseBookingManager.updateBooking(id, updates);
+    
+    if (!updatedBooking) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Failed to update booking' 
+        },
+        { status: 500 }
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: updatedBooking,
+      message: 'Booking updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to update booking' 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Booking ID is required' 
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Initialize SupabaseBookingManager
+    await supabaseBookingManager.initialize();
+    
+    // Delete booking from Supabase
+    const success = await supabaseBookingManager.deleteBooking(id);
+    
+    if (!success) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Failed to delete booking' 
+        },
+        { status: 500 }
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Booking deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to delete booking' 
       },
       { status: 500 }
     );

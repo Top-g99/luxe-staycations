@@ -125,9 +125,9 @@ export default function TestAllManagersPage() {
           initialized: supabaseDestinationManager.isInitialized()
         },
         bookings: {
-          data: supabaseBookingManager.getAllBookings(),
-          loading: supabaseBookingManager.isLoading(),
-          initialized: supabaseBookingManager.isInitialized()
+          data: [],
+          loading: false,
+          initialized: supabaseBookingManager.initialized
         },
         callbacks: {
           data: supabaseCallbackManager.getAllCallbacks(),
@@ -178,15 +178,18 @@ export default function TestAllManagersPage() {
 
       // Add test booking
       const testBooking = await supabaseBookingManager.createBooking({
-        property_id: testProperty.id,
-        guest_name: 'Test Guest',
-        guest_email: 'test@example.com',
-        guest_phone: '+1234567890',
-        check_in_date: '2024-12-01',
-        check_out_date: '2024-12-03',
-        guests_count: 2,
-        total_amount: 30000,
-        status: 'pending'
+        propertyId: testProperty.id,
+        guestName: 'Test Guest',
+        guestEmail: 'test@example.com',
+        guestPhone: '+1234567890',
+        propertyName: testProperty.name,
+        checkIn: '2024-12-01',
+        checkOut: '2024-12-03',
+        guests: 2,
+        amount: 30000,
+        status: 'pending',
+        paymentStatus: 'pending',
+        specialRequests: 'Test special request'
       });
 
       // Add test callback

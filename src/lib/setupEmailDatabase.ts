@@ -138,6 +138,24 @@ CREATE TABLE IF NOT EXISTS email_logs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Bookings Table (if not exists)
+CREATE TABLE IF NOT EXISTS bookings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  property_id TEXT NOT NULL,
+  guest_name TEXT NOT NULL,
+  guest_email TEXT NOT NULL,
+  guest_phone TEXT,
+  check_in DATE NOT NULL,
+  check_out DATE NOT NULL,
+  guests INTEGER NOT NULL DEFAULT 1,
+  total_amount DECIMAL(10,2) NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
+  payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')),
+  special_requests TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_email_templates_type ON email_templates(type);
 CREATE INDEX IF NOT EXISTS idx_email_templates_active ON email_templates(is_active);
@@ -147,11 +165,21 @@ CREATE INDEX IF NOT EXISTS idx_email_logs_recipient ON email_logs(recipient_emai
 CREATE INDEX IF NOT EXISTS idx_email_logs_status ON email_logs(status);
 CREATE INDEX IF NOT EXISTS idx_email_logs_sent_at ON email_logs(sent_at);
 
+-- Bookings indexes
+CREATE INDEX IF NOT EXISTS idx_bookings_property_id ON bookings(property_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_guest_email ON bookings(guest_email);
+CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
+CREATE INDEX IF NOT EXISTS idx_bookings_payment_status ON bookings(payment_status);
+CREATE INDEX IF NOT EXISTS idx_bookings_created_at ON bookings(created_at);
+CREATE INDEX IF NOT EXISTS idx_bookings_check_in ON bookings(check_in);
+CREATE INDEX IF NOT EXISTS idx_bookings_check_out ON bookings(check_out);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE email_configurations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_triggers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for public access (adjust as needed for your security requirements)
 CREATE POLICY "Allow public read access to email_templates" ON email_templates FOR SELECT USING (true);
@@ -172,6 +200,12 @@ CREATE POLICY "Allow public delete access to email_templates" ON email_templates
 CREATE POLICY "Allow public delete access to email_configurations" ON email_configurations FOR DELETE USING (true);
 CREATE POLICY "Allow public delete access to email_triggers" ON email_triggers FOR DELETE USING (true);
 CREATE POLICY "Allow public delete access to email_logs" ON email_logs FOR DELETE USING (true);
+
+-- Bookings policies
+CREATE POLICY "Allow public read access to bookings" ON bookings FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access to bookings" ON bookings FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access to bookings" ON bookings FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete access to bookings" ON bookings FOR DELETE USING (true);
 `;
 
 // Function to check if email tables exist
@@ -180,12 +214,14 @@ export async function checkEmailTablesExist(): Promise<{
   email_templates: boolean;
   email_triggers: boolean;
   email_logs: boolean;
+  bookings: boolean;
 }> {
   const result = {
     email_configurations: false,
     email_templates: false,
     email_triggers: false,
-    email_logs: false
+    email_logs: false,
+    bookings: false
   };
 
   if (!supabase) return result;
@@ -203,6 +239,9 @@ export async function checkEmailTablesExist(): Promise<{
 
     const { data: logs } = await supabase.from(TABLES.EMAIL_LOGS).select('id').limit(1);
     result.email_logs = !!logs;
+
+    const { data: bookings } = await supabase.from(TABLES.BOOKINGS).select('id').limit(1);
+    result.bookings = !!bookings;
   } catch (error) {
     console.error('Error checking email tables:', error);
   }
