@@ -154,13 +154,19 @@ export default function EnhancedEmailSettingsForm() {
       console.log('Initializing enhanced email system...');
       setIsLoading(true);
       
-      // Initialize the email system via API
+      // Initialize the email system via API with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const response = await fetch('/api/email/v2/initialize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const result = await response.json();
@@ -186,10 +192,16 @@ export default function EnhancedEmailSettingsForm() {
         
         console.log('Enhanced email system initialized successfully');
       } else {
-        console.error('Failed to initialize email system');
+        console.error('Failed to initialize email system:', response.status, response.statusText);
+        // Still set as initialized to show the form
+        setIsInitialized(true);
+        setIsConfigured(false);
       }
     } catch (error) {
       console.error('Error initializing email system:', error);
+      // Still set as initialized to show the form even if there's an error
+      setIsInitialized(true);
+      setIsConfigured(false);
     } finally {
       setIsLoading(false);
     }
@@ -721,9 +733,17 @@ export default function EnhancedEmailSettingsForm() {
 
   if (!isInitialized) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', py: 4 }}>
         <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Initializing Enhanced Email System...</Typography>
+        <Typography sx={{ ml: 2, mb: 2 }}>Initializing Enhanced Email System...</Typography>
+        <Button 
+          variant="outlined" 
+          onClick={initializeEmailSystem}
+          disabled={isLoading}
+          startIcon={<Refresh />}
+        >
+          Retry Initialization
+        </Button>
       </Box>
     );
   }
