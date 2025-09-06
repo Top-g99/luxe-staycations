@@ -47,19 +47,56 @@ import {
   CheckCircle,
   Error,
   Settings,
-  Template,
-  Trigger,
-  Analytics,
   Refresh,
   Add,
   Edit,
   Delete,
   ExpandMore,
   Send,
-  TestTube
+  Science as TestTube,
+  Description as Template,
+  FlashOn as Trigger,
+  Analytics
 } from '@mui/icons-material';
-import { emailService } from '@/lib/email/EmailService';
-import { EmailConfig, EmailTemplate, EmailTrigger } from '@/lib/email/types';
+
+// Types for the email system
+interface EmailConfig {
+  id: string;
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword: string;
+  enableSSL: boolean;
+  fromName: string;
+  fromEmail: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface EmailTemplate {
+  id: string;
+  name: string;
+  type: string;
+  subject: string;
+  content: string;
+  isActive: boolean;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface EmailTrigger {
+  id: string;
+  name: string;
+  event: string;
+  templateId: string;
+  priority: 'low' | 'normal' | 'high';
+  delay: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -117,29 +154,35 @@ export default function EnhancedEmailSettingsForm() {
       console.log('Initializing enhanced email system...');
       setIsLoading(true);
       
-      const success = await emailService.initialize();
-      if (success) {
+      // Initialize the email system via API
+      const response = await fetch('/api/email/v2/initialize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
         setIsInitialized(true);
-        setIsConfigured(emailService.isReady());
+        setIsConfigured(result.success);
         
-        // Load current configuration
-        const currentConfig = emailService.getConfig();
-        if (currentConfig) {
-          setConfig(currentConfig);
+        if (result.config) {
+          setConfig(result.config);
           setConfigForm({
-            smtpHost: currentConfig.smtpHost,
-            smtpPort: currentConfig.smtpPort,
-            smtpUser: currentConfig.smtpUser,
-            smtpPassword: currentConfig.smtpPassword,
-            enableSSL: currentConfig.enableSSL,
-            fromName: currentConfig.fromName,
-            fromEmail: currentConfig.fromEmail
+            smtpHost: result.config.smtpHost,
+            smtpPort: result.config.smtpPort,
+            smtpUser: result.config.smtpUser,
+            smtpPassword: result.config.smtpPassword,
+            enableSSL: result.config.enableSSL,
+            fromName: result.config.fromName,
+            fromEmail: result.config.fromEmail
           });
         }
 
         // Load templates and triggers
-        setTemplates(emailService.getTemplates());
-        setTriggers(emailService.getTriggers());
+        setTemplates(result.templates || []);
+        setTriggers(result.triggers || []);
         
         console.log('Enhanced email system initialized successfully');
       } else {
@@ -166,12 +209,26 @@ export default function EnhancedEmailSettingsForm() {
   const handleSaveConfig = async () => {
     setIsLoading(true);
     try {
-      // This would need to be implemented in the EmailService
-      // For now, we'll just show a success message
-      setTestResult({
-        success: true,
-        message: 'Email configuration saved successfully! The enhanced email system is now active.'
+      const response = await fetch('/api/email/v2/save-config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(configForm),
       });
+
+      const result = await response.json();
+      
+      setTestResult({
+        success: result.success,
+        message: result.success 
+          ? 'Email configuration saved successfully! The enhanced email system is now active.'
+          : `Error saving configuration: ${result.error || 'Unknown error'}`
+      });
+      
+      if (result.success) {
+        setIsConfigured(true);
+      }
       
       setTimeout(() => setTestResult(null), 3000);
     } catch (error) {
@@ -189,15 +246,23 @@ export default function EnhancedEmailSettingsForm() {
     setTestResult(null);
     
     try {
-      const result = await emailService.testConnection();
+      const response = await fetch('/api/email/v2/test-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(configForm),
+      });
+
+      const result = await response.json();
       setTestResult({
         success: result.success,
         message: result.message
       });
-    } catch (error) {
+    } catch (error: unknown) {
       setTestResult({
         success: false,
-        message: `Error testing connection: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: `Error testing connection: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`
       });
     } finally {
       setIsLoading(false);
@@ -217,17 +282,28 @@ export default function EnhancedEmailSettingsForm() {
     setTestResult(null);
     
     try {
-      const result = await emailService.sendTestEmail(testEmail);
+      const response = await fetch('/api/email/v2/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: testEmail,
+          config: configForm
+        }),
+      });
+
+      const result = await response.json();
       setTestResult({
         success: result.success,
         message: result.success 
           ? 'Enhanced test email sent successfully! Check your inbox.' 
           : `Failed to send test email: ${result.error || 'Unknown error'}`
       });
-    } catch (error) {
+    } catch (error: unknown) {
       setTestResult({
         success: false,
-        message: `Error sending test email: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: `Error sending test email: ${error instanceof Error ? (error as Error).message : 'Unknown error'}`
       });
     } finally {
       setIsLoading(false);
