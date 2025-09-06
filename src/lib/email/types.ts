@@ -250,7 +250,7 @@ export interface LoyaltyEmailData {
 }
 
 export interface AdminNotificationEmailData {
-  type: 'booking' | 'payment' | 'cancellation' | 'partner_request' | 'consultation' | 'special_request' | 'loyalty' | 'system';
+  type: 'booking' | 'payment' | 'cancellation' | 'partner_request' | 'consultation' | 'special_request' | 'contact_form' | 'loyalty' | 'system';
   title: string;
   description: string;
   data: Record<string, any>;

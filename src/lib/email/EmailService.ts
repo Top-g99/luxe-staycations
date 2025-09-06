@@ -7,6 +7,7 @@ import { emailTriggerManager } from './EmailTriggerManager';
 import { 
   EmailOptions, 
   EmailSendResult, 
+  EmailRecipient,
   BookingEmailData, 
   PartnerRequestEmailData, 
   ConsultationRequestEmailData, 

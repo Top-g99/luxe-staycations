@@ -90,7 +90,7 @@ export class EmailTriggerManager {
       for (const trigger of matchingTriggers) {
         try {
           // Check conditions
-          if (this.checkConditions(trigger.conditions, data)) {
+          if (this.checkConditions(trigger.conditions || {}, data)) {
             // Apply delay if specified
             if (trigger.delay && trigger.delay > 0) {
               setTimeout(() => {
