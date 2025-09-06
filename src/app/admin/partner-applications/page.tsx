@@ -33,6 +33,7 @@ import {
 } from '@mui/material';
 import {
   Visibility,
+  Delete,
   CheckCircle,
   Cancel,
   Schedule,
@@ -45,6 +46,7 @@ import {
   People,
   Star
 } from '@mui/icons-material';
+import { isAdmin, hasAdminPermission, getAdminPermissionError } from '@/lib/adminPermissions';
 
 interface PartnerApplication {
   id: string;
@@ -171,6 +173,47 @@ export default function AdminPartnerApplicationsPage() {
   const handleViewApplication = (application: PartnerApplication) => {
     setSelectedApplication(application);
     setDialogOpen(true);
+  };
+
+  const handleDeleteApplication = async (application: PartnerApplication) => {
+    if (!hasAdminPermission('delete', 'partner application')) {
+      setSnackbar({
+        open: true,
+        message: getAdminPermissionError('delete', 'partner application'),
+        severity: 'error'
+      });
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete the application from ${application.businessName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // Delete from partner manager
+      const module = await import('@/lib/partnerManager');
+      const partnerManager = module.partnerManager;
+      
+      if (partnerManager && typeof partnerManager.delete === 'function') {
+        partnerManager.delete(application.id);
+      }
+
+      // Remove from local state
+      setApplications(prev => prev.filter(app => app.id !== application.id));
+
+      setSnackbar({
+        open: true,
+        message: 'Partner application deleted successfully!',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error deleting partner application:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error deleting partner application',
+        severity: 'error'
+      });
+    }
   };
 
   const handleStatusChange = async (applicationId: string, newStatus: string) => {
@@ -320,12 +363,23 @@ export default function AdminPartnerApplicationsPage() {
                     />
                   </TableCell>
                   <TableCell>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleViewApplication(application)}
-                    >
-                      <Visibility />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleViewApplication(application)}
+                      >
+                        <Visibility />
+                      </IconButton>
+                      {isAdmin() && (
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteApplication(application)}
+                          sx={{ color: '#f44336' }}
+                        >
+                          <Delete />
+                        </IconButton>
+                      )}
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}

@@ -79,6 +79,7 @@ import {
   couponManager,
   specialRequestManager
 } from '@/lib/dataManager';
+import { isAdmin, hasAdminPermission, getAdminPermissionError } from '@/lib/adminPermissions';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -115,6 +116,7 @@ export default function AdminDataMonitorPage() {
   const [backupDialogOpen, setBackupDialogOpen] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [liveData, setLiveData] = useState<Record<string, any[]>>({});
 
   const managers = [
     { name: 'Properties', manager: propertyManager, type: 'properties', icon: '🏠' },
@@ -140,15 +142,72 @@ export default function AdminDataMonitorPage() {
   const initializeData = async () => {
     setIsLoading(true);
     try {
+      // Initialize local managers
       await masterDataManager.initializeAll();
+      
+      // Fetch live data from APIs
+      await fetchLiveData();
+      
       setConnectionStatus('connected');
       updateStats();
       updateSyncStatus();
+      setAlert({
+        type: 'success',
+        message: 'All data managers initialized and live data synced!'
+      });
     } catch (error) {
       console.error('Error initializing data:', error);
       setConnectionStatus('error');
+      setAlert({
+        type: 'error',
+        message: 'Failed to initialize data managers or fetch live data'
+      });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchLiveData = async () => {
+    try {
+      const dataPromises = [
+        // Fetch bookings from Supabase
+        fetch('/api/bookings').then(res => res.json()).then(data => data.success ? data.data : []),
+        // Fetch analytics data
+        fetch('/api/analytics').then(res => res.json()).then(data => data.success ? data.data : {}),
+        // Fetch users
+        fetch('/api/users').then(res => res.json()).then(data => data.success ? data.data : []),
+        // Fetch destinations
+        fetch('/api/destinations').then(res => res.json()).then(data => data.success ? data.data : []),
+        // Fetch properties/villas
+        fetch('/api/villas').then(res => res.json()).then(data => data.success ? data.data : []),
+        // Fetch partners
+        fetch('/api/partners').then(res => res.json()).then(data => data.success ? data.data : [])
+      ];
+
+      const [bookings, analytics, users, destinations, properties, partners] = await Promise.all(dataPromises);
+
+      setLiveData({
+        bookings: bookings || [],
+        analytics: analytics || {},
+        users: users || [],
+        destinations: destinations || [],
+        properties: properties || [],
+        partners: partners || []
+      });
+
+      // Update stats with live data
+      setStats({
+        bookings: bookings?.length || 0,
+        users: users?.length || 0,
+        destinations: destinations?.length || 0,
+        properties: properties?.length || 0,
+        partners: partners?.length || 0,
+        totalRevenue: analytics?.totalRevenue || 0,
+        confirmedBookings: analytics?.confirmedBookings || 0
+      });
+
+    } catch (error) {
+      console.error('Error fetching live data:', error);
     }
   };
 
@@ -222,7 +281,9 @@ export default function AdminDataMonitorPage() {
 
   const handleSyncAll = async () => {
     try {
+      setAlert({ type: 'info', message: 'Synchronizing data...' });
       await masterDataManager.initializeAll();
+      await fetchLiveData(); // Also refresh live data
       updateStats();
       updateSyncStatus();
       setAlert({ type: 'success', message: 'All data synchronized successfully!' });
@@ -231,14 +292,75 @@ export default function AdminDataMonitorPage() {
     }
   };
 
+  const handleRefreshLiveData = async () => {
+    try {
+      setAlert({ type: 'info', message: 'Refreshing live data...' });
+      await fetchLiveData();
+      setAlert({ type: 'success', message: 'Live data refreshed successfully!' });
+    } catch (error) {
+      setAlert({ type: 'error', message: 'Error refreshing live data' });
+    }
+  };
+
+  const handleDeleteItem = async (item: any, type: string) => {
+    if (!hasAdminPermission('delete', type)) {
+      setAlert({
+        type: 'error',
+        message: getAdminPermissionError('delete', type)
+      });
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete this ${type}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // Delete from local manager
+      const currentManager = managers.find(m => m.type === type)?.manager;
+      if (currentManager && typeof currentManager.delete === 'function') {
+        currentManager.delete(item.id);
+      }
+
+      // Delete from live data if it exists
+      if (liveData[type]) {
+        setLiveData(prev => ({
+          ...prev,
+          [type]: prev[type].filter((i: any) => i.id !== item.id)
+        }));
+      }
+
+      // Update stats
+      updateStats();
+      updateSyncStatus();
+
+      setAlert({ type: 'success', message: `${type} deleted successfully!` });
+    } catch (error) {
+      setAlert({ type: 'error', message: `Error deleting ${type}` });
+    }
+  };
+
   const getFilteredData = () => {
-    const currentManager = managers[tabValue].manager;
-    let data: any[] = currentManager.getAll();
+    const currentType = managers[tabValue].type;
+    let data: any[] = [];
+
+    // Use live data if available, otherwise fall back to local manager
+    if (liveData[currentType] && liveData[currentType].length > 0) {
+      data = liveData[currentType];
+    } else {
+      const currentManager = managers[tabValue].manager;
+      data = currentManager.getAll();
+    }
 
     // Apply search filter
     if (searchQuery) {
-      const searchableFields = getSearchableFields(managers[tabValue].type);
-      data = currentManager.search(searchQuery, searchableFields);
+      const searchableFields = getSearchableFields(currentType);
+      data = data.filter(item => {
+        return searchableFields.some(field => {
+          const value = item[field];
+          return value && value.toString().toLowerCase().includes(searchQuery.toLowerCase());
+        });
+      });
     }
 
     // Apply status filter
@@ -455,11 +577,17 @@ export default function AdminDataMonitorPage() {
                       <Edit />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error">
-                      <Delete />
-                    </IconButton>
-                  </Tooltip>
+                  {isAdmin() && (
+                    <Tooltip title="Delete">
+                      <IconButton 
+                        size="small" 
+                        color="error"
+                        onClick={() => handleDeleteItem(item, currentType)}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -507,6 +635,14 @@ export default function AdminDataMonitorPage() {
                 disabled={isLoading}
               >
                 Sync All
+              </Button>
+              <Button
+                startIcon={<Refresh />}
+                onClick={handleRefreshLiveData}
+                disabled={isLoading}
+                variant="outlined"
+              >
+                Refresh Live Data
               </Button>
               <Button
                 startIcon={<Backup />}
