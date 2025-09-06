@@ -85,9 +85,9 @@ export class SupabaseBookingManager {
   }
 
   // Convert DatabaseBooking to Booking interface
-  private convertToBooking(dbBooking: DatabaseBooking): Booking {
+  private convertToBooking(dbBooking: any): Booking {
     return {
-      id: dbBooking.id,
+      id: dbBooking.id || dbBooking.booking_id, // Handle both id and booking_id
       guestName: dbBooking.guest_name,
       guestEmail: dbBooking.guest_email,
       guestPhone: dbBooking.guest_phone,
@@ -106,8 +106,9 @@ export class SupabaseBookingManager {
   }
 
   // Convert Booking to DatabaseBooking interface
-  private convertToDatabaseBooking(booking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Omit<DatabaseBooking, 'id' | 'created_at' | 'updated_at'> {
+  private convertToDatabaseBooking(booking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): any {
     return {
+      booking_id: `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Generate unique booking ID
       property_id: booking.propertyId,
       guest_name: booking.guestName,
       guest_email: booking.guestEmail,
@@ -130,7 +131,16 @@ export class SupabaseBookingManager {
     }
 
     try {
-      const dbBooking = this.convertToDatabaseBooking(bookingData);
+      // First, ensure the property exists and get the valid property ID
+      const validPropertyId = await this.ensurePropertyExists(bookingData.propertyId, bookingData.propertyName);
+      
+      // Update booking data with valid property ID
+      const updatedBookingData = {
+        ...bookingData,
+        propertyId: validPropertyId
+      };
+      
+      const dbBooking = this.convertToDatabaseBooking(updatedBookingData);
       
       const { data, error } = await supabase
         .from(TABLES.BOOKINGS)
@@ -156,6 +166,70 @@ export class SupabaseBookingManager {
     } catch (error) {
       console.error('Error creating booking:', error);
       return null;
+    }
+  }
+
+  // Generate a valid UUID for property ID
+  private generateUUID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  // Ensure property exists in the database
+  private async ensurePropertyExists(propertyId: string, propertyName: string): Promise<string> {
+    if (!supabase) return propertyId;
+
+    try {
+      // If propertyId is not a valid UUID, generate one
+      let validPropertyId = propertyId;
+      if (!propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+        validPropertyId = this.generateUUID();
+        console.log(`Generated UUID for property: ${validPropertyId}`);
+      }
+
+      // Check if property exists
+      const { data: existingProperty, error: checkError } = await supabase
+        .from(TABLES.PROPERTIES)
+        .select('id')
+        .eq('id', validPropertyId)
+        .single();
+
+      if (checkError && checkError.code === 'PGRST116') {
+        // Property doesn't exist, create it
+        const newProperty = {
+          id: validPropertyId,
+          name: propertyName || `Property ${validPropertyId.slice(0, 8)}`,
+          description: 'Auto-created property for booking',
+          price: 10000,
+          location: 'Location TBD',
+          type: 'villa',
+          amenities: ['wifi', 'parking'],
+          images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80'],
+          featured: false,
+          available: true,
+          max_guests: 4,
+          bedrooms: 2,
+          bathrooms: 2
+        };
+
+        const { error: insertError } = await supabase
+          .from(TABLES.PROPERTIES)
+          .insert([newProperty]);
+
+        if (insertError) {
+          console.error('Error creating property:', insertError);
+        } else {
+          console.log('Property created for booking:', validPropertyId);
+        }
+      }
+
+      return validPropertyId;
+    } catch (error) {
+      console.error('Error ensuring property exists:', error);
+      return propertyId;
     }
   }
 
