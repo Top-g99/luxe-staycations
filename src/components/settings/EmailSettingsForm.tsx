@@ -148,9 +148,10 @@ export default function EmailSettingsForm() {
       });
     } catch (error: unknown) {
       console.error('Error testing SMTP connection:', error);
+      const errorMessage = error instanceof Error ? (error as Error).message : 'Unknown error';
       setTestResult({
         success: false,
-        message: `Error testing SMTP connection: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: `Error testing SMTP connection: ${errorMessage}`
       });
     } finally {
       setIsLoading(false);
@@ -182,9 +183,10 @@ export default function EmailSettingsForm() {
       });
     } catch (error: unknown) {
       console.error('Error sending test email:', error);
+      const errorMessage = error instanceof Error ? (error as Error).message : 'Unknown error';
       setTestResult({
         success: false,
-        message: `Error sending test email: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: `Error sending test email: ${errorMessage}`
       });
     } finally {
       setIsLoading(false);
