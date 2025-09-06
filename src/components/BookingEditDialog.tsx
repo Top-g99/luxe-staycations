@@ -18,7 +18,8 @@ import {
   MenuItem,
   Alert
 } from '@mui/material';
-import { Close, Save } from '@mui/icons-material';
+import { Close, Save, Delete } from '@mui/icons-material';
+import { isAdmin } from '@/lib/adminPermissions';
 
 interface Booking {
   id?: string;
@@ -41,9 +42,10 @@ interface BookingEditDialogProps {
   onClose: () => void;
   booking?: Booking | null;
   mode: 'create' | 'edit' | 'view';
+  onDelete?: (booking: Booking) => void;
 }
 
-export default function BookingEditDialog({ open, onClose, booking, mode }: BookingEditDialogProps) {
+export default function BookingEditDialog({ open, onClose, booking, mode, onDelete }: BookingEditDialogProps) {
   const [formData, setFormData] = useState<Booking>({
     guestName: '',
     guestEmail: '',
@@ -106,6 +108,15 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
       onClose();
     } catch (error) {
       setError('Failed to save booking. Please try again.');
+    }
+  };
+
+  const handleDelete = () => {
+    if (!booking || !onDelete) return;
+    
+    if (window.confirm(`Are you sure you want to delete this booking for ${booking.guestName}? This action cannot be undone.`)) {
+      onDelete(booking);
+      onClose();
     }
   };
 
@@ -290,11 +301,35 @@ export default function BookingEditDialog({ open, onClose, booking, mode }: Book
 
       <DialogActions sx={{ p: 3, background: '#f5f5f5' }}>
         {mode === 'view' ? (
-          <Button onClick={onClose} variant="contained" sx={{ ml: 'auto' }}>
-            Close
-          </Button>
+          <>
+            {isAdmin() && onDelete && (
+              <Button 
+                onClick={handleDelete} 
+                variant="contained"
+                color="error"
+                startIcon={<Delete />}
+                sx={{ mr: 'auto' }}
+              >
+                Delete Booking
+              </Button>
+            )}
+            <Button onClick={onClose} variant="contained" sx={{ ml: 'auto' }}>
+              Close
+            </Button>
+          </>
         ) : (
           <>
+            {isAdmin() && onDelete && mode === 'edit' && (
+              <Button 
+                onClick={handleDelete} 
+                variant="contained"
+                color="error"
+                startIcon={<Delete />}
+                sx={{ mr: 'auto' }}
+              >
+                Delete Booking
+              </Button>
+            )}
             <Button onClick={onClose} variant="outlined">
               Cancel
             </Button>

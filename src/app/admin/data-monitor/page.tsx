@@ -107,7 +107,23 @@ export default function AdminDataMonitorPage() {
   const [tabValue, setTabValue] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking');
-  const [stats, setStats] = useState<any>({});
+  const [stats, setStats] = useState<any>({
+    bookings: { total: 0, active: 0, featured: 0 },
+    users: { total: 0, active: 0, featured: 0 },
+    destinations: { total: 0, active: 0, featured: 0 },
+    properties: { total: 0, active: 0, featured: 0 },
+    partners: { total: 0, active: 0, featured: 0 },
+    callback_requests: { total: 0, active: 0, featured: 0 },
+    deal_banners: { total: 0, active: 0, featured: 0 },
+    hero_backgrounds: { total: 0, active: 0, featured: 0 },
+    settings: { total: 0, active: 0, featured: 0 },
+    profiles: { total: 0, active: 0, featured: 0 },
+    reviews: { total: 0, active: 0, featured: 0 },
+    payments: { total: 0, active: 0, featured: 0 },
+    loyalty_transactions: { total: 0, active: 0, featured: 0 },
+    coupons: { total: 0, active: 0, featured: 0 },
+    special_requests: { total: 0, active: 0, featured: 0 }
+  });
   const [syncStatus, setSyncStatus] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');

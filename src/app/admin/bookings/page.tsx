@@ -272,6 +272,7 @@ export default function AdminBookingsPage() {
         onClose={() => setDialogOpen(false)}
         booking={selectedBooking}
         mode={dialogMode}
+        onDelete={handleDeleteBooking}
       />
     </Box>
   );
