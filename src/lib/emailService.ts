@@ -90,18 +90,20 @@ export class EmailService {
   private async loadConfiguration(): Promise<void> {
     try {
       const config = supabaseEmailManager.getConfiguration();
-      if (config) {
+      if (config && config.smtpHost && config.smtpUser && config.smtpPassword) {
         this.config = {
-          fromEmail: config.fromEmail,
-          fromName: config.fromName,
+          fromEmail: config.fromEmail || 'info@luxestaycations.in',
+          fromName: config.fromName || 'Luxe Staycations',
           smtpHost: config.smtpHost,
-          smtpPort: config.smtpPort,
+          smtpPort: config.smtpPort || 587,
           smtpUser: config.smtpUser,
           smtpPassword: config.smtpPassword,
-          enableSSL: config.enableSSL
+          enableSSL: config.enableSSL || false
         };
         this.isConfigured = true;
         console.log('Email service configuration loaded from Supabase');
+      } else {
+        console.log('No valid email configuration found in Supabase');
       }
     } catch (error) {
       console.error('Error loading email configuration:', error);
@@ -132,6 +134,11 @@ export class EmailService {
       console.error('Error saving email configuration:', error);
       return false;
     }
+  }
+
+  // Reload configuration from Supabase
+  async reloadConfiguration(): Promise<void> {
+    await this.loadConfiguration();
   }
 
   // Check if email service is configured

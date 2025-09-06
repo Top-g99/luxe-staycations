@@ -40,23 +40,37 @@ export default function EmailSettingsForm() {
   } | null>(null);
 
   useEffect(() => {
-    // Load existing configuration from localStorage
-    const savedConfig = localStorage.getItem('luxeEmailConfig');
-    if (savedConfig) {
+    // Load existing configuration from Supabase
+    const loadConfig = async () => {
       try {
-        const parsedConfig = JSON.parse(savedConfig);
-        // Ensure smtpPort is a valid number
-        if (parsedConfig.smtpPort && !isNaN(parsedConfig.smtpPort)) {
-          parsedConfig.smtpPort = Number(parsedConfig.smtpPort);
-        } else {
-          parsedConfig.smtpPort = 587; // Default port
+        await emailService.initialize();
+        const savedConfig = emailService.getConfig();
+        if (savedConfig) {
+          setConfig(savedConfig);
+          setIsConfigured(true);
         }
-        setConfig(parsedConfig);
-        setIsConfigured(true);
       } catch (error) {
-        console.error('Error loading email config:', error);
+        console.error('Error loading email config from Supabase:', error);
+        // Fallback to localStorage if Supabase fails
+        const savedConfig = localStorage.getItem('luxeEmailConfig');
+        if (savedConfig) {
+          try {
+            const parsedConfig = JSON.parse(savedConfig);
+            if (parsedConfig.smtpPort && !isNaN(parsedConfig.smtpPort)) {
+              parsedConfig.smtpPort = Number(parsedConfig.smtpPort);
+            } else {
+              parsedConfig.smtpPort = 587;
+            }
+            setConfig(parsedConfig);
+            setIsConfigured(true);
+          } catch (parseError) {
+            console.error('Error parsing localStorage config:', parseError);
+          }
+        }
       }
-    }
+    };
+    
+    loadConfig();
   }, []);
 
   const handleConfigChange = (field: keyof EmailConfig, value: string | number | boolean) => {
@@ -73,6 +87,8 @@ export default function EmailSettingsForm() {
       const success = await emailService.configure(config);
       
       if (success) {
+        // Reload configuration to ensure it's properly loaded
+        await emailService.reloadConfiguration();
         setIsConfigured(true);
         setTestResult({
           success: true,
@@ -88,6 +104,7 @@ export default function EmailSettingsForm() {
         });
       }
     } catch (error) {
+      console.error('Error saving email configuration:', error);
       setTestResult({
         success: false,
         message: 'Error saving email configuration'
@@ -143,11 +160,33 @@ export default function EmailSettingsForm() {
     }
   };
 
-  const handleResetConfig = () => {
-    setConfig(defaultEmailConfig);
-    setIsConfigured(false);
-    localStorage.removeItem('luxeEmailConfig');
-    setTestResult(null);
+  const handleResetConfig = async () => {
+    try {
+      // Reset in Supabase
+      const success = await emailService.configure(defaultEmailConfig);
+      if (success) {
+        await emailService.reloadConfiguration();
+        setConfig(defaultEmailConfig);
+        setIsConfigured(false);
+        localStorage.removeItem('luxeEmailConfig');
+        setTestResult({
+          success: true,
+          message: 'Configuration reset to defaults'
+        });
+        setTimeout(() => setTestResult(null), 3000);
+      } else {
+        setTestResult({
+          success: false,
+          message: 'Failed to reset configuration'
+        });
+      }
+    } catch (error) {
+      console.error('Error resetting config:', error);
+      setTestResult({
+        success: false,
+        message: 'Error resetting configuration'
+      });
+    }
   };
 
   return (
