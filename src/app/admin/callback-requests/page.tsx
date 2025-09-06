@@ -41,10 +41,12 @@ import {
   TrendingUp,
   Schedule,
   DoneAll,
-  Clear
+  Clear,
+  Email
 } from '@mui/icons-material';
 import { callbackManager, CallbackRequest } from '@/lib/callbackManager';
 import { contactFormManager, ContactFormSubmission } from '@/lib/contactFormManager';
+import { isAdmin, hasAdminPermission, getAdminPermissionError } from '@/lib/adminPermissions';
 
 export default function CallbackRequestsPage() {
   const [callbacks, setCallbacks] = useState<CallbackRequest[]>([]);
@@ -132,10 +134,44 @@ export default function CallbackRequestsPage() {
           severity: 'error'
         });
       }
+    } else if (selectedContactSubmission) {
+      const success = contactFormManager.updateSubmission(
+        selectedContactSubmission.id,
+        {
+          status: editStatus as any,
+          notes: editNotes
+        }
+      );
+      
+      if (success) {
+        setSnackbar({
+          open: true,
+          message: 'Contact form submission updated successfully!',
+          severity: 'success'
+        });
+        setEditDialogOpen(false);
+        setSelectedContactSubmission(null);
+        setEditNotes('');
+      } else {
+        setSnackbar({
+          open: true,
+          message: 'Failed to update contact form submission!',
+          severity: 'error'
+        });
+      }
     }
   };
 
   const handleDeleteCallback = (id: string) => {
+    if (!hasAdminPermission('delete', 'callback request')) {
+      setSnackbar({
+        open: true,
+        message: getAdminPermissionError('delete', 'callback request'),
+        severity: 'error'
+      });
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this callback request?')) {
       const success = callbackManager.deleteCallback(id);
       if (success) {
@@ -162,6 +198,15 @@ export default function CallbackRequestsPage() {
   };
 
   const handleDeleteContactSubmission = (id: string) => {
+    if (!hasAdminPermission('delete', 'contact form submission')) {
+      setSnackbar({
+        open: true,
+        message: getAdminPermissionError('delete', 'contact form submission'),
+        severity: 'error'
+      });
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this contact form submission?')) {
       const success = contactFormManager.deleteSubmission(id);
       if (success) {
@@ -417,17 +462,101 @@ export default function CallbackRequestsPage() {
                       >
                         <Edit />
                       </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteCallback(callback.id)}
-                        sx={{ color: '#f44336' }}
-                      >
-                        <Delete />
-                      </IconButton>
+                      {isAdmin() && (
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteCallback(callback.id)}
+                          sx={{ color: '#f44336' }}
+                        >
+                          <Delete />
+                        </IconButton>
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>
-              ))
+              )) : null}
+                
+                {/* Contact Form Submissions */}
+                {typeFilter === 'all' || typeFilter === 'contact' ? filteredContactSubmissions.map((submission) => (
+                <TableRow key={`contact-${submission.id}`} hover>
+                  <TableCell>
+                    <Chip
+                      label="Contact Form"
+                      color="secondary"
+                      size="small"
+                      icon={<Email />}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {submission.name}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        {submission.email}
+                      </Typography>
+                      {submission.phone && (
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          {submission.phone}
+                        </Typography>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {submission.subject}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      {submission.message.length > 50 
+                        ? `${submission.message.substring(0, 50)}...` 
+                        : submission.message
+                      }
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={submission.priority}
+                      color={submission.priority === 'high' ? 'error' : submission.priority === 'medium' ? 'warning' : 'default'}
+                      size="small"
+                      sx={{ textTransform: 'capitalize' }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={submission.status}
+                      color={submission.status === 'new' ? 'info' : submission.status === 'in_progress' ? 'warning' : submission.status === 'completed' ? 'success' : 'default'}
+                      size="small"
+                      sx={{ textTransform: 'capitalize' }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      {new Date(submission.createdAt).toLocaleDateString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEditContactSubmission(submission)}
+                        sx={{ color: 'var(--primary-light)' }}
+                      >
+                        <Edit />
+                      </IconButton>
+                      {isAdmin() && (
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteContactSubmission(submission.id)}
+                          sx={{ color: '#f44336' }}
+                        >
+                          <Delete />
+                        </IconButton>
+                      )}
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              )) : null}
+              </>
             )}
           </TableBody>
         </Table>
@@ -445,31 +574,47 @@ export default function CallbackRequestsPage() {
           color: 'white',
           fontFamily: 'Playfair Display, serif'
         }}>
-          Update Callback Request
+          {selectedCallback ? 'Update Callback Request' : 'Update Contact Form Submission'}
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
-          {selectedCallback && (
+          {(selectedCallback || selectedContactSubmission) && (
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Guest: {selectedCallback.name}
+                  {selectedCallback ? 'Guest' : 'Contact'}: {selectedCallback?.name || selectedContactSubmission?.name}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                  Phone: {selectedCallback.phone}
+                  {selectedCallback ? 'Phone' : 'Email'}: {selectedCallback?.phone || selectedContactSubmission?.email}
                 </Typography>
+                {selectedContactSubmission && selectedContactSubmission.phone && (
+                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                    Phone: {selectedContactSubmission.phone}
+                  </Typography>
+                )}
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth>
                   <InputLabel>Status</InputLabel>
                   <Select
                     value={editStatus}
-                    onChange={(e) => setEditStatus(e.target.value as CallbackRequest['status'])}
+                    onChange={(e) => setEditStatus(e.target.value as any)}
                     label="Status"
                   >
-                    <MenuItem value="pending">Pending</MenuItem>
-                    <MenuItem value="contacted">Contacted</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
-                    <MenuItem value="cancelled">Cancelled</MenuItem>
+                    {selectedCallback ? (
+                      <>
+                        <MenuItem value="pending">Pending</MenuItem>
+                        <MenuItem value="contacted">Contacted</MenuItem>
+                        <MenuItem value="completed">Completed</MenuItem>
+                        <MenuItem value="cancelled">Cancelled</MenuItem>
+                      </>
+                    ) : (
+                      <>
+                        <MenuItem value="new">New</MenuItem>
+                        <MenuItem value="in_progress">In Progress</MenuItem>
+                        <MenuItem value="completed">Completed</MenuItem>
+                        <MenuItem value="closed">Closed</MenuItem>
+                      </>
+                    )}
                   </Select>
                 </FormControl>
               </Grid>
@@ -518,5 +663,6 @@ export default function CallbackRequestsPage() {
     </Container>
   );
 }
+
 
 

@@ -37,8 +37,10 @@ import {
   CheckCircle,
   Cancel,
   Edit,
+  Delete,
   Visibility
 } from '@mui/icons-material';
+import { isAdmin, hasAdminPermission, getAdminPermissionError } from '@/lib/adminPermissions';
 
 export default function AdminConsultationRequestsPage() {
   const [consultations, setConsultations] = useState<any[]>([]);
@@ -95,6 +97,18 @@ export default function AdminConsultationRequestsPage() {
       notes: consultation.notes || ''
     });
     setDialogOpen(true);
+  };
+
+  const handleDeleteConsultation = (consultation: any) => {
+    if (!hasAdminPermission('delete', 'consultation request')) {
+      console.error(getAdminPermissionError('delete', 'consultation request'));
+      return;
+    }
+
+    if (window.confirm('Are you sure you want to delete this consultation request? This action cannot be undone.')) {
+      setConsultations(prev => prev.filter(cons => cons.id !== consultation.id));
+      console.log('Deleted consultation request:', consultation.id);
+    }
   };
 
   const handleSaveChanges = async () => {
@@ -335,6 +349,15 @@ export default function AdminConsultationRequestsPage() {
                         >
                           <Edit />
                         </IconButton>
+                        {isAdmin() && (
+                          <IconButton 
+                            size="small" 
+                            onClick={() => handleDeleteConsultation(consultation)}
+                            sx={{ color: '#dc2626' }}
+                          >
+                            <Delete />
+                          </IconButton>
+                        )}
                         {consultation.status === 'pending' && (
                           <>
                             <Button 

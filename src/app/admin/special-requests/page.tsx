@@ -33,6 +33,7 @@ import {
   CheckCircle,
   Cancel,
   Edit,
+  Delete,
   Visibility,
   FilterList,
   Search,
@@ -42,6 +43,7 @@ import {
 } from '@mui/icons-material';
 import { useBookingContext } from '@/contexts/BookingContext';
 import { propertyManager } from '@/lib/dataManager';
+import { isAdmin, hasAdminPermission, getAdminPermissionError } from '@/lib/adminPermissions';
 
 export default function SpecialRequestsPage() {
   const { allBookings } = useBookingContext();
@@ -158,6 +160,19 @@ export default function SpecialRequestsPage() {
       setUpdateDialogOpen(false);
       setSelectedRequest(null);
       setUpdateNotes('');
+    }
+  };
+
+  const handleDeleteRequest = (request: any) => {
+    if (!hasAdminPermission('delete', 'special request')) {
+      // Show error message instead of alert
+      console.error(getAdminPermissionError('delete', 'special request'));
+      return;
+    }
+
+    if (window.confirm('Are you sure you want to delete this special request? This action cannot be undone.')) {
+      setSpecialRequests(prev => prev.filter(req => req.id !== request.id));
+      console.log('Deleted special request:', request.id);
     }
   };
 
@@ -412,6 +427,17 @@ export default function SpecialRequestsPage() {
                         >
                           Update Status
                         </Button>
+                        {isAdmin() && (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<Delete />}
+                            onClick={() => handleDeleteRequest(request)}
+                            color="error"
+                          >
+                            Delete
+                          </Button>
+                        )}
                         <Typography variant="caption" sx={{ color: 'text.secondary', mt: 1 }}>
                           Booking ID: {request.bookingId}
                         </Typography>
