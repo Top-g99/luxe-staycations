@@ -43,14 +43,25 @@ export default function EmailSettingsForm() {
     // Load existing configuration from Supabase
     const loadConfig = async () => {
       try {
+        console.log('Initializing email service...');
         await emailService.initialize();
+        
+        console.log('Email service initialized, loading config...');
         const savedConfig = emailService.getConfig();
-        if (savedConfig) {
+        console.log('Retrieved config:', savedConfig ? 'Found' : 'Not found');
+        
+        if (savedConfig && savedConfig.smtpHost && savedConfig.smtpUser && savedConfig.smtpPassword) {
           setConfig(savedConfig);
           setIsConfigured(true);
+          console.log('Email configuration loaded successfully from Supabase');
+        } else {
+          console.log('No valid email configuration found in Supabase');
+          setIsConfigured(false);
         }
       } catch (error) {
         console.error('Error loading email config from Supabase:', error);
+        setIsConfigured(false);
+        
         // Fallback to localStorage if Supabase fails
         const savedConfig = localStorage.getItem('luxeEmailConfig');
         if (savedConfig) {
@@ -63,8 +74,10 @@ export default function EmailSettingsForm() {
             }
             setConfig(parsedConfig);
             setIsConfigured(true);
+            console.log('Email configuration loaded from localStorage fallback');
           } catch (parseError) {
             console.error('Error parsing localStorage config:', parseError);
+            setIsConfigured(false);
           }
         }
       }
@@ -116,16 +129,28 @@ export default function EmailSettingsForm() {
 
   const handleTestConnection = async () => {
     setIsLoading(true);
+    setTestResult(null);
+    
     try {
+      console.log('Testing SMTP connection with config:', {
+        smtpHost: config.smtpHost,
+        smtpPort: config.smtpPort,
+        smtpUser: config.smtpUser,
+        enableSSL: config.enableSSL
+      });
+      
       const result = await emailService.testConnection();
+      console.log('Test connection result:', result);
+      
       setTestResult({
         success: result.success,
         message: result.message
       });
     } catch (error) {
+      console.error('Error testing SMTP connection:', error);
       setTestResult({
         success: false,
-        message: 'Error testing SMTP connection'
+        message: `Error testing SMTP connection: ${error instanceof Error ? error.message : 'Unknown error'}`
       });
     } finally {
       setIsLoading(false);
@@ -142,8 +167,13 @@ export default function EmailSettingsForm() {
     }
 
     setIsLoading(true);
+    setTestResult(null);
+    
     try {
+      console.log('Sending test email to:', testEmail);
       const success = await emailService.sendTestEmail(testEmail);
+      console.log('Test email result:', success);
+      
       setTestResult({
         success,
         message: success 
@@ -151,9 +181,10 @@ export default function EmailSettingsForm() {
           : 'Failed to send test email. Please check your configuration.'
       });
     } catch (error) {
+      console.error('Error sending test email:', error);
       setTestResult({
         success: false,
-        message: 'Error sending test email'
+        message: `Error sending test email: ${error instanceof Error ? error.message : 'Unknown error'}`
       });
     } finally {
       setIsLoading(false);

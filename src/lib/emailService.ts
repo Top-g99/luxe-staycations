@@ -89,7 +89,12 @@ export class EmailService {
   // Load configuration from Supabase
   private async loadConfiguration(): Promise<void> {
     try {
+      // Ensure Supabase email manager is initialized
+      await supabaseEmailManager.initialize();
+      
       const config = supabaseEmailManager.getConfiguration();
+      console.log('Loaded config from Supabase:', config ? 'Found' : 'Not found');
+      
       if (config && config.smtpHost && config.smtpUser && config.smtpPassword) {
         this.config = {
           fromEmail: config.fromEmail || 'info@luxestaycations.in',
@@ -101,12 +106,19 @@ export class EmailService {
           enableSSL: config.enableSSL || false
         };
         this.isConfigured = true;
-        console.log('Email service configuration loaded from Supabase');
+        console.log('Email service configuration loaded from Supabase:', {
+          smtpHost: config.smtpHost,
+          smtpPort: config.smtpPort,
+          smtpUser: config.smtpUser,
+          enableSSL: config.enableSSL
+        });
       } else {
         console.log('No valid email configuration found in Supabase');
+        this.isConfigured = false;
       }
     } catch (error) {
       console.error('Error loading email configuration:', error);
+      this.isConfigured = false;
     }
   }
 

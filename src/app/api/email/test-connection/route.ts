@@ -51,21 +51,22 @@ export async function POST(request: NextRequest) {
     // Create transporter and test actual SMTP connection
     const transporter = nodemailer.createTransport({
       host: emailConfig.smtpHost,
-      port: emailConfig.smtpPort,
+      port: parseInt(emailConfig.smtpPort),
       secure: emailConfig.enableSSL, // true for 465, false for other ports
       auth: {
         user: emailConfig.smtpUser,
         pass: emailConfig.smtpPassword,
       },
-      // Additional options for better Hostinger compatibility
+      // Enhanced security configuration for better compatibility
       tls: {
-        rejectUnauthorized: false, // Allow self-signed certificates
-        ciphers: 'SSLv3'
+        rejectUnauthorized: false, // Allow self-signed certificates for Hostinger
+        minVersion: 'TLSv1.2',
+        ciphers: 'HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA'
       },
       // Connection timeout
-      connectionTimeout: 60000, // 60 seconds
-      greetingTimeout: 30000,   // 30 seconds
-      socketTimeout: 60000,     // 60 seconds
+      connectionTimeout: 30000, // 30 seconds
+      greetingTimeout: 15000,   // 15 seconds
+      socketTimeout: 30000,     // 30 seconds
     });
 
     // Test the actual SMTP connection
