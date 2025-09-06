@@ -97,7 +97,7 @@ export class EmailCore {
       throw new Error('Email configuration not loaded');
     }
 
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       host: this.config.smtpHost,
       port: this.config.smtpPort,
       secure: this.config.enableSSL,
