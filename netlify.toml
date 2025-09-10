@@ -1,0 +1,58 @@
+# Netlify Configuration for Luxe Staycations
+# This file MUST be used instead of UI settings
+
+[build]
+  command = "npm run build"
+  publish = "luxe-app/.next"
+  base = "."
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- ."
+
+[build.environment]
+  NODE_ENV = "production"
+  NODE_VERSION = "18.20.4"
+  NEXT_TELEMETRY_DISABLED = "1"
+  NEXT_PUBLIC_USE_LOCAL_STORAGE = "false"
+  NEXT_PUBLIC_ENABLE_DEBUG_MODE = "false"
+  NETLIFY_SUBMODULE_CHECKOUT = "false"
+  NETLIFY_USE_NETLIFY_TOML = "true"
+  NETLIFY_TOML_OVERRIDE = "true"
+
+# Netlify Next.js plugin configuration
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Redirects for Next.js App Router
+[[redirects]]
+  from = "/admin"
+  to = "/admin/"
+  status = 301
+
+[[redirects]]
+  from = "/villas"
+  to = "/villas/"
+  status = 301
+
+[[redirects]]
+  from = "/destinations"
+  to = "/destinations/"
+  status = 301
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache static assets
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

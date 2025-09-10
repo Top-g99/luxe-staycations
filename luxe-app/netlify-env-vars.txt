@@ -1,0 +1,29 @@
+# Netlify Environment Variables
+# Copy these to your Netlify Dashboard → Site Settings → Environment Variables
+
+NEXT_PUBLIC_SUPABASE_URL=https://okphwjvhzofxevtmlapn.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rcGh3anZoem9meGV2dG1sYXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4ODU4NjMsImV4cCI6MjA3MTQ2MTg2M30.xwb10Ff-7nCothbmnL8Kesp4n8TYyJLcdehPgrXLsUw
+NEXT_PUBLIC_USE_LOCAL_STORAGE=false
+NEXT_PUBLIC_ENABLE_DEBUG_MODE=true
+NEXT_PUBLIC_BASE_URL=https://silly-banoffee-445ea8.netlify.app
+
+# Optional: Service Role Key (for admin operations)
+# SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+
+# Payment Configuration (if needed)
+# NEXT_PUBLIC_RAZORPAY_KEY_ID=your_razorpay_key_id
+# RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+
+# Email Configuration (if needed)
+# SMTP_HOST=your_smtp_host
+# SMTP_PORT=587
+# SMTP_USER=your_smtp_user
+# SMTP_PASS=your_smtp_password
+
+# WhatsApp Configuration (if needed)
+# WHATSAPP_ACCESS_TOKEN=your_whatsapp_token
+# WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id
+
+# Instagram Configuration (if needed)
+# INSTAGRAM_ACCESS_TOKEN=your_instagram_token
+# INSTAGRAM_BUSINESS_ACCOUNT_ID=your_business_account_id

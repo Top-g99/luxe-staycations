@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Property Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Test Property Form</h1>
+    <form id="propertyForm">
+        <div class="form-group">
+            <label for="name">Property Name *</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="location">Location *</label>
+            <input type="text" id="location" name="location" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="price">Price per Night *</label>
+            <input type="number" id="price" name="price" required>
+        </div>
+
+        <div class="form-group">
+            <label for="type">Property Type</label>
+            <select id="type" name="type">
+                <option value="Villa">Villa</option>
+                <option value="Luxury Villa">Luxury Villa</option>
+                <option value="Beach Villa">Beach Villa</option>
+                <option value="Mountain Villa">Mountain Villa</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="maxGuests">Max Guests</label>
+            <input type="number" id="maxGuests" name="maxGuests" value="2">
+        </div>
+
+        <div class="form-group">
+            <label for="bedrooms">Bedrooms</label>
+            <input type="number" id="bedrooms" name="bedrooms" value="1">
+        </div>
+
+        <div class="form-group">
+            <label for="bathrooms">Bathrooms</label>
+            <input type="number" id="bathrooms" name="bathrooms" value="1">
+        </div>
+
+        <div class="form-group">
+            <label for="image">Image URL</label>
+            <input type="url" id="image" name="image">
+        </div>
+
+        <button type="submit">Save Property</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('propertyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const propertyData = {};
+
+            for (let [key, value] of formData.entries()) {
+                if (key === 'price' || key === 'maxGuests' || key === 'bedrooms' || key === 'bathrooms') {
+                    propertyData[key] = parseInt(value);
+                } else {
+                    propertyData[key] = value;
+                }
+            }
+
+            // Add default values
+            propertyData.amenities = ['WiFi', 'Pool'];
+            propertyData.featured = false;
+            propertyData.rating = 0;
+            propertyData.reviews = 0;
+            propertyData.hostName = '';
+            propertyData.hostImage = '';
+            propertyData.propertySize = '';
+            propertyData.yearBuilt = '';
+            propertyData.floorLevel = '';
+            propertyData.totalFloors = 1;
+            propertyData.parkingSpaces = 0;
+            propertyData.petFriendly = false;
+            propertyData.smokingAllowed = false;
+            propertyData.wheelchairAccessible = false;
+            propertyData.neighborhood = '';
+            propertyData.distanceFromAirport = '';
+            propertyData.distanceFromCityCenter = '';
+            propertyData.distanceFromBeach = '';
+            propertyData.publicTransport = '';
+            propertyData.checkInTime = '15:00';
+            propertyData.checkOutTime = '11:00';
+            propertyData.earlyCheckIn = false;
+            propertyData.lateCheckOut = false;
+            propertyData.cancellationPolicy = 'Flexible';
+            propertyData.cleaningFee = 0;
+            propertyData.serviceFee = 0;
+            propertyData.securityDeposit = 0;
+            propertyData.weeklyDiscount = 0;
+            propertyData.monthlyDiscount = 0;
+
+            try {
+                // Save to localStorage
+                const existingProperties = JSON.parse(localStorage.getItem('luxe_properties') || '[]');
+
+                const newProperty = {
+                    ...propertyData,
+                    id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                existingProperties.unshift(newProperty);
+                localStorage.setItem('luxe_properties', JSON.stringify(existingProperties));
+
+                document.getElementById('result').innerHTML = `
+                    <div class="result success">
+                        <h3>Success!</h3>
+                        <p>Property saved successfully!</p>
+                        <p><strong>Property ID:</strong> ${newProperty.id}</p>
+                        <p><strong>Total Properties:</strong> ${existingProperties.length}</p>
+                    </div>
+                `;
+
+                // Clear form
+                this.reset();
+
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="result error">
+                        <h3>Error!</h3>
+                        <p>Failed to save property: ${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+
+        // Load and display existing properties
+        function loadProperties() {
+            const properties = JSON.parse(localStorage.getItem('luxe_properties') || '[]');
+            console.log('Loaded properties:', properties);
+            return properties;
+        }
+
+        // Load properties on page load
+        loadProperties();
+    </script>
+</body>
+
+</html>

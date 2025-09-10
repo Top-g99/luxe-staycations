@@ -1,0 +1,3 @@
+Netlify Build Test - $(date)
+This file is created to test if Netlify can find our package.json
+If you can see this file, the build process is working correctly.

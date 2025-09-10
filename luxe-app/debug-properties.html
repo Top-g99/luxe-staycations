@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Properties</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            color: green;
+        }
+        
+        .error {
+            color: red;
+        }
+        
+        .info {
+            color: blue;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Debug Properties Loading</h1>
+
+        <div class="section">
+            <h2>localStorage Check</h2>
+            <button onclick="checkLocalStorage()">Check localStorage</button>
+            <div id="localStorageLog" class="log"></div>
+        </div>
+
+        <div class="section">
+            <h2>API Check</h2>
+            <button onclick="checkAPI()">Check API</button>
+            <div id="apiLog" class="log"></div>
+        </div>
+
+        <div class="section">
+            <h2>DataManager Test</h2>
+            <button onclick="testDataManager()">Test DataManager</button>
+            <div id="dataManagerLog" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const log = (elementId, message, type = 'info') => {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            element.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            element.scrollTop = element.scrollHeight;
+        };
+
+        function checkLocalStorage() {
+            const logElement = 'localStorageLog';
+            log(logElement, 'Checking localStorage...');
+
+            // Check all localStorage keys
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                log(logElement, `Key: ${key}`);
+                log(logElement, `Value length: ${value ? value.length : 0}`);
+                if (key === 'luxe_properties') {
+                    try {
+                        const parsed = JSON.parse(value);
+                        log(logElement, `Properties found: ${parsed.length}`, 'success');
+                        parsed.forEach(p => {
+                            log(logElement, `- ${p.name} (${p.featured ? 'Featured' : 'Regular'})`);
+                        });
+                    } catch (e) {
+                        log(logElement, `Error parsing: ${e.message}`, 'error');
+                    }
+                }
+            }
+        }
+
+        async function checkAPI() {
+            const logElement = 'apiLog';
+            log(logElement, 'Checking API...');
+
+            try {
+                const response = await fetch('/api/villas');
+                const data = await response.json();
+
+                if (response.ok) {
+                    log(logElement, `API Response: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    log(logElement, `API Error: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (e) {
+                log(logElement, `Network Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function testDataManager() {
+            const logElement = 'dataManagerLog';
+            log(logElement, 'Testing DataManager...');
+
+            try {
+                // Simulate what the home page does
+                const response = await fetch('/api/villas');
+                const data = await response.json();
+
+                if (response.ok && data.data) {
+                    log(logElement, `Total properties: ${data.data.length}`, 'success');
+
+                    const featured = data.data.filter(p => p.featured);
+                    log(logElement, `Featured properties: ${featured.length}`, 'success');
+
+                    featured.forEach(p => {
+                        log(logElement, `- ${p.name} (${p.location})`);
+                    });
+
+                    if (featured.length === 0) {
+                        log(logElement, 'No featured properties found!', 'error');
+                    }
+                } else {
+                    log(logElement, `API issue: ${data.error || 'No data'}`, 'error');
+                }
+            } catch (e) {
+                log(logElement, `Error: ${e.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

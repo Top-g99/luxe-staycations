@@ -1,0 +1,32 @@
+{
+    "name": "luxe-staycations-root",
+    "version": "1.0.0",
+    "description": "Luxe Staycations - Luxury Villa Booking Platform",
+    "private": true,
+    "scripts": {
+        "build": "ls -la && pwd && cd luxe-app && npm ci && npm run build && cp -r .next ../.next",
+        "dev": "cd luxe-app && npm run dev",
+        "start": "cd luxe-app && npm run start",
+        "lint": "cd luxe-app && npm run lint",
+        "deploy:prepare": "cd luxe-app && npm run deploy:prepare"
+    },
+    "engines": {
+        "node": ">=20.0.0",
+        "npm": ">=8.0.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Top-g99/luxe-staycations.git"
+    },
+    "keywords": [
+        "luxury",
+        "villa",
+        "booking",
+        "staycations",
+        "nextjs",
+        "supabase",
+        "netlify"
+    ],
+    "author": "Top-g99",
+    "license": "MIT"
+}

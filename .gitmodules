@@ -1,0 +1,3 @@
+# No submodules configured
+# This file exists to prevent Netlify from trying to checkout non-existent submodules
+# All project files are now in the main repository structure

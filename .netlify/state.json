@@ -1,0 +1,6 @@
+{
+  "siteId": "luxe-staycations",
+  "netlifyToml": true,
+  "buildCommand": "npm run build",
+  "publishDir": "luxe-app/.next"
+}

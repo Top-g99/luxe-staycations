@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Sample Properties</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #704F49;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .property-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #fafafa;
+        }
+        
+        .property-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #704F49;
+            margin-bottom: 10px;
+        }
+        
+        .property-location {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .property-price {
+            font-weight: bold;
+            color: #2e7d32;
+            font-size: 1.1em;
+        }
+        
+        button {
+            background: #704F49;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        button:hover {
+            background: #5A3F3A;
+        }
+        
+        .success {
+            background: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .info {
+            background: #2196f3;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Add Sample Properties to Luxe Staycations</h1>
+
+        <div class="info">
+            <strong>Instructions:</strong> Click the button below to add sample properties to your browser's localStorage. Then go back to <a href="http://localhost:3000" style="color: white;">http://localhost:3000</a> to see them displayed.
+        </div>
+
+        <h2>Sample Properties to be Added:</h2>
+
+        <div class="property-card">
+            <div class="property-name">Casa Alphonso</div>
+            <div class="property-location">Lonavala, Maharashtra</div>
+            <div class="property-price">₹15,000/night</div>
+        </div>
+
+        <div class="property-card">
+            <div class="property-name">Serene Retreat</div>
+            <div class="property-location">Mahabaleshwar, Maharashtra</div>
+            <div class="property-price">₹12,000/night</div>
+        </div>
+
+        <div class="property-card">
+            <div class="property-name">Luxury Haven</div>
+            <div class="property-location">Goa, India</div>
+            <div class="property-price">₹25,000/night</div>
+        </div>
+
+        <button onclick="addSampleProperties()">Add Sample Properties to localStorage</button>
+
+        <div id="result"></div>
+
+        <div class="info">
+            <strong>Next Steps:</strong>
+            <ol>
+                <li>Click the button above to add properties</li>
+                <li>Go to <a href="http://localhost:3000" style="color: white;">http://localhost:3000</a></li>
+                <li>Refresh the page if needed</li>
+                <li>You should now see the properties displayed in the "Explore Top Properties" section</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const sampleProperties = [{
+            id: '1',
+            name: 'Casa Alphonso',
+            location: 'Lonavala, Maharashtra',
+            description: 'Luxury villa with panoramic views of the Western Ghats. Perfect for family getaways with modern amenities and private pool.',
+            image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
+            price: 15000,
+            rating: 4.8,
+            reviews: 127,
+            type: 'Villa',
+            amenities: ['Private Pool', 'WiFi', 'Kitchen', 'Parking', 'Garden', 'BBQ'],
+            featured: true,
+            bedrooms: 3,
+            bathrooms: 2,
+            maxGuests: 8,
+            hostName: 'Alphonso Family',
+            hostImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80',
+            images: [
+                'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
+                'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80',
+                'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80'
+            ],
+            highlights: ['Mountain View', 'Private Pool', 'Family Friendly'],
+            squareFootage: 2500,
+            yearBuilt: 2020,
+            distanceToBeach: 0,
+            distanceToCity: 5,
+            primaryView: 'Mountain',
+            propertyStyle: 'Modern',
+            policies: {
+                checkIn: '3:00 PM',
+                checkOut: '11:00 AM',
+                cancellation: 'Free cancellation up to 7 days before check-in'
+            }
+        }, {
+            id: '2',
+            name: 'Serene Retreat',
+            location: 'Mahabaleshwar, Maharashtra',
+            description: 'Peaceful cottage surrounded by strawberry farms and scenic valleys. Ideal for romantic getaways and nature lovers.',
+            image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+            price: 12000,
+            rating: 4.6,
+            reviews: 89,
+            type: 'Cottage',
+            amenities: ['Fireplace', 'WiFi', 'Kitchen', 'Parking', 'Garden', 'Valley View'],
+            featured: true,
+            bedrooms: 2,
+            bathrooms: 1,
+            maxGuests: 4,
+            hostName: 'Nature Escapes',
+            hostImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&q=80',
+            images: [
+                'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+                'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+                'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80'
+            ],
+            highlights: ['Valley View', 'Fireplace', 'Romantic'],
+            squareFootage: 1800,
+            yearBuilt: 2019,
+            distanceToBeach: 0,
+            distanceToCity: 3,
+            primaryView: 'Valley',
+            propertyStyle: 'Rustic',
+            policies: {
+                checkIn: '2:00 PM',
+                checkOut: '10:00 AM',
+                cancellation: 'Free cancellation up to 5 days before check-in'
+            }
+        }, {
+            id: '3',
+            name: 'Luxury Haven',
+            location: 'Goa, India',
+            description: 'Beachfront villa with direct access to pristine beaches. Modern luxury with traditional Goan charm and world-class amenities.',
+            image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+            price: 25000,
+            rating: 4.9,
+            reviews: 203,
+            type: 'Luxury Villa',
+            amenities: ['Private Beach Access', 'Infinity Pool', 'WiFi', 'Kitchen', 'Parking', 'Spa', 'Chef Service'],
+            featured: true,
+            bedrooms: 4,
+            bathrooms: 3,
+            maxGuests: 10,
+            hostName: 'Goa Luxury Stays',
+            hostImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80',
+            images: [
+                'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+                'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+                'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80'
+            ],
+            highlights: ['Beachfront', 'Infinity Pool', 'Luxury'],
+            squareFootage: 3500,
+            yearBuilt: 2021,
+            distanceToBeach: 0,
+            distanceToCity: 8,
+            primaryView: 'Ocean',
+            propertyStyle: 'Luxury',
+            policies: {
+                checkIn: '4:00 PM',
+                checkOut: '12:00 PM',
+                cancellation: 'Free cancellation up to 14 days before check-in'
+            }
+        }];
+
+        function addSampleProperties() {
+            try {
+                localStorage.setItem('luxeProperties', JSON.stringify(sampleProperties));
+                document.getElementById('result').innerHTML = `
+                    <div class="success">
+                        ✅ Successfully added ${sampleProperties.length} sample properties to localStorage!<br>
+                        Now go to <a href="http://localhost:3000" style="color: white; text-decoration: underline;">http://localhost:3000</a> to see them displayed.
+                    </div>
+                `;
+                console.log('Sample properties added to localStorage:', sampleProperties.length);
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div style="background: #f44336; color: white; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        ❌ Error adding properties: ${error.message}
+                    </div>
+                `;
+                console.error('Error adding properties:', error);
+            }
+        }
+
+        // Check if properties already exist
+        window.onload = function() {
+            const existingProperties = localStorage.getItem('luxeProperties');
+            if (existingProperties) {
+                const properties = JSON.parse(existingProperties);
+                document.getElementById('result').innerHTML = `
+                    <div style="background: #ff9800; color: white; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        ℹ️ ${properties.length} properties already exist in localStorage. Click the button to replace them with sample properties.
+                    </div>
+                `;
+            }
+        };
+    </script>
+</body>
+
+</html>
