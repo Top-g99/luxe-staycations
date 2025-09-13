@@ -12,13 +12,23 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   trailingSlash: false,
   distDir: '.next',
-  // Override Netlify plugin trailing slash behavior
+  // CRITICAL: Override Netlify plugin trailing slash behavior completely
   async redirects() {
     return [
+      // Force admin route to work without trailing slash
       {
         source: '/admin/',
         destination: '/admin',
         permanent: true,
+      },
+    ];
+  },
+  // Force rewrite to handle admin routes properly
+  async rewrites() {
+    return [
+      {
+        source: '/admin/',
+        destination: '/admin',
       },
     ];
   },

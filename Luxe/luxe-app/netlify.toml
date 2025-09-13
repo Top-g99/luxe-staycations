@@ -14,6 +14,9 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+  [plugins.inputs]
+    # Disable automatic trailing slash behavior that causes redirect loops
+    trailingSlash = false
 
 [[headers]]
   for = "/*"
@@ -23,6 +26,17 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-# FIXED: Removed problematic admin redirect that caused infinite loop
-# Admin routes should be handled by Next.js routing, not Netlify redirects
+# CRITICAL FIX: Force admin routes to work without redirects
+[[redirects]]
+  from = "/admin/"
+  to = "/admin"
+  status = 301
+  force = true
+
+# Override Netlify's automatic trailing slash behavior for admin routes
+[[redirects]]
+  from = "/admin"
+  to = "/admin"
+  status = 200
+  force = true
 
