@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { emailService } from '@/lib/email/emailService';
+import { emailService } from '@/lib/email/EmailService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,12 +18,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Send contact form notification to admin
-    const emailResult = await emailService.sendContactFormNotification({
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      subject: data.subject,
-      message: data.message
+    const emailResult = await emailService.sendEmail({
+      to: 'info@luxestaycations.in',
+      subject: `Contact Form: ${data.subject}`,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Phone:</strong> ${data.phone}</p>
+        <p><strong>Subject:</strong> ${data.subject}</p>
+        <p><strong>Message:</strong></p>
+        <p>${data.message}</p>
+      `
     });
 
     if (emailResult.success) {

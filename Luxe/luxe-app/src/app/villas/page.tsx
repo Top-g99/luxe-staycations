@@ -1,0 +1,1115 @@
+'use client';
+
+import React, { useState, useEffect, Suspense } from 'react';
+import {
+  Container,
+  Grid,
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  CardMedia,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  CircularProgress,
+  Slider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from '@mui/material';
+import { Search } from '@mui/icons-material';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useBookingContext } from '@/contexts/BookingContext';
+import { propertyManager } from '@/lib/dataManager';
+
+// Property interface matching the dataManager
+interface Property {
+  id: string;
+  name: string;
+  location: string;
+  description: string;
+  price: number;
+  rating: number;
+  reviews: number;
+  max_guests: number;
+  amenities: string[];
+  image: string;
+  featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+function VillasPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { searchFormData, setSearchFormData, setBookingDetails } = useBookingContext();
+  
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [priceRange, setPriceRange] = useState<number[]>([0, 50000]);
+
+  useEffect(() => {
+    const loadProperties = async () => {
+      try {
+        setLoading(true);
+        
+        // Initialize and load properties from PropertyManager
+        propertyManager.initialize();
+        
+        // Get all properties from the manager
+        let allProperties = propertyManager.getAll();
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Properties loaded from PropertyManager:', allProperties);
+        }
+        
+        // If no properties exist, add sample properties
+        if (allProperties.length === 0) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('No properties found, adding sample properties...');
+          }
+          const sampleProperties = [
+            {
+              id: 'casa-alphonso-lonavala',
+              name: 'Casa Alphonso - Lonavala',
+              location: 'Lonavala, Maharashtra',
+              description: 'Luxury villa with panoramic mountain views, private pool, and modern amenities.',
+              price: 15000,
+              rating: 4.8,
+              reviews: 25,
+              max_guests: 8,
+              amenities: ['Private Pool', 'WiFi', 'Kitchen', 'Parking', 'Mountain View'],
+              image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80',
+              featured: true,
+              type: 'villa',
+              available: true,
+              bedrooms: 4,
+              bathrooms: 3,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            },
+            {
+              id: 'casa-alphonso-malpe',
+              name: 'Casa Alphonso - Malpe',
+              location: 'Malpe, Maharashtra',
+              description: 'Luxury beachfront villa in Malpe with stunning ocean views, private pool, and modern amenities.',
+              price: 18000,
+              rating: 4.9,
+              reviews: 32,
+              max_guests: 8,
+              amenities: ['Private Pool', 'Beach Access', 'WiFi', 'Kitchen', 'Parking', 'Ocean View', 'Air Conditioning', 'BBQ Grill', 'Garden', 'Balcony'],
+              image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80',
+              featured: true,
+              type: 'villa',
+              available: true,
+              bedrooms: 4,
+              bathrooms: 3,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+          ];
+          
+          // Add sample properties to the manager
+          for (const property of sampleProperties) {
+            await propertyManager.create(property);
+          }
+          
+          // Reload properties after adding samples
+          allProperties = propertyManager.getAll();
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Sample properties added, now have:', allProperties.length);
+          }
+        }
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Property details:', allProperties.map(p => ({
+            id: p.id,
+            name: p.name,
+            location: p.location,
+            price: p.price,
+            maxGuests: p.max_guests
+          })));
+        }
+        
+        // All properties from PropertyManager are considered available
+        const availableProperties = allProperties;
+        
+        setProperties(availableProperties);
+        setFilteredProperties(availableProperties);
+      } catch (error) {
+        console.error('Error loading properties:', error);
+        setProperties([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Load properties initially
+    loadProperties();
+
+    // Subscribe to PropertyManager changes for live updates
+    const unsubscribe = propertyManager.subscribe(() => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PropertyManager: Received update notification, refreshing properties...');
+      }
+      loadProperties();
+    });
+
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // Handle URL search parameters
+  useEffect(() => {
+    const destination = searchParams.get('destination');
+    const checkIn = searchParams.get('checkIn');
+    const checkOut = searchParams.get('checkOut');
+    const guests = searchParams.get('guests');
+
+    if (destination) {
+      setSearchQuery(destination);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Setting search query from URL:', destination);
+      }
+    }
+
+    // Update the booking context if we have search data
+    if (destination || checkIn || checkOut || guests) {
+      const urlSearchData = {
+        destination: destination || '',
+        checkIn: checkIn || '',
+        checkOut: checkOut || '',
+        guests: guests || ''
+      };
+      setSearchFormData(urlSearchData);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('URL search data:', urlSearchData);
+      }
+    }
+  }, [searchParams, setSearchFormData]);
+
+  // Filter properties based on search and filters
+  useEffect(() => {
+    let filtered = properties;
+
+    // Debug logging for troubleshooting
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Filtering properties:', {
+        totalProperties: properties.length,
+        searchQuery,
+        priceRange,
+        selectedAmenities: searchFormData?.amenities || []
+      });
+    }
+
+    // Search query filter
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      filtered = filtered.filter(property => {
+        // Split search query into words for more flexible matching
+        const searchWords = searchLower.split(/[,\s]+/).filter(word => word.length > 0);
+        
+        const nameMatch = searchWords.some(word => 
+          property.name.toLowerCase().includes(word)
+        );
+        const locationMatch = searchWords.some(word => 
+          property.location.toLowerCase().includes(word)
+        );
+        const descriptionMatch = searchWords.some(word => 
+          property.description.toLowerCase().includes(word)
+        );
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Property "${property.name}" (${property.location}):`, {
+            nameMatch,
+            locationMatch,
+            descriptionMatch,
+            searchQuery: searchLower,
+            searchWords
+          });
+        }
+        
+        return nameMatch || locationMatch || descriptionMatch;
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Properties after search filter:', filtered.length);
+      }
+    }
+
+    // Price range filter
+    filtered = filtered.filter(property =>
+      property.price >= priceRange[0] && property.price <= priceRange[1]
+    );
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Properties after price filter:', filtered.length);
+    }
+
+    // Amenities filter
+    if (searchFormData?.amenities && searchFormData.amenities.length > 0) {
+      filtered = filtered.filter(property => {
+        const propertyAmenities = property.amenities || [];
+        const selectedAmenities = searchFormData.amenities || [];
+        
+        // Check if property has ALL selected amenities
+        const hasAllAmenities = selectedAmenities.every(amenity => 
+          propertyAmenities.some(propAmenity => 
+            propAmenity.toLowerCase().includes(amenity.toLowerCase()) ||
+            amenity.toLowerCase().includes(propAmenity.toLowerCase())
+          )
+        );
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Property "${property.name}" amenities check:`, {
+            propertyAmenities,
+            selectedAmenities,
+            hasAllAmenities
+          });
+        }
+        
+        return hasAllAmenities;
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Properties after amenities filter:', filtered.length);
+      }
+    }
+
+    setFilteredProperties(filtered);
+  }, [properties, searchQuery, priceRange, searchFormData?.amenities]);
+
+  const [showAmenitiesWarning, setShowAmenitiesWarning] = useState(false);
+  const [propertyToBook, setPropertyToBook] = useState<Property | null>(null);
+
+  const handleBookNow = (property: Property) => {
+    // Check if amenities filter is active and if this property matches all selected amenities
+    if (searchFormData?.amenities && searchFormData.amenities.length > 0) {
+      const propertyAmenities = property.amenities || [];
+      const selectedAmenities = searchFormData.amenities || [];
+      const matchedAmenities = selectedAmenities.filter(amenity => 
+        propertyAmenities.some(propAmenity => 
+          propAmenity.toLowerCase().includes(amenity.toLowerCase()) ||
+          amenity.toLowerCase().includes(propAmenity.toLowerCase())
+        )
+      );
+      
+      // If not all amenities match, show warning dialog
+      if (matchedAmenities.length < selectedAmenities.length) {
+        setPropertyToBook(property);
+        setShowAmenitiesWarning(true);
+        return;
+      }
+    }
+    
+    // Proceed with booking
+    proceedWithBooking(property);
+  };
+
+  const proceedWithBooking = (property: Property) => {
+    // Calculate total nights and price from search form data
+    let totalNights = 1;
+    let total = property.price;
+    
+    if (searchFormData?.checkIn && searchFormData?.checkOut) {
+      const checkIn = new Date(searchFormData.checkIn);
+      const checkOut = new Date(searchFormData.checkOut);
+      const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
+      totalNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      total = totalNights * property.price;
+    }
+
+    // Set booking details in context
+    setBookingDetails({
+      propertyId: property.id,
+      propertyName: property.name,
+      propertyLocation: property.location,
+      propertyImage: property.image || '',
+      propertyPrice: property.price,
+      checkIn: searchFormData?.checkIn || '',
+      checkOut: searchFormData?.checkOut || '',
+      guests: searchFormData?.guests || '1',
+      totalNights: totalNights,
+      total: total
+    });
+
+    // Navigate to checkout with property ID
+    router.push(`/booking/checkout?property=${property.id}`);
+  };
+
+  const handleSearch = () => {
+    // Search is handled by the useEffect filter
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Search triggered with:', { searchQuery, priceRange });
+    }
+  };
+
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Loading properties...
+        </Typography>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Search and Filter Section */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ 
+          fontFamily: 'Playfair Display, serif',
+          mb: 3, 
+          textAlign: 'center', 
+          color: 'var(--primary-dark)' 
+        }}>
+          Find Your Perfect Villa
+        </Typography>
+        
+        {/* Current Search Summary */}
+        {searchFormData?.checkIn && searchFormData?.checkOut && searchFormData?.destination && (
+          <Box sx={{ mb: 3, p: 3, bgcolor: 'primary.light', borderRadius: 2, textAlign: 'center' }}>
+            <Typography variant="h6" sx={{ mb: 1, color: 'primary.contrastText' }}>
+              🔍 Current Search
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'primary.contrastText' }}>
+              <strong>{searchFormData.destination}</strong> • 
+              {new Date(searchFormData.checkIn).toLocaleDateString()} - {new Date(searchFormData.checkOut).toLocaleDateString()} • 
+              {searchFormData.guests} guest(s)
+            </Typography>
+          </Box>
+        )}
+        
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              label="Search destinations, villas..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Check In"
+              value={searchFormData?.checkIn || ''}
+              onChange={(e) => {
+                const newSearchData = {
+                  destination: searchQuery,
+                  checkIn: e.target.value,
+                  checkOut: searchFormData?.checkOut || '',
+                  guests: searchFormData?.guests || '1'
+                };
+                setSearchFormData(newSearchData);
+              }}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Check Out"
+              value={searchFormData?.checkOut || ''}
+              onChange={(e) => {
+                const newSearchData = {
+                  destination: searchQuery,
+                  checkIn: searchFormData?.checkIn || '',
+                  checkOut: e.target.value,
+                  guests: searchFormData?.guests || '1'
+                };
+                setSearchFormData(newSearchData);
+              }}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Guests"
+              value={searchFormData?.guests || '1'}
+              onChange={(e) => {
+                const newSearchData = {
+                  destination: searchQuery,
+                  checkIn: searchFormData?.checkIn || '',
+                  checkOut: searchFormData?.checkOut || '',
+                  guests: e.target.value
+                };
+                setSearchFormData(newSearchData);
+              }}
+              inputProps={{ min: 1, max: 20 }}
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth>
+              <InputLabel>Price Range</InputLabel>
+              <Select
+                value={priceRange[1].toString()}
+                onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
+              >
+                <MenuItem value="10000">Up to ₹10,000</MenuItem>
+                <MenuItem value="20000">Up to ₹20,000</MenuItem>
+                <MenuItem value="30000">Up to ₹30,000</MenuItem>
+                <MenuItem value="50000">Up to ₹50,000</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+        
+        {/* Price Range Slider */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            Price Range: ₹{priceRange[0].toLocaleString()} - ₹{priceRange[1].toLocaleString()}
+          </Typography>
+          <Slider
+            value={priceRange}
+            onChange={(_, newValue: number | number[]) => setPriceRange(newValue as number[])}
+            min={0}
+            max={50000}
+            step={1000}
+            valueLabelDisplay="auto"
+            valueLabelFormat={(value: number) => `₹${value.toLocaleString()}`}
+          />
+        </Box>
+
+        {/* Amenities Filter */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ 
+            fontFamily: 'Playfair Display, serif',
+            mb: 2, 
+            color: 'var(--primary-dark)' 
+          }}>
+            🎯 Filter by Amenities
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {[
+              'Private Pool', 'WiFi', 'Kitchen', 'Air Conditioning', 'Pet Friendly',
+              'Beach Access', 'Mountain View', 'City View', 'BBQ Grill', 'Hot Tub',
+              'Fireplace', 'Garden', 'Balcony', 'Parking', 'Wheelchair Accessible'
+            ].map((amenity) => (
+              <Chip
+                key={amenity}
+                label={amenity}
+                onClick={() => {
+                  // Toggle amenity filter
+                  const currentAmenities = searchFormData?.amenities || [];
+                  if (currentAmenities.includes(amenity)) {
+                    setSearchFormData({
+                      destination: searchFormData?.destination || '',
+                      checkIn: searchFormData?.checkIn || '',
+                      checkOut: searchFormData?.checkOut || '',
+                      guests: searchFormData?.guests || '',
+                      amenities: currentAmenities.filter(a => a !== amenity)
+                    });
+                  } else {
+                    setSearchFormData({
+                      destination: searchFormData?.destination || '',
+                      checkIn: searchFormData?.checkIn || '',
+                      checkOut: searchFormData?.checkOut || '',
+                      guests: searchFormData?.guests || '',
+                      amenities: [...currentAmenities, amenity]
+                    });
+                  }
+                }}
+                color={searchFormData?.amenities?.includes(amenity) ? 'primary' : 'default'}
+                variant={searchFormData?.amenities?.includes(amenity) ? 'filled' : 'outlined'}
+                sx={{ cursor: 'pointer' }}
+              />
+            ))}
+          </Box>
+          {searchFormData?.amenities && searchFormData.amenities.length > 0 && (
+            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Typography variant="body2" color="text.secondary">
+                Filtering by: {searchFormData.amenities.join(', ')}
+              </Typography>
+              
+              {/* Properties count that match amenities */}
+              {(() => {
+                const matchingProperties = properties.filter(property => {
+                  const propertyAmenities = property.amenities || [];
+                  const selectedAmenities = searchFormData.amenities || [];
+                  return selectedAmenities.every(amenity => 
+                    propertyAmenities.some(propAmenity => 
+                      propAmenity.toLowerCase().includes(amenity.toLowerCase()) ||
+                      amenity.toLowerCase().includes(propAmenity.toLowerCase())
+                    )
+                  );
+                });
+                
+                return (
+                  <Chip
+                    label={`${matchingProperties.length} of ${properties.length} properties match`}
+                    size="small"
+                    color={matchingProperties.length === 0 ? 'error' : matchingProperties.length < properties.length ? 'warning' : 'success'}
+                    variant="outlined"
+                  />
+                );
+              })()}
+              
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setSearchFormData({ 
+                  destination: searchFormData?.destination || '',
+                  checkIn: searchFormData?.checkIn || '',
+                  checkOut: searchFormData?.checkOut || '',
+                  guests: searchFormData?.guests || '',
+                  amenities: [] 
+                })}
+              >
+                Clear Amenities
+              </Button>
+            </Box>
+          )}
+        </Box>
+        
+        {/* Search Instructions */}
+        {(!searchFormData?.checkIn || !searchFormData?.checkOut) && (
+          <Box sx={{ mb: 3, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+            <Typography variant="body2" color="info.contrastText">
+              💡 <strong>Tip:</strong> Select your check-in and check-out dates above to enable booking. 
+              The total price will be calculated based on the number of nights.
+            </Typography>
+          </Box>
+        )}
+        
+        {/* Success Message when search data is received */}
+        {searchFormData?.checkIn && searchFormData?.checkOut && searchFormData?.destination && (
+          <Box sx={{ mb: 3, p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
+            <Typography variant="body2" color="success.contrastText">
+              ✅ <strong>Search Data Received!</strong> Your search for {searchFormData.destination} 
+              from {new Date(searchFormData.checkIn).toLocaleDateString()} to {new Date(searchFormData.checkOut).toLocaleDateString()} 
+              with {searchFormData.guests} guest(s) is ready. You can now book any property below.
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* Results Count */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" color="text.secondary">
+          {filteredProperties.length} properties found
+        </Typography>
+      </Box>
+
+      {/* Amenities Comparison Warning */}
+      {searchFormData?.amenities && searchFormData.amenities.length > 0 && filteredProperties.length === 0 && properties.length > 0 && (
+        <Box sx={{ mb: 3, p: 3, bgcolor: 'warning.light', borderRadius: 2, border: '1px solid', borderColor: 'warning.main' }}>
+          <Typography variant="h6" sx={{ mb: 2, color: 'warning.dark' }}>
+            ⚠️ No Properties Match All Selected Amenities
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2, color: 'warning.dark' }}>
+            The following properties are available but don't have all the amenities you selected:
+          </Typography>
+          
+          {/* Available Properties with Amenities Comparison */}
+          <Box sx={{ mt: 2 }}>
+            {properties.slice(0, 3).map((property) => {
+              const propertyAmenities = property.amenities || [];
+              const selectedAmenities = searchFormData.amenities || [];
+              
+              // Find missing amenities
+              const missingAmenities = selectedAmenities.filter(amenity => 
+                !propertyAmenities.some(propAmenity => 
+                  propAmenity.toLowerCase().includes(amenity.toLowerCase()) ||
+                  amenity.toLowerCase().includes(propAmenity.toLowerCase())
+                )
+              );
+              
+              // Find available amenities
+              const availableAmenities = selectedAmenities.filter(amenity => 
+                propertyAmenities.some(propAmenity => 
+                  propAmenity.toLowerCase().includes(amenity.toLowerCase()) ||
+                  amenity.toLowerCase().includes(propAmenity.toLowerCase())
+                )
+              );
+              
+              return (
+                <Card key={property.id} sx={{ mb: 2, p: 2, bgcolor: 'background.paper' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {property.name}
+                    </Typography>
+                    <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                      ₹{property.price.toLocaleString()}/night
+                    </Typography>
+                  </Box>
+                  
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {property.location}
+                  </Typography>
+                  
+                  {/* Amenities Comparison */}
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                    <Typography variant="body2" sx={{ width: '100%', mb: 1, fontWeight: 600 }}>
+                      Amenities Comparison:
+                    </Typography>
+                    
+                    {/* Available Amenities */}
+                    {availableAmenities.length > 0 && (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                        <Typography variant="body2" color="success.main" sx={{ fontWeight: 600, mr: 1 }}>
+                          ✅ Available:
+                        </Typography>
+                        {availableAmenities.map((amenity) => (
+                          <Chip
+                            key={amenity}
+                            label={amenity}
+                            size="small"
+                            color="success"
+                            variant="outlined"
+                          />
+                        ))}
+                      </Box>
+                    )}
+                    
+                    {/* Missing Amenities */}
+                    {missingAmenities.length > 0 && (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        <Typography variant="body2" color="error.main" sx={{ fontWeight: 600, mr: 1 }}>
+                          ❌ Missing:
+                        </Typography>
+                        {missingAmenities.map((amenity) => (
+                          <Chip
+                            key={amenity}
+                            label={amenity}
+                            size="small"
+                            color="error"
+                            variant="outlined"
+                          />
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
+                  
+                  {/* Action Buttons */}
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        // Clear amenities filter to show this property
+                        setSearchFormData({
+                          destination: searchFormData?.destination || '',
+                          checkIn: searchFormData?.checkIn || '',
+                          checkOut: searchFormData?.checkOut || '',
+                          guests: searchFormData?.guests || '',
+                          amenities: []
+                        });
+                      }}
+                    >
+                      View Without Amenities Filter
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={() => handleBookNow(property)}
+                      disabled={!searchFormData?.checkIn || !searchFormData?.checkOut}
+                      sx={{ bgcolor: 'var(--primary-dark)' }}
+                    >
+                      Book Anyway
+                    </Button>
+                  </Box>
+                </Card>
+              );
+            })}
+          </Box>
+          
+          <Typography variant="body2" sx={{ mt: 2, color: 'warning.dark' }}>
+            💡 <strong>Tip:</strong> You can either clear the amenities filter to see all properties, 
+            or book a property that has some of your preferred amenities.
+          </Typography>
+        </Box>
+      )}
+
+      {/* Properties Grid */}
+      <Grid container spacing={3}>
+        {filteredProperties.map((property) => (
+          <Grid item xs={12} sm={6} md={4} key={property.id}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardMedia
+                component="img"
+                height="200"
+                image={property.image || 'https://via.placeholder.com/400x200?text=No+Image'}
+                alt={property.name}
+                sx={{ objectFit: 'cover' }}
+              />
+              <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
+                  {property.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {property.location}
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2, flexGrow: 1 }}>
+                  {property.description}
+                </Typography>
+                
+                {/* Property's Available Amenities */}
+                {property.amenities && property.amenities.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: 'text.secondary' }}>
+                      🏠 Available Amenities:
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {property.amenities.map((amenity) => (
+                        <Chip
+                          key={amenity}
+                          label={amenity}
+                          size="small"
+                          color="default"
+                          variant="outlined"
+                          sx={{ 
+                            fontSize: '0.75rem',
+                            height: '24px',
+                            '& .MuiChip-label': { px: 1 }
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+                
+                {/* Amenities Comparison (if amenities filter is active) */}
+                {searchFormData?.amenities && searchFormData.amenities.length > 0 && (
+                  <Box sx={{ mb: 2, p: 1.5, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.200' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                        🎯 Amenities Match:
+                      </Typography>
+                      {(() => {
+                        const propertyAmenities = property.amenities || [];
+                        const selectedAmenities = searchFormData.amenities || [];
+                        const matchedAmenities = selectedAmenities.filter(amenity => 
+                          propertyAmenities.some(propAmenity => 
+                            propAmenity.toLowerCase().includes(amenity.toLowerCase()) ||
+                            amenity.toLowerCase().includes(propAmenity.toLowerCase())
+                          )
+                        );
+                        const matchPercentage = Math.round((matchedAmenities.length / selectedAmenities.length) * 100);
+                        
+                        return (
+                          <Chip
+                            label={`${matchPercentage}% Match`}
+                            size="small"
+                            color={matchPercentage === 100 ? 'success' : matchPercentage >= 70 ? 'warning' : 'error'}
+                            variant="filled"
+                            sx={{ fontWeight: 600 }}
+                          />
+                        );
+                      })()}
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {searchFormData.amenities.map((amenity) => {
+                        const propertyAmenities = property.amenities || [];
+                        const hasAmenity = propertyAmenities.some(propAmenity => 
+                          propAmenity.toLowerCase().includes(amenity.toLowerCase()) ||
+                          amenity.toLowerCase().includes(propAmenity.toLowerCase())
+                        );
+                        
+                        return (
+                          <Chip
+                            key={amenity}
+                            label={amenity}
+                            size="small"
+                            color={hasAmenity ? 'success' : 'error'}
+                            variant="outlined"
+                            icon={hasAmenity ? <span>✅</span> : <span>❌</span>}
+                            sx={{ 
+                              fontSize: '0.75rem',
+                              height: '24px',
+                              '& .MuiChip-label': { px: 1 }
+                            }}
+                          />
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                )}
+                
+                <Box sx={{ mb: 2 }}>
+                  <Chip 
+                    label="Villa" 
+                    size="small" 
+                    sx={{ mr: 1, mb: 1 }}
+                  />
+                  <Chip 
+                    label={`${property.max_guests || 1} Guests`} 
+                    size="small" 
+                    sx={{ mb: 1 }}
+                  />
+                  {property.rating && (
+                    <Chip 
+                      label={`${property.rating}★`} 
+                      size="small" 
+                      sx={{ mr: 1, mb: 1 }}
+                    />
+                  )}
+                </Box>
+
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="h6" color="primary">
+                    ₹{property.price.toLocaleString()}/night
+                  </Typography>
+                  {property.featured && (
+                    <Chip label="Featured" color="secondary" size="small" />
+                  )}
+                </Box>
+
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => handleBookNow(property)}
+                  disabled={!searchFormData?.checkIn || !searchFormData?.checkOut}
+                  sx={{ 
+                    bgcolor: 'var(--primary-dark)',
+                    '&:hover': { bgcolor: 'var(--primary-dark)' }
+                  }}
+                  title={!searchFormData?.checkIn || !searchFormData?.checkOut ? 
+                    'Please select check-in and check-out dates first' : 
+                    'Book this property'
+                  }
+                >
+                  Book Now
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      {filteredProperties.length === 0 && !loading && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+            No properties found matching your criteria
+          </Typography>
+          
+          {/* Debug information */}
+          {searchQuery && (
+            <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1, textAlign: 'left' }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                <strong>Search Details:</strong>
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                • Search Query: "{searchQuery}"
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                • Total Properties Available: {properties.length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                • Price Range: ₹{priceRange[0].toLocaleString()} - ₹{priceRange[1].toLocaleString()}
+              </Typography>
+              {properties.length > 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  <strong>Available Properties:</strong>
+                </Typography>
+              )}
+              {properties.slice(0, 3).map((prop, index) => (
+                <Typography key={index} variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                  • {prop.name} - {prop.location} (₹{prop.price.toLocaleString()})
+                </Typography>
+              ))}
+              {properties.length > 3 && (
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                  • ... and {properties.length - 3} more
+                </Typography>
+              )}
+            </Box>
+          )}
+          
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setSearchQuery('');
+              setPriceRange([0, 50000]);
+            }}
+            sx={{ mt: 2 }}
+          >
+            Clear Filters
+          </Button>
+        </Box>
+      )}
+
+      {/* Amenities Warning Dialog */}
+      <Dialog
+        open={showAmenitiesWarning}
+        onClose={() => setShowAmenitiesWarning(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ bgcolor: 'warning.light', color: 'warning.dark' }}>
+          ⚠️ Amenities Mismatch Warning
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          {propertyToBook && (
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                {propertyToBook.name} - {propertyToBook.location}
+              </Typography>
+              
+              <Typography variant="body1" sx={{ mb: 3 }}>
+                This property doesn't have all the amenities you selected. Please review the comparison below:
+              </Typography>
+              
+              {/* Amenities Comparison */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: 'var(--primary-dark)' }}>
+                  Amenities Comparison
+                </Typography>
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600, color: 'success.main' }}>
+                      ✅ Available Amenities:
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {(() => {
+                        const propertyAmenities = propertyToBook.amenities || [];
+                        const selectedAmenities = searchFormData?.amenities || [];
+                        const availableAmenities = selectedAmenities.filter(amenity => 
+                          propertyAmenities.some(propAmenity => 
+                            propAmenity.toLowerCase().includes(amenity.toLowerCase()) ||
+                            amenity.toLowerCase().includes(propAmenity.toLowerCase())
+                          )
+                        );
+                        
+                        return availableAmenities.length > 0 ? (
+                          availableAmenities.map((amenity) => (
+                            <Chip
+                              key={amenity}
+                              label={amenity}
+                              color="success"
+                              variant="outlined"
+                              size="small"
+                            />
+                          ))
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            None of the selected amenities are available
+                          </Typography>
+                        );
+                      })()}
+                    </Box>
+                  </Grid>
+                  
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600, color: 'error.main' }}>
+                      ❌ Missing Amenities:
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {(() => {
+                        const propertyAmenities = propertyToBook.amenities || [];
+                        const selectedAmenities = searchFormData?.amenities || [];
+                        const missingAmenities = selectedAmenities.filter(amenity => 
+                          !propertyAmenities.some(propAmenity => 
+                            propAmenity.toLowerCase().includes(amenity.toLowerCase()) ||
+                            amenity.toLowerCase().includes(propAmenity.toLowerCase())
+                          )
+                        );
+                        
+                        return missingAmenities.map((amenity) => (
+                          <Chip
+                            key={amenity}
+                            label={amenity}
+                            color="error"
+                            variant="outlined"
+                            size="small"
+                          />
+                        ));
+                      })()}
+                    </Box>
+                  </Grid>
+                </Grid>
+                
+                {/* Match Percentage */}
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  {(() => {
+                    const propertyAmenities = propertyToBook.amenities || [];
+                    const selectedAmenities = searchFormData?.amenities || [];
+                    const matchedAmenities = selectedAmenities.filter(amenity => 
+                      propertyAmenities.some(propAmenity => 
+                        propAmenity.toLowerCase().includes(amenity.toLowerCase()) ||
+                        amenity.toLowerCase().includes(propAmenity.toLowerCase())
+                      )
+                    );
+                    const matchPercentage = Math.round((matchedAmenities.length / selectedAmenities.length) * 100);
+                    
+                    return (
+                      <Typography variant="body1" sx={{ textAlign: 'center' }}>
+                        <strong>Amenities Match: {matchPercentage}%</strong>
+                        <br />
+                        <Typography variant="body2" color="text.secondary">
+                          {matchedAmenities.length} of {selectedAmenities.length} selected amenities are available
+                        </Typography>
+                      </Typography>
+                    );
+                  })()}
+                </Box>
+              </Box>
+              
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Would you like to proceed with the booking despite the missing amenities?
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button
+            onClick={() => setShowAmenitiesWarning(false)}
+            variant="outlined"
+            color="inherit"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              if (propertyToBook) {
+                proceedWithBooking(propertyToBook);
+                setShowAmenitiesWarning(false);
+              }
+            }}
+            variant="contained"
+            sx={{ bgcolor: 'var(--primary-dark)' }}
+          >
+            Proceed with Booking
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
+}
+
+export default function VillasPage() {
+  return (
+    <Suspense fallback={
+      <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Loading...
+        </Typography>
+      </Container>
+    }>
+      <VillasPageContent />
+    </Suspense>
+  );
+}

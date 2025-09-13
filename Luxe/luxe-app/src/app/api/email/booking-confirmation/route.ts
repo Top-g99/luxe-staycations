@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { emailService } from '@/lib/email/emailService';
+import { emailService } from '@/lib/email/EmailService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     const emailResult = await emailService.sendBookingConfirmation({
       guestName: data.guestName,
       guestEmail: data.guestEmail,
+      guestPhone: data.guestPhone || '+91-9876543210',
       bookingId: data.bookingId,
       propertyName: data.propertyName,
       propertyLocation: data.propertyLocation || 'Luxe Staycations',
@@ -28,11 +29,7 @@ export async function POST(request: NextRequest) {
       checkOut: data.checkOut,
       guests: data.guests,
       totalAmount: data.totalAmount,
-      transactionId: data.transactionId || `TXN-${data.bookingId}`,
-      paymentMethod: data.paymentMethod || 'Online Payment',
-      hostName: data.hostName || 'Luxe Staycations Team',
-      hostPhone: data.hostPhone || '+91-9876543210',
-      hostEmail: data.hostEmail || 'info@luxestaycations.in',
+      paymentStatus: data.paymentStatus || 'Confirmed',
       specialRequests: data.specialRequests
     });
 

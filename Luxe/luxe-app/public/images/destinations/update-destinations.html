@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Luxe Destinations</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #3E2723;
+            margin-bottom: 30px;
+        }
+        .status {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .success {
+            background: #E8F5E8;
+            color: #2E7D32;
+            border: 1px solid #4CAF50;
+        }
+        .info {
+            background: #E3F2FD;
+            color: #1565C0;
+            border: 1px solid #2196F3;
+        }
+        .destinations-list {
+            text-align: left;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .destination-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .destination-item:last-child {
+            border-bottom: none;
+        }
+        .destination-name {
+            font-weight: bold;
+            color: #3E2723;
+        }
+        .destination-location {
+            color: #5D4037;
+            font-size: 0.9rem;
+        }
+        .button {
+            background: #8D6E63;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 10px;
+            transition: background 0.3s ease;
+        }
+        .button:hover {
+            background: #5D4037;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .instructions {
+            background: #FFF3E0;
+            border: 1px solid #FF9800;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .instructions h3 {
+            color: #E65100;
+            margin-top: 0;
+        }
+        .instructions ul {
+            color: #BF360C;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Update Luxe Destinations</h1>
+        
+        <div class="info">
+            <strong>Status:</strong> Ready to update destinations in localStorage
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 Instructions:</h3>
+            <ul>
+                <li><strong>Step 1:</strong> Click "Update Destinations" button below</li>
+                <li><strong>Step 2:</strong> Wait for success message</li>
+                <li><strong>Step 3:</strong> Go back to your Luxe website</li>
+                <li><strong>Step 4:</strong> Refresh the page to see new destinations</li>
+                <li><strong>Step 5:</strong> Check the destination dropdown in hero search</li>
+            </ul>
+        </div>
+        
+        <button class="button" onclick="updateDestinations()" id="updateBtn">
+            🔄 Update Destinations
+        </button>
+        
+        <button class="button" onclick="checkCurrentDestinations()" id="checkBtn">
+            📊 Check Current Destinations
+        </button>
+        
+        <div id="status"></div>
+        
+        <div id="destinationsList" class="destinations-list" style="display: none;">
+            <h3>Current Destinations in localStorage:</h3>
+            <div id="destinationsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const touristDestinations = [
+  {
+    "id": "malpe-maharashtra",
+    "name": "Malpe, Maharashtra",
+    "description": "Pristine beaches and coastal charm await in this serene coastal town. Experience the perfect blend of tranquility and adventure with golden sands, clear waters, and stunning sunsets.",
+    "image": "/images/destinations/malpe-maharashtra.jpg",
+    "location": "Maharashtra, India",
+    "attractions": [
+      "Malpe Beach",
+      "St. Mary's Island",
+      "Udupi Temple",
+      "Water Sports",
+      "Seafood Delicacies"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.501Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "lonavala-maharashtra",
+    "name": "Lonavala, Maharashtra",
+    "description": "Nestled in the Western Ghats, this hill station offers breathtaking views, ancient caves, and refreshing waterfalls. Perfect for nature lovers and adventure seekers.",
+    "image": "/images/destinations/lonavala-maharashtra.jpg",
+    "location": "Maharashtra, India",
+    "attractions": [
+      "Tiger's Leap",
+      "Karla Caves",
+      "Bhaja Caves",
+      "Lonavala Lake",
+      "Trekking Trails"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "mahabaleshwar-maharashtra",
+    "name": "Mahabaleshwar, Maharashtra",
+    "description": "Queen of Hill Stations offers panoramic views, strawberry farms, and colonial charm. Experience the cool mountain air and scenic beauty of the Western Ghats.",
+    "image": "/images/destinations/mahabaleshwar-maharashtra.jpg",
+    "location": "Maharashtra, India",
+    "attractions": [
+      "Wilson Point",
+      "Mapro Garden",
+      "Venna Lake",
+      "Strawberry Farms",
+      "Scenic Points"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "goa-beaches",
+    "name": "Goa Beaches",
+    "description": "Famous for its pristine beaches, vibrant culture, and Portuguese heritage. From party beaches to secluded coves, Goa offers something for every traveler.",
+    "image": "/images/destinations/goa-beaches.jpg",
+    "location": "Goa, India",
+    "attractions": [
+      "Calangute Beach",
+      "Baga Beach",
+      "Anjuna Beach",
+      "Old Goa Churches",
+      "Portuguese Architecture"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "kerala-backwaters",
+    "name": "Kerala Backwaters",
+    "description": "Experience the serene beauty of Kerala's backwaters with houseboat cruises, lush greenery, and traditional village life. A perfect escape into nature.",
+    "image": "/images/destinations/kerala-backwaters.jpg",
+    "location": "Kerala, India",
+    "attractions": [
+      "Alleppey Backwaters",
+      "Kumarakom",
+      "Vembanad Lake",
+      "Houseboat Cruises",
+      "Ayurvedic Spas"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "udaipur-rajasthan",
+    "name": "Udaipur, Rajasthan",
+    "description": "The City of Lakes offers royal heritage, stunning palaces, and romantic boat rides. Experience the magic of Rajasthan's most beautiful city.",
+    "image": "/images/destinations/udaipur-rajasthan.jpg",
+    "location": "Rajasthan, India",
+    "attractions": [
+      "Lake Palace",
+      "City Palace",
+      "Jag Mandir",
+      "Fateh Sagar Lake",
+      "Royal Heritage"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "manali-himachal",
+    "name": "Manali, Himachal Pradesh",
+    "description": "Adventure capital of India with snow-capped mountains, apple orchards, and thrilling activities. Perfect for both relaxation and adventure.",
+    "image": "/images/destinations/manali-himachal.jpg",
+    "location": "Himachal Pradesh, India",
+    "attractions": [
+      "Rohtang Pass",
+      "Solang Valley",
+      "Hadimba Temple",
+      "Apple Orchards",
+      "Adventure Sports"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "shimla-himachal",
+    "name": "Shimla, Himachal Pradesh",
+    "description": "Queen of Hills offers colonial architecture, scenic beauty, and pleasant weather. Experience the charm of British-era hill stations.",
+    "image": "/images/destinations/shimla-himachal.jpg",
+    "location": "Himachal Pradesh, India",
+    "attractions": [
+      "The Ridge",
+      "Christ Church",
+      "Jakhu Temple",
+      "Mall Road",
+      "Colonial Architecture"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "darjeeling-west-bengal",
+    "name": "Darjeeling, West Bengal",
+    "description": "Famous for its tea gardens, toy train, and views of Kanchenjunga. Experience the charm of the Himalayan foothills.",
+    "image": "/images/destinations/darjeeling-west-bengal.jpg",
+    "location": "West Bengal, India",
+    "attractions": [
+      "Tiger Hill",
+      "Darjeeling Toy Train",
+      "Tea Gardens",
+      "Kanchenjunga Views",
+      "Colonial Charm"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "varanasi-uttar-pradesh",
+    "name": "Varanasi, Uttar Pradesh",
+    "description": "Spiritual capital of India with ancient temples, Ganga ghats, and cultural heritage. Experience the essence of Indian spirituality.",
+    "image": "/images/destinations/varanasi-uttar-pradesh.jpg",
+    "location": "Uttar Pradesh, India",
+    "attractions": [
+      "Ganga Ghats",
+      "Kashi Vishwanath Temple",
+      "Ganga Aarti",
+      "Ancient Temples",
+      "Spiritual Heritage"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "agra-uttar-pradesh",
+    "name": "Agra, Uttar Pradesh",
+    "description": "Home to the iconic Taj Mahal, a symbol of eternal love. Experience the grandeur of Mughal architecture and history.",
+    "image": "/images/destinations/agra-uttar-pradesh.jpg",
+    "location": "Uttar Pradesh, India",
+    "attractions": [
+      "Taj Mahal",
+      "Agra Fort",
+      "Fatehpur Sikri",
+      "Itmad-ud-Daula",
+      "Mughal Architecture"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  },
+  {
+    "id": "jaisalmer-rajasthan",
+    "name": "Jaisalmer, Rajasthan",
+    "description": "Golden City in the Thar Desert offers stunning sand dunes, ancient forts, and camel safaris. Experience the magic of the desert.",
+    "image": "/images/destinations/jaisalmer-rajasthan.jpg",
+    "location": "Rajasthan, India",
+    "attractions": [
+      "Jaisalmer Fort",
+      "Sam Sand Dunes",
+      "Camel Safari",
+      "Golden Architecture",
+      "Desert Culture"
+    ],
+    "featured": true,
+    "createdAt": "2025-08-31T18:07:24.502Z",
+    "updatedAt": "2025-08-31T18:07:24.502Z"
+  }
+];
+        
+        function updateDestinations() {
+            const updateBtn = document.getElementById('updateBtn');
+            const statusDiv = document.getElementById('status');
+            
+            updateBtn.disabled = true;
+            updateBtn.textContent = '🔄 Updating...';
+            
+            try {
+                // Clear existing destinations
+                localStorage.removeItem('luxe_destinations');
+                
+                // Add new destinations
+                localStorage.setItem('luxe_destinations', JSON.stringify(touristDestinations));
+                
+                // Verify the update
+                const stored = localStorage.getItem('luxe_destinations');
+                const parsed = JSON.parse(stored);
+                
+                if (parsed && parsed.length === touristDestinations.length) {
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            ✅ <strong>Success!</strong> Destinations updated successfully!<br>
+                            📊 Total destinations: ${parsed.length}<br>
+                            🎯 Malpe, Maharashtra is now available!<br>
+                            🔄 Go back to your Luxe website and refresh the page.
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Verification failed');
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div style="background: #FFEBEE; color: #C62828; border: 1px solid #F44336; padding: 20px; border-radius: 10px;">
+                        ❌ <strong>Error:</strong> Failed to update destinations: ${error.message}
+                    </div>
+                `;
+            } finally {
+                updateBtn.disabled = false;
+                updateBtn.textContent = '🔄 Update Destinations';
+            }
+        }
+        
+        function checkCurrentDestinations() {
+            const checkBtn = document.getElementById('checkBtn');
+            const destinationsList = document.getElementById('destinationsList');
+            const destinationsContent = document.getElementById('destinationsContent');
+            
+            checkBtn.disabled = true;
+            checkBtn.textContent = '📊 Checking...';
+            
+            try {
+                const stored = localStorage.getItem('luxe_destinations');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    let html = '';
+                    
+                    parsed.forEach((dest, index) => {
+                        html += `
+                            <div class="destination-item">
+                                <div>
+                                    <div class="destination-name">${dest.name}</div>
+                                    <div class="destination-location">${dest.location}</div>
+                                </div>
+                                <div style="color: #666; font-size: 0.8rem;">
+                                    ${dest.featured ? '⭐ Featured' : '• Regular'}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    destinationsContent.innerHTML = html;
+                    destinationsList.style.display = 'block';
+                    
+                    document.getElementById('status').innerHTML = `
+                        <div class="info">
+                            📊 Found ${parsed.length} destinations in localStorage
+                        </div>
+                    `;
+                } else {
+                    destinationsContent.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">No destinations found in localStorage</div>';
+                    destinationsList.style.display = 'block';
+                    
+                    document.getElementById('status').innerHTML = `
+                        <div style="background: #FFF3E0; color: #E65100; border: 1px solid #FF9800; padding: 20px; border-radius: 10px;">
+                            ⚠️ No destinations found in localStorage. Click "Update Destinations" to add them.
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                document.getElementById('status').innerHTML = `
+                    <div style="background: #FFEBEE; color: #C62828; border: 1px solid #F44336; padding: 20px; border-radius: 10px;">
+                        ❌ <strong>Error:</strong> Failed to check destinations: ${error.message}
+                    </div>
+                `;
+            } finally {
+                checkBtn.disabled = false;
+                checkBtn.textContent = '📊 Check Current Destinations';
+            }
+        }
+        
+        // Auto-check on page load
+        window.onload = function() {
+            checkCurrentDestinations();
+        };
+    </script>
+</body>
+</html>
