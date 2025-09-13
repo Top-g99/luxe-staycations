@@ -23,10 +23,6 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-# Fix admin redirect loop - disable automatic trailing slash redirects for admin
-[[redirects]]
-  from = "/admin/"
-  to = "/admin"
-  status = 301
-  force = true
+# FIXED: Removed problematic admin redirect that caused infinite loop
+# Admin routes should be handled by Next.js routing, not Netlify redirects
 
