@@ -29,21 +29,24 @@ export function middleware(request: NextRequest) {
     timestamp: new Date().toISOString()
   }, 'low');
 
-  // Rate limiting for page requests
-  const rateLimitKey = `page:${clientIP}:${pathname}`;
-  if (RateLimiter.isRateLimited(rateLimitKey, 60, 15 * 60 * 1000)) { // 60 requests per 15 minutes
-    SecurityAuditLogger.logSecurityEvent('PAGE_RATE_LIMITED', {
-      pathname,
-      ip: clientIP,
-      userAgent
-    }, 'high');
+  // Skip rate limiting for admin pages to allow legitimate admin access
+  if (!pathname.startsWith('/admin')) {
+    // Rate limiting for non-admin page requests (more lenient)
+    const rateLimitKey = `page:${clientIP}:${pathname}`;
+    if (RateLimiter.isRateLimited(rateLimitKey, 100, 15 * 60 * 1000)) { // 100 requests per 15 minutes
+      SecurityAuditLogger.logSecurityEvent('PAGE_RATE_LIMITED', {
+        pathname,
+        ip: clientIP,
+        userAgent
+      }, 'high');
 
-    return new NextResponse('Too many requests', { 
-      status: 429,
-      headers: {
-        'Retry-After': '900' // 15 minutes
-      }
-    });
+      return new NextResponse('Too many requests', { 
+        status: 429,
+        headers: {
+          'Retry-After': '900' // 15 minutes
+        }
+      });
+    }
   }
 
   // Check for suspicious patterns
