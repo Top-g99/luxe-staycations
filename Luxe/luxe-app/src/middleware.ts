@@ -29,25 +29,26 @@ export function middleware(request: NextRequest) {
     timestamp: new Date().toISOString()
   }, 'low');
 
+  // TEMPORARILY DISABLED: Rate limiting to fix admin redirect loop issue
   // Skip rate limiting for admin pages to allow legitimate admin access
-  if (!pathname.startsWith('/admin')) {
-    // Rate limiting for non-admin page requests (more lenient)
-    const rateLimitKey = `page:${clientIP}:${pathname}`;
-    if (RateLimiter.isRateLimited(rateLimitKey, 100, 15 * 60 * 1000)) { // 100 requests per 15 minutes
-      SecurityAuditLogger.logSecurityEvent('PAGE_RATE_LIMITED', {
-        pathname,
-        ip: clientIP,
-        userAgent
-      }, 'high');
+  // if (!pathname.startsWith('/admin')) {
+  //   // Rate limiting for non-admin page requests (more lenient)
+  //   const rateLimitKey = `page:${clientIP}:${pathname}`;
+  //   if (RateLimiter.isRateLimited(rateLimitKey, 100, 15 * 60 * 1000)) { // 100 requests per 15 minutes
+  //     SecurityAuditLogger.logSecurityEvent('PAGE_RATE_LIMITED', {
+  //       pathname,
+  //       ip: clientIP,
+  //       userAgent
+  //     }, 'high');
 
-      return new NextResponse('Too many requests', { 
-        status: 429,
-        headers: {
-          'Retry-After': '900' // 15 minutes
-        }
-      });
-    }
-  }
+  //     return new NextResponse('Too many requests', { 
+  //       status: 429,
+  //       headers: {
+  //         'Retry-After': '900' // 15 minutes
+  //       }
+  //     });
+  //   }
+  // }
 
   // Check for suspicious patterns
   if (isSuspiciousRequest(request)) {
