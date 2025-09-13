@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Property Saving</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .properties-list {
+            margin-top: 20px;
+        }
+        
+        .property-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Test Property Saving Logic</h1>
+
+    <h2>Current Storage Status</h2>
+    <div id="storageStatus"></div>
+
+    <h2>Add Test Property</h2>
+    <form id="propertyForm">
+        <div class="form-group">
+            <label for="name">Property Name *</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="location">Location *</label>
+            <input type="text" id="location" name="location" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="price">Price per Night *</label>
+            <input type="number" id="price" name="price" required>
+        </div>
+
+        <div class="form-group">
+            <label for="type">Property Type</label>
+            <select id="type" name="type">
+                <option value="Villa">Villa</option>
+                <option value="Luxury Villa">Luxury Villa</option>
+                <option value="Beach Villa">Beach Villa</option>
+            </select>
+        </div>
+
+        <button type="submit">Save Property</button>
+    </form>
+
+    <div id="result"></div>
+
+    <div class="properties-list">
+        <h2>Existing Properties</h2>
+        <div id="propertiesList"></div>
+    </div>
+
+    <script>
+        // Check current storage status
+        function checkStorageStatus() {
+            const stored = localStorage.getItem('luxe_properties');
+            const statusDiv = document.getElementById('storageStatus');
+
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <strong>localStorage Status:</strong> ✅ Working<br>
+                            <strong>Properties Count:</strong> ${parsed.length}<br>
+                            <strong>Storage Key:</strong> luxe_properties
+                        </div>
+                    `;
+                } catch (e) {
+                    statusDiv.innerHTML = `
+                        <div class="error">
+                            <strong>localStorage Status:</strong> ❌ Error parsing data<br>
+                            <strong>Error:</strong> ${e.message}
+                        </div>
+                    `;
+                }
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <strong>localStorage Status:</strong> ❌ No data found<br>
+                        <strong>Storage Key:</strong> luxe_properties
+                    </div>
+                `;
+            }
+        }
+
+        // Load and display existing properties
+        function loadProperties() {
+            const stored = localStorage.getItem('luxe_properties');
+            const listDiv = document.getElementById('propertiesList');
+
+            if (stored) {
+                try {
+                    const properties = JSON.parse(stored);
+                    if (properties.length === 0) {
+                        listDiv.innerHTML = '<p>No properties found.</p>';
+                    } else {
+                        listDiv.innerHTML = properties.map(prop => `
+                            <div class="property-item">
+                                <h3>${prop.name}</h3>
+                                <p><strong>Location:</strong> ${prop.location}</p>
+                                <p><strong>Price:</strong> ₹${prop.price}/night</p>
+                                <p><strong>Type:</strong> ${prop.type}</p>
+                                <p><strong>ID:</strong> ${prop.id}</p>
+                                <p><strong>Created:</strong> ${new Date(prop.createdAt).toLocaleString()}</p>
+                            </div>
+                        `).join('');
+                    }
+                } catch (e) {
+                    listDiv.innerHTML = `<div class="error">Error loading properties: ${e.message}</div>`;
+                }
+            } else {
+                listDiv.innerHTML = '<p>No properties found.</p>';
+            }
+        }
+
+        // Save property
+        document.getElementById('propertyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const propertyData = {};
+
+            for (let [key, value] of formData.entries()) {
+                if (key === 'price') {
+                    propertyData[key] = parseInt(value);
+                } else {
+                    propertyData[key] = value;
+                }
+            }
+
+            // Add default values
+            propertyData.amenities = ['WiFi', 'Pool'];
+            propertyData.featured = false;
+            propertyData.rating = 0;
+            propertyData.reviews = 0;
+            propertyData.maxGuests = 4;
+            propertyData.bedrooms = 2;
+            propertyData.bathrooms = 2;
+            propertyData.hostName = '';
+            propertyData.hostImage = '';
+            propertyData.propertySize = '';
+            propertyData.yearBuilt = '';
+            propertyData.floorLevel = '';
+            propertyData.totalFloors = 1;
+            propertyData.parkingSpaces = 2;
+            propertyData.petFriendly = false;
+            propertyData.smokingAllowed = false;
+            propertyData.wheelchairAccessible = false;
+            propertyData.neighborhood = '';
+            propertyData.distanceFromAirport = '';
+            propertyData.distanceFromCityCenter = '';
+            propertyData.distanceFromBeach = '';
+            propertyData.publicTransport = '';
+            propertyData.checkInTime = '15:00';
+            propertyData.checkOutTime = '11:00';
+            propertyData.earlyCheckIn = false;
+            propertyData.lateCheckOut = false;
+            propertyData.cancellationPolicy = 'Flexible';
+            propertyData.cleaningFee = 0;
+            propertyData.serviceFee = 0;
+            propertyData.securityDeposit = 0;
+            propertyData.weeklyDiscount = 0;
+            propertyData.monthlyDiscount = 0;
+
+            try {
+                // Save to localStorage
+                const existingProperties = JSON.parse(localStorage.getItem('luxe_properties') || '[]');
+
+                const newProperty = {
+                    ...propertyData,
+                    id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                existingProperties.unshift(newProperty);
+                localStorage.setItem('luxe_properties', JSON.stringify(existingProperties));
+
+                document.getElementById('result').innerHTML = `
+                    <div class="result success">
+                        <h3>Success!</h3>
+                        <p>Property saved successfully!</p>
+                        <p><strong>Property ID:</strong> ${newProperty.id}</p>
+                        <p><strong>Total Properties:</strong> ${existingProperties.length}</p>
+                    </div>
+                `;
+
+                // Clear form
+                this.reset();
+
+                // Reload properties list
+                loadProperties();
+                checkStorageStatus();
+
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="result error">
+                        <h3>Error!</h3>
+                        <p>Failed to save property: ${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+
+        // Initialize page
+        checkStorageStatus();
+        loadProperties();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxe Staycations - Owner Booking System Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #f7ede1 0%, #E8E2D9 100%);
+            color: #322a2b;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #322a2b 0%, #704F49 100%);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-family: 'Gilda Display', serif;
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            border: 1px solid #E8E2D9;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-card h3 {
+            font-family: 'Gilda Display', serif;
+            font-size: 1.5rem;
+            color: #322a2b;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .status.completed {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status.pending {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .demo-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-section h2 {
+            font-family: 'Gilda Display', serif;
+            font-size: 2rem;
+            color: #322a2b;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .demo-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #322a2b;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #B8A195;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #704F49;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #322a2b 0%, #704F49 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #704F49;
+            margin-bottom: 30px;
+        }
+        
+        .instructions h3 {
+            color: #322a2b;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Luxe Staycations</h1>
+            <p>Owner Booking System - Complete Implementation</p>
+        </div>
+
+        <div class="instructions">
+            <h3>🚀 How to Start the Project</h3>
+            <ol>
+                <li><strong>Open Terminal</strong> (Cmd + Space, type "Terminal")</li>
+                <li><strong>Navigate to project:</strong> <code>cd /Users/ishaankhan/Desktop/Luxe/luxe</code></li>
+                <li><strong>Install dependencies:</strong> <code>npm install</code></li>
+                <li><strong>Start server:</strong> <code>npm run dev</code></li>
+                <li><strong>Open browser:</strong> <code>http://localhost:3000</code></li>
+            </ol>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🏠 Owner Self-Booking</h3>
+                <p>Property owners can book their own properties for personal use with real-time availability checking.</p>
+                <span class="status completed">✅ Implemented</span>
+            </div>
+
+            <div class="feature-card">
+                <h3>👨‍💼 Admin Management</h3>
+                <p>Complete admin panel to review, approve, or reject owner booking requests with detailed analytics.</p>
+                <span class="status completed">✅ Implemented</span>
+            </div>
+
+            <div class="feature-card">
+                <h3>🔄 Real-Time Availability</h3>
+                <p>Automatic date blocking and conflict prevention to ensure no double bookings occur.</p>
+                <span class="status completed">✅ Implemented</span>
+            </div>
+
+            <div class="feature-card">
+                <h3>🔔 Admin Notifications</h3>
+                <p>Instant notifications to admin when owners submit booking requests for review.</p>
+                <span class="status completed">✅ Implemented</span>
+            </div>
+
+            <div class="feature-card">
+                <h3>🎨 Brand Consistent UI</h3>
+                <p>Beautiful brown/black gradient theme with consistent styling across all components.</p>
+                <span class="status completed">✅ Implemented</span>
+            </div>
+
+            <div class="feature-card">
+                <h3>📱 Responsive Design</h3>
+                <p>Fully responsive design that works perfectly on desktop, tablet, and mobile devices.</p>
+                <span class="status completed">✅ Implemented</span>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📋 Owner Booking Form Preview</h2>
+            <div class="demo-form">
+                <div class="form-group">
+                    <label>Select Property</label>
+                    <select>
+                        <option>Luxury Villa - Goa</option>
+                        <option>Beach House - Kerala</option>
+                        <option>Mountain Retreat - Himachal</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Check-in Date</label>
+                    <input type="date" value="2025-01-15">
+                </div>
+
+                <div class="form-group">
+                    <label>Check-out Date</label>
+                    <input type="date" value="2025-01-20">
+                </div>
+
+                <div class="form-group">
+                    <label>Number of Guests</label>
+                    <input type="number" value="4" min="1" max="20">
+                </div>
+
+                <div class="form-group">
+                    <label>Purpose of Stay</label>
+                    <select>
+                        <option>Personal Use</option>
+                        <option>Family Visit</option>
+                        <option>Property Maintenance</option>
+                        <option>Property Inspection</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Special Requests (Optional)</label>
+                    <textarea rows="3" placeholder="Any special requirements or requests..."></textarea>
+                </div>
+
+                <button class="btn" onclick="showSuccess()">Submit Booking Request</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🔧 Quick Start Commands</h2>
+            <div class="code-block">
+                # Navigate to project directory cd /Users/ishaankhan/Desktop/Luxe/luxe # Install dependencies npm install # Start development server npm run dev # Alternative quick start node quick-start.js
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎯 Testing the Owner Booking System</h2>
+            <ol style="padding-left: 20px; line-height: 2;">
+                <li><strong>Create Partner Account:</strong> Go to <code>http://localhost:3000/partner-with-us</code></li>
+                <li><strong>Approve Partner:</strong> Go to <code>http://localhost:3000/admin/partner-applications</code></li>
+                <li><strong>Login as Partner:</strong> Go to <code>http://localhost:3000/partner/login</code></li>
+                <li><strong>Book Property:</strong> Click "Book My Property" in dashboard</li>
+                <li><strong>Manage Bookings:</strong> Go to <code>http://localhost:3000/admin/owner-bookings</code></li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function showSuccess() {
+            alert('🎉 Owner booking request submitted successfully!\n\nThis is a preview. To test the full system, please start the development server using the commands above.');
+        }
+
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏠 Luxe Staycations Owner Booking System Preview');
+            console.log('📱 To see the full system, start the development server');
+        });
+    </script>
+</body>

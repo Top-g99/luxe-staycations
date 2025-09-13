@@ -1,0 +1,78 @@
+{
+  "properties": [
+    {
+      "id": "casa-alphonso-001",
+      "name": "Casa Alphonso",
+      "location": "Goa, India",
+      "description": "Luxury villa with ocean view",
+      "price": 15000,
+      "rating": 4.8,
+      "reviews": 127,
+      "type": "villa",
+      "amenities": [
+        "Pool",
+        "Ocean View",
+        "Private Beach",
+        "WiFi"
+      ],
+      "featured": true,
+      "bedrooms": 4,
+      "bathrooms": 3,
+      "maxGuests": 8,
+      "images": [
+        "casa-alphonso-1.jpg",
+        "casa-alphonso-2.jpg"
+      ],
+      "available": true,
+      "created_at": "2025-08-29T08:59:42.324Z",
+      "updated_at": "2025-08-29T08:59:42.325Z"
+    }
+  ],
+  "destinations": [
+    {
+      "id": "goa-001",
+      "name": "Goa",
+      "description": "Tropical paradise with pristine beaches",
+      "image": "goa-beach.jpg",
+      "featured": true,
+      "created_at": "2025-08-29T08:59:42.325Z",
+      "updated_at": "2025-08-29T08:59:42.325Z"
+    },
+    {
+      "id": "kerala-001",
+      "name": "Kerala",
+      "description": "God's own country with backwaters",
+      "image": "kerala-backwaters.jpg",
+      "featured": true,
+      "created_at": "2025-08-29T08:59:42.325Z",
+      "updated_at": "2025-08-29T08:59:42.325Z"
+    }
+  ],
+  "dealBanners": [
+    {
+      "id": "banner-001",
+      "title": "Summer Special",
+      "description": "Get 20% off on luxury villas",
+      "video_url": "/videos/6271140-uhd_2160_4096_30fps.mp4",
+      "button_text": "Book Now",
+      "button_url": "/villas",
+      "active": true,
+      "created_at": "2025-08-29T08:59:42.325Z",
+      "updated_at": "2025-08-29T08:59:42.325Z"
+    }
+  ],
+  "settings": [
+    {
+      "key": "app_name",
+      "value": "Luxe Staycations",
+      "created_at": "2025-08-29T08:59:42.325Z",
+      "updated_at": "2025-08-29T08:59:42.325Z"
+    },
+    {
+      "key": "contact_email",
+      "value": "info@luxestaycations.com",
+      "created_at": "2025-08-29T08:59:42.325Z",
+      "updated_at": "2025-08-29T08:59:42.325Z"
+    }
+  ]
+}
