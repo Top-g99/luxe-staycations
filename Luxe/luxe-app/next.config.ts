@@ -12,6 +12,16 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   trailingSlash: false,
   distDir: '.next',
+  // Override Netlify plugin trailing slash behavior
+  async redirects() {
+    return [
+      {
+        source: '/admin/',
+        destination: '/admin',
+        permanent: true,
+      },
+    ];
+  },
   // Enable image optimization
   images: {
     domains: ['supabase.co', 'supabase.in'],
