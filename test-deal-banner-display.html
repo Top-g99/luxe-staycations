@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Deal Banner Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .deal-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .deal-banner h2 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .deal-banner p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .deal-banner button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎯 Deal Banner Display Test</h1>
+
+        <div id="deal-banner-container">
+            <div class="info">Loading deal banner data...</div>
+        </div>
+
+        <div id="debug-info">
+            <h3>Debug Information:</h3>
+            <div id="debug-content"></div>
+        </div>
+    </div>
+
+    <script>
+        function displayDealBanner(dealBanner) {
+            const container = document.getElementById('deal-banner-container');
+
+            if (!dealBanner || !dealBanner.isActive) {
+                container.innerHTML = '<div class="error">No active deal banner found</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="deal-banner">
+                    <h2>${dealBanner.title}</h2>
+                    <p>${dealBanner.subtitle || ''}</p>
+                    <button onclick="alert('Button clicked!')">${dealBanner.buttonText}</button>
+                </div>
+            `;
+        }
+
+        function showDebugInfo() {
+            const debugContent = document.getElementById('debug-content');
+
+            // Check localStorage
+            const dealBanners = JSON.parse(localStorage.getItem('dealBanners') || '[]');
+            const luxeDealBanner = localStorage.getItem('luxeDealBanner');
+
+            debugContent.innerHTML = `
+                <div class="info">
+                    <strong>localStorage 'dealBanners':</strong> ${dealBanners.length} items
+                    <pre>${JSON.stringify(dealBanners, null, 2)}</pre>
+                </div>
+                
+                <div class="info">
+                    <strong>localStorage 'luxeDealBanner':</strong> ${luxeDealBanner ? 'Found' : 'Not found'}
+                    ${luxeDealBanner ? `<pre>${luxeDealBanner}</pre>` : ''}
+                </div>
+            `;
+            
+            // Try to display deal banner
+            if (dealBanners.length > 0) {
+                const activeBanner = dealBanners.find(banner => banner.isActive);
+                displayDealBanner(activeBanner);
+            } else if (luxeDealBanner) {
+                try {
+                    const parsed = JSON.parse(luxeDealBanner);
+                    displayDealBanner(parsed);
+                } catch (error) {
+                    document.getElementById('deal-banner-container').innerHTML = 
+                        '<div class="error">Error parsing luxeDealBanner: ' + error.message + '</div>';
+                }
+            } else {
+                document.getElementById('deal-banner-container').innerHTML = 
+                    '<div class="error">No deal banner data found in localStorage</div>';
+            }
+        }
+        
+        // Load debug info on page load
+        showDebugInfo();
+    </script>
+</body>
+
+</html>

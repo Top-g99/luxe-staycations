@@ -1,0 +1,8 @@
+{
+    "framework": "nextjs",
+    "regions": ["bom1"],
+    "buildCommand": "cd luxe-app && npm ci && npm run build",
+    "outputDirectory": "luxe-app/.next",
+    "installCommand": "cd luxe-app && npm install",
+    "devCommand": "cd luxe-app && npm run dev"
+}

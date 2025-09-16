@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Properties Sync</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            color: green;
+        }
+        
+        .error {
+            color: red;
+        }
+        
+        .info {
+            color: blue;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Fix Properties Sync Issue</h1>
+
+        <div class="section">
+            <h2>Current Status</h2>
+            <button onclick="checkLocalStorage()">Check localStorage</button>
+            <button onclick="checkSupabase()">Check Supabase</button>
+            <button onclick="syncToSupabase()">Sync to Supabase</button>
+            <div id="status" class="log"></div>
+        </div>
+
+        <div class="section">
+            <h2>Add Sample Properties</h2>
+            <button onclick="addSampleProperties()">Add Sample Properties</button>
+            <div id="addStatus" class="log"></div>
+        </div>
+
+        <div class="section">
+            <h2>Test Home Page Display</h2>
+            <button onclick="testHomePage()">Test Home Page API</button>
+            <div id="testStatus" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const log = (message, type = 'info') => {
+            const status = document.getElementById('status');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            status.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            status.scrollTop = status.scrollHeight;
+        };
+
+        const logAdd = (message, type = 'info') => {
+            const status = document.getElementById('addStatus');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            status.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            status.scrollTop = status.scrollHeight;
+        };
+
+        const logTest = (message, type = 'info') => {
+            const status = document.getElementById('testStatus');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            status.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            status.scrollTop = status.scrollHeight;
+        };
+
+        async function checkLocalStorage() {
+            log('Checking localStorage...');
+
+            const properties = localStorage.getItem('luxe_properties');
+            if (properties) {
+                try {
+                    const parsed = JSON.parse(properties);
+                    log(`Found ${parsed.length} properties in localStorage:`, 'success');
+                    parsed.forEach(p => {
+                        log(`- ${p.name} (${p.featured ? 'Featured' : 'Regular'}) - ${p.location}`);
+                    });
+                } catch (e) {
+                    log(`Error parsing localStorage: ${e.message}`, 'error');
+                }
+            } else {
+                log('No properties found in localStorage', 'error');
+            }
+        }
+
+        async function checkSupabase() {
+            log('Checking Supabase...');
+
+            try {
+                const response = await fetch('/api/villas');
+                const data = await response.json();
+
+                if (response.ok) {
+                    log(`Supabase API returned ${data.length} properties:`, 'success');
+                    data.forEach(p => {
+                        log(`- ${p.name} (${p.featured ? 'Featured' : 'Regular'}) - ${p.location}`);
+                    });
+                } else {
+                    log(`API error: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (e) {
+                log(`Network error: ${e.message}`, 'error');
+            }
+        }
+
+        async function syncToSupabase() {
+            log('Syncing properties to Supabase...');
+
+            try {
+                const response = await fetch('/api/sync-properties');
+                const data = await response.json();
+
+                if (response.ok) {
+                    log(`Sync result: ${data.message}`, 'success');
+                    if (data.properties) {
+                        log(`Properties synced: ${data.properties.length}`);
+                    }
+                } else {
+                    log(`Sync error: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (e) {
+                log(`Network error: ${e.message}`, 'error');
+            }
+        }
+
+        async function addSampleProperties() {
+            logAdd('Adding sample properties...');
+
+            const sampleProperties = [{
+                name: 'Casa Alphonso 1',
+                location: 'Goa, India',
+                description: 'Luxurious villa with ocean views and private pool',
+                price: 25000,
+                rating: 4.8,
+                reviews: 45,
+                maxGuests: 6,
+                amenities: ['Private Pool', 'Ocean View', 'WiFi', 'Kitchen', 'Parking'],
+                image: '/images/properties/casa-alphonso-1.jpg',
+                featured: true
+            }, {
+                name: 'Casa Alphonso 2',
+                location: 'Goa, India',
+                description: 'Modern villa with garden and mountain views',
+                price: 22000,
+                rating: 4.6,
+                reviews: 32,
+                maxGuests: 4,
+                amenities: ['Garden View', 'Mountain View', 'WiFi', 'Kitchen', 'Parking'],
+                image: '/images/properties/casa-alphonso-2.jpg',
+                featured: true
+            }, {
+                name: 'Luxe Villa Mumbai',
+                location: 'Mumbai, India',
+                description: 'Premium villa in the heart of Mumbai with city views',
+                price: 35000,
+                rating: 4.9,
+                reviews: 67,
+                maxGuests: 8,
+                amenities: ['City View', 'Private Pool', 'WiFi', 'Kitchen', 'Parking', 'Gym'],
+                image: '/images/properties/luxe-villa-mumbai.jpg',
+                featured: true
+            }];
+
+            for (const property of sampleProperties) {
+                try {
+                    const response = await fetch('/api/villas', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(property)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        logAdd(`✓ Added: ${property.name}`, 'success');
+                    } else {
+                        logAdd(`✗ Failed to add ${property.name}: ${data.error || 'Unknown error'}`, 'error');
+                    }
+                } catch (e) {
+                    logAdd(`✗ Error adding ${property.name}: ${e.message}`, 'error');
+                }
+            }
+
+            logAdd('Sample properties addition completed');
+        }
+
+        async function testHomePage() {
+            logTest('Testing home page API...');
+
+            try {
+                const response = await fetch('/api/villas');
+                const data = await response.json();
+
+                if (response.ok) {
+                    logTest(`Home page API returned ${data.length} properties:`, 'success');
+
+                    const featured = data.filter(p => p.featured);
+                    logTest(`Featured properties: ${featured.length}`);
+
+                    featured.forEach(p => {
+                        logTest(`- ${p.name} (${p.location})`);
+                    });
+
+                    if (featured.length === 0) {
+                        logTest('No featured properties found! This is why the home page is empty.', 'error');
+                    }
+                } else {
+                    logTest(`API error: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (e) {
+                logTest(`Network error: ${e.message}`, 'error');
+            }
+        }
+
+        // Auto-check on page load
+        window.onload = () => {
+            log('Page loaded. Click buttons to check status and fix issues.');
+        };
+    </script>
+</body>
+
+</html>

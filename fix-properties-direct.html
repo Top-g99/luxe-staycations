@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Properties Direct</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            color: green;
+        }
+        
+        .error {
+            color: red;
+        }
+        
+        .info {
+            color: blue;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Fix Properties Direct</h1>
+
+        <div class="section">
+            <h2>Step 1: Add Properties to localStorage</h2>
+            <button onclick="addPropertiesToLocalStorage()">Add Properties to localStorage</button>
+            <div id="step1Log" class="log"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 2: Test API</h2>
+            <button onclick="testAPI()">Test API</button>
+            <div id="step2Log" class="log"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 3: Test Home Page</h2>
+            <button onclick="testHomePage()">Test Home Page</button>
+            <div id="step3Log" class="log"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 4: Open Home Page</h2>
+            <button onclick="openHomePage()">Open Home Page</button>
+            <p>After clicking the button above, refresh the home page to see the properties.</p>
+        </div>
+    </div>
+
+    <script>
+        const log = (elementId, message, type = 'info') => {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            element.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            element.scrollTop = element.scrollHeight;
+        };
+
+        function addPropertiesToLocalStorage() {
+            const logElement = 'step1Log';
+            log(logElement, 'Adding properties to localStorage...');
+
+            const properties = [{
+                id: 'casa-alphonso-1',
+                name: 'Casa Alphonso 1',
+                location: 'Goa, India',
+                description: 'Luxurious villa with ocean views and private pool',
+                price: 25000,
+                rating: 4.8,
+                reviews: 45,
+                maxGuests: 6,
+                amenities: ['Private Pool', 'Ocean View', 'WiFi', 'Kitchen', 'Parking'],
+                image: '/images/properties/casa-alphonso-1.jpg',
+                featured: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            }, {
+                id: 'casa-alphonso-2',
+                name: 'Casa Alphonso 2',
+                location: 'Goa, India',
+                description: 'Modern villa with garden and mountain views',
+                price: 22000,
+                rating: 4.6,
+                reviews: 32,
+                maxGuests: 4,
+                amenities: ['Garden View', 'Mountain View', 'WiFi', 'Kitchen', 'Parking'],
+                image: '/images/properties/casa-alphonso-2.jpg',
+                featured: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            }, {
+                id: 'luxe-villa-mumbai',
+                name: 'Luxe Villa Mumbai',
+                location: 'Mumbai, India',
+                description: 'Premium villa in the heart of Mumbai with city views',
+                price: 35000,
+                rating: 4.9,
+                reviews: 67,
+                maxGuests: 8,
+                amenities: ['City View', 'Private Pool', 'WiFi', 'Kitchen', 'Parking', 'Gym'],
+                image: '/images/properties/luxe-villa-mumbai.jpg',
+                featured: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            }];
+
+            // Add to localStorage
+            localStorage.setItem('luxe_properties', JSON.stringify(properties));
+
+            log(logElement, `Added ${properties.length} properties to localStorage`, 'success');
+            properties.forEach(p => {
+                log(logElement, `- ${p.name} (${p.featured ? 'Featured' : 'Regular'})`);
+            });
+
+            log(logElement, 'Properties added successfully!', 'success');
+        }
+
+        async function testAPI() {
+            const logElement = 'step2Log';
+            log(logElement, 'Testing API...');
+
+            try {
+                const response = await fetch('/api/villas');
+                const data = await response.json();
+
+                if (response.ok) {
+                    log(logElement, `API Response: ${JSON.stringify(data, null, 2)}`, 'success');
+
+                    if (data.data && data.data.length > 0) {
+                        log(logElement, `✓ API is returning ${data.data.length} properties`, 'success');
+                    } else {
+                        log(logElement, `✗ API is returning empty data`, 'error');
+                    }
+                } else {
+                    log(logElement, `API Error: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (e) {
+                log(logElement, `Network Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function testHomePage() {
+            const logElement = 'step3Log';
+            log(logElement, 'Testing home page...');
+
+            try {
+                const response = await fetch('/');
+                const html = await response.text();
+
+                if (response.ok) {
+                    // Check if properties are mentioned in the HTML
+                    if (html.includes('Casa Alphonso')) {
+                        log(logElement, '✓ Home page contains property names', 'success');
+                    } else {
+                        log(logElement, '✗ Home page does not contain property names', 'error');
+                    }
+
+                    if (html.includes('Featured Luxe Retreats')) {
+                        log(logElement, '✓ Home page has Featured Luxe Retreats section', 'success');
+                    } else {
+                        log(logElement, '✗ Home page missing Featured Luxe Retreats section', 'error');
+                    }
+                } else {
+                    log(logElement, `Home page error: ${response.status}`, 'error');
+                }
+            } catch (e) {
+                log(logElement, `Error testing home page: ${e.message}`, 'error');
+            }
+        }
+
+        function openHomePage() {
+            window.open('/', '_blank');
+        }
+    </script>
+</body>
+
+</html>

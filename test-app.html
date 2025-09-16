@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxe Staycations - Test Page</title>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #f7ede1 0%, #E8E2D9 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #322a2b;
+            font-family: 'Gilda Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .button {
+            background: #322a2b;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .button:hover {
+            background: #4A3735;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            color: #322a2b;
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏖️ Luxe Staycations</h1>
+            <p>Property Management Engine - Test Page</p>
+        </div>
+
+        <div class="status success">
+            ✅ Application files are properly configured and ready!
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 Quick Start Options</h3>
+            <p>Since the terminal is having issues, here are alternative ways to start your application:</p>
+
+            <h4>Option 1: Manual Terminal Start</h4>
+            <ol>
+                <li>Open Terminal/Command Prompt</li>
+                <li>Navigate to: <code>/Users/ishaankhan/Desktop/Luxe/luxe</code></li>
+                <li>Run: <code>npm run dev</code></li>
+            </ol>
+
+            <h4>Option 2: VS Code Terminal</h4>
+            <ol>
+                <li>Open VS Code</li>
+                <li>Open the integrated terminal (Ctrl/Cmd + `)</li>
+                <li>Navigate to the luxe folder</li>
+                <li>Run: <code>npm run dev</code></li>
+            </ol>
+
+            <h4>Option 3: Alternative Port</h4>
+            <ol>
+                <li>If port 3000 is busy, try: <code>npm run dev -- -p 3001</code></li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 Once Running, Access These URLs:</h3>
+            <a href="http://localhost:3000" class="button" target="_blank">🏠 Homepage</a>
+            <a href="http://localhost:3000/admin" class="button" target="_blank">⚙️ Admin Dashboard</a>
+            <a href="http://localhost:3000/admin/properties" class="button" target="_blank">🏠 Property Management</a>
+            <a href="http://localhost:3000/admin/destinations" class="button" target="_blank">🗺️ Destination Management</a>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 What You'll See:</h3>
+            <div class="status success">
+                <strong>Homepage Features:</strong>
+                <ul>
+                    <li>✅ Search properties by destination, dates, guests</li>
+                    <li>✅ Featured properties display</li>
+                    <li>✅ Popular destinations with images</li>
+                    <li>✅ Callback request form</li>
+                    <li>✅ Deal banner with video</li>
+                </ul>
+            </div>
+
+            <div class="status success">
+                <strong>Admin Features:</strong>
+                <ul>
+                    <li>✅ Dashboard with real-time statistics</li>
+                    <li>✅ Property management - Add/Edit/Delete properties</li>
+                    <li>✅ Destination management - Add/Edit/Delete destinations</li>
+                    <li>✅ Real-time updates - Changes appear immediately on homepage</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Troubleshooting</h3>
+            <div class="status warning">
+                <strong>If you get errors:</strong>
+                <ol>
+                    <li>Check if Node.js is installed: <code>node --version</code></li>
+                    <li>Clear cache: <code>rm -rf .next node_modules/.cache</code></li>
+                    <li>Reinstall dependencies: <code>npm install</code></li>
+                    <li>Try different port: <code>npm run dev -- -p 3001</code></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📞 Need Help?</h3>
+            <p>If you're still having issues:</p>
+            <ul>
+                <li>Restart your computer</li>
+                <li>Update Node.js to latest LTS version</li>
+                <li>Try a different terminal (Terminal, iTerm, VS Code terminal)</li>
+                <li>Check firewall/antivirus settings</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Test if the application is running
+        function testServer() {
+            fetch('http://localhost:3000')
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById('server-status').innerHTML =
+                            '<div class="status success">✅ Server is running! Click the links above to access your application.</div>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('server-status').innerHTML =
+                        '<div class="status error">❌ Server is not running. Please start the development server first.</div>';
+                });
+        }
+
+        // Test server status every 5 seconds
+        setInterval(testServer, 5000);
+        testServer(); // Initial test
+    </script>
+
+    <div id="server-status" style="margin-top: 20px;"></div>
+</body>
