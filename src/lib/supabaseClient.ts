@@ -149,7 +149,7 @@ export interface EmailLog {
   subject: string;
   template_type: string;
   status: 'sent' | 'failed' | 'pending';
-  sent_at: string;
+  sent_at?: string;
   created_at: string;
 }
 

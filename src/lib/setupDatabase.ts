@@ -181,7 +181,7 @@ export async function setupDatabase() {
             subject TEXT NOT NULL,
             template_type TEXT NOT NULL,
             status TEXT NOT NULL CHECK (status IN ('sent', 'failed', 'pending')),
-            sent_at TIMESTAMP WITH TIME ZONE,
+            sent_at TIMESTAMP WITH TIME ZONE NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
           );
         `
