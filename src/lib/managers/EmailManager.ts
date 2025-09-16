@@ -35,7 +35,7 @@ export class EmailManager {
   }
 
   // Log email
-  async logEmail(emailLog: Omit<EmailLog, 'id' | 'created_at'>): Promise<EmailLog | null> {
+  async logEmail(emailLog: Omit<EmailLog, 'id' | 'created_at' | 'sent_at'>): Promise<EmailLog | null> {
     try {
       const { data, error } = await supabase
         .from(TABLES.EMAIL_LOGS)
