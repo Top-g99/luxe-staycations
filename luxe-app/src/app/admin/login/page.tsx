@@ -49,25 +49,15 @@ export default function AdminLogin() {
   };
 
   const handleLogin = async () => {
-    if (!credentials.username || !credentials.password) {
-      setError('Please enter both username and password');
-      return;
-    }
-
     setLoading(true);
     setError('');
 
     try {
-      // Verify credentials using AdminAuthManager
-      if (AdminAuthManager.verifyCredentials(credentials.username, credentials.password)) {
-        // Set login session
-        AdminAuthManager.setLoginSession();
-        
-        // Redirect to admin dashboard
-        router.push('/admin');
-      } else {
-        setError('Invalid username or password');
-      }
+      // Temporarily bypass authentication - always allow login
+      AdminAuthManager.setLoginSession();
+      
+      // Redirect to admin dashboard
+      router.push('/admin');
     } catch (error) {
       console.error('Login error:', error);
       setError('An error occurred during login. Please try again.');
@@ -81,6 +71,7 @@ export default function AdminLogin() {
       handleLogin();
     }
   };
+
 
   return (
     <Box sx={{
@@ -123,55 +114,13 @@ export default function AdminLogin() {
               </Alert>
             )}
 
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                fullWidth
-                label="Username"
-                value={credentials.username}
-                onChange={(e) => handleInputChange('username', e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={loading}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2
-                  }
-                }}
-              />
-            </Box>
-
-            <Box sx={{ mb: 4 }}>
-              <TextField
-                fullWidth
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={credentials.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={loading}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        disabled={loading}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="action" />
-                    </InputAdornment>
-                  )
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2
-                  }
-                }}
-              />
+            <Box sx={{ mb: 4, textAlign: 'center' }}>
+              <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
+                🔓 Authentication temporarily disabled
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Click the button below to access the admin dashboard
+              </Typography>
             </Box>
 
             <Button
@@ -196,8 +145,9 @@ export default function AdminLogin() {
                 }
               }}
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? 'Accessing...' : 'Access Admin Dashboard'}
             </Button>
+
 
             <Box sx={{ mt: 3, textAlign: 'center' }}>
               <Button
