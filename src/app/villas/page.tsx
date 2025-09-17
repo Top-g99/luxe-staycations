@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -78,7 +78,7 @@ interface Property {
   updated_at: string;
 }
 
-export default function VillasPage() {
+function VillasPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -501,5 +501,19 @@ export default function VillasPage() {
         </Alert>
       </Snackbar>
     </Container>
+  );
+}
+
+export default function VillasPage() {
+  return (
+    <Suspense fallback={
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h6">Loading...</Typography>
+        </Box>
+      </Container>
+    }>
+      <VillasPageContent />
+    </Suspense>
   );
 }
