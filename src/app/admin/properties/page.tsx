@@ -62,6 +62,9 @@ import {
   SmokingRooms as SmokingIcon,
   Block as NoSmokingIcon
 } from '@mui/icons-material';
+import { PropertyManager } from '@/lib/managers/PropertyManager';
+
+const propertyManager = new PropertyManager();
 
 interface Property {
   id: string;
@@ -141,7 +144,8 @@ const amenitiesOptions = [
 ];
 
 export default function PropertiesManagement() {
-  const [properties, setProperties] = useState<Property[]>(mockProperties);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [formData, setFormData] = useState<Partial<Property>>({
@@ -162,6 +166,25 @@ export default function PropertiesManagement() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [images, setImages] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
+
+  // Load properties from Supabase
+  useEffect(() => {
+    const loadProperties = async () => {
+      try {
+        setLoading(true);
+        const data = await propertyManager.getAllProperties();
+        setProperties(data);
+        console.log('Loaded properties from Supabase:', data.length);
+      } catch (error) {
+        console.error('Error loading properties:', error);
+        setSnackbar({ open: true, message: 'Error loading properties', severity: 'error' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProperties();
+  }, []);
 
   const handleOpen = (property?: Property) => {
     if (property) {
@@ -196,40 +219,59 @@ export default function PropertiesManagement() {
     setEditingProperty(null);
   };
 
-  const handleSave = () => {
-    if (editingProperty) {
-      // Update existing property
-      const updatedProperty = {
-        ...formData,
-        id: editingProperty.id,
-        images: imagePreview, // Include uploaded images
-        updated_at: new Date().toISOString()
-      } as Property;
+  const handleSave = async () => {
+    try {
+      if (editingProperty) {
+        // Update existing property
+        const updatedProperty = await propertyManager.updateProperty(editingProperty.id, {
+          ...formData,
+          images: imagePreview
+        });
+        
+        if (updatedProperty) {
+          setProperties(prev => prev.map(p => p.id === editingProperty.id ? updatedProperty : p));
+          setSnackbar({ open: true, message: 'Property updated successfully! Now live on website.', severity: 'success' });
+        } else {
+          setSnackbar({ open: true, message: 'Error updating property', severity: 'error' });
+        }
+      } else {
+        // Add new property
+        const newProperty = await propertyManager.createProperty({
+          ...formData,
+          images: imagePreview
+        } as Omit<Property, 'id' | 'created_at' | 'updated_at'>);
+        
+        if (newProperty) {
+          setProperties(prev => [...prev, newProperty]);
+          setSnackbar({ open: true, message: 'Property added successfully! Now live on website and available for booking.', severity: 'success' });
+        } else {
+          setSnackbar({ open: true, message: 'Error creating property', severity: 'error' });
+        }
+      }
       
-      setProperties(prev => prev.map(p => p.id === editingProperty.id ? updatedProperty : p));
-      setSnackbar({ open: true, message: 'Property updated successfully! Now live on website.', severity: 'success' });
-    } else {
-      // Add new property
-      const newProperty: Property = {
-        ...formData as Property,
-        id: Date.now().toString(),
-        images: imagePreview, // Include uploaded images
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      setProperties(prev => [...prev, newProperty]);
-      setSnackbar({ open: true, message: 'Property added successfully! Now live on website and available for booking.', severity: 'success' });
+      // Reset form and images
+      setImages([]);
+      setImagePreview([]);
+      handleClose();
+    } catch (error) {
+      console.error('Error saving property:', error);
+      setSnackbar({ open: true, message: 'Error saving property', severity: 'error' });
     }
-    
-    // Reset form and images
-    setImages([]);
-    setImagePreview([]);
-    handleClose();
   };
 
-  const handleDelete = (id: string) => {
-    setProperties(prev => prev.filter(p => p.id !== id));
-    setSnackbar({ open: true, message: 'Property deleted successfully!', severity: 'success' });
+  const handleDelete = async (id: string) => {
+    try {
+      const success = await propertyManager.deleteProperty(id);
+      if (success) {
+        setProperties(prev => prev.filter(p => p.id !== id));
+        setSnackbar({ open: true, message: 'Property deleted successfully!', severity: 'success' });
+      } else {
+        setSnackbar({ open: true, message: 'Error deleting property', severity: 'error' });
+      }
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      setSnackbar({ open: true, message: 'Error deleting property', severity: 'error' });
+    }
   };
 
   const handleToggleActive = (id: string) => {
@@ -299,9 +341,25 @@ export default function PropertiesManagement() {
         </Button>
       </Box>
 
+      {/* Loading State */}
+      {loading && (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h6">Loading properties...</Typography>
+        </Box>
+      )}
+
+      {/* No Properties Message */}
+      {!loading && properties.length === 0 && (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h6" color="text.secondary">
+            No properties found. Add your first property to get started!
+          </Typography>
+        </Box>
+      )}
+
       {/* Properties Grid */}
       <Grid container spacing={3}>
-        {properties.map((property) => (
+        {!loading && properties.map((property) => (
           <Grid item xs={12} md={6} lg={4} key={property.id}>
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardContent sx={{ flexGrow: 1 }}>

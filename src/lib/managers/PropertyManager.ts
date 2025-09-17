@@ -38,9 +38,22 @@ export class PropertyManager {
 
   async createProperty(property: Omit<Property, 'id' | 'created_at' | 'updated_at'>): Promise<Property | null> {
     try {
+      // Upload images to Supabase storage if they exist
+      let imageUrls: string[] = [];
+      if (property.images && property.images.length > 0) {
+        imageUrls = await this.uploadImages(property.images);
+      }
+
+      const propertyData = {
+        ...property,
+        images: imageUrls,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from(TABLES.PROPERTIES)
-        .insert([property])
+        .insert([propertyData])
         .select()
         .single();
 
@@ -50,6 +63,42 @@ export class PropertyManager {
       console.error('Error creating property:', error);
       return null;
     }
+  }
+
+  async uploadImages(images: string[]): Promise<string[]> {
+    const uploadedUrls: string[] = [];
+    
+    for (let i = 0; i < images.length; i++) {
+      try {
+        // Convert base64 or blob URL to file
+        const response = await fetch(images[i]);
+        const blob = await response.blob();
+        
+        // Create unique filename
+        const fileName = `property-${Date.now()}-${i}.${blob.type.split('/')[1]}`;
+        
+        // Upload to Supabase storage
+        const { data, error } = await supabase.storage
+          .from('property-images')
+          .upload(fileName, blob, {
+            contentType: blob.type,
+            upsert: false
+          });
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(urlData.publicUrl);
+      } catch (error) {
+        console.error(`Error uploading image ${i}:`, error);
+      }
+    }
+    
+    return uploadedUrls;
   }
 
   async updateProperty(id: string, property: Partial<Property>): Promise<Property | null> {

@@ -20,7 +20,8 @@
         "deploy:prepare": "node deploy-netlify.js",
         "storage:setup": "node -e \"require('./src/lib/supabaseFileUploadService').supabaseFileUploadService.createStorageBuckets()\"",
         "postbuild": "next-sitemap",
-        "build:cloudflare": "WEBPACK_CACHE_DISABLED=true NEXT_TELEMETRY_DISABLED=1 npm run build && node cloudflare-build.js"
+        "build:cloudflare": "WEBPACK_CACHE_DISABLED=true NEXT_TELEMETRY_DISABLED=1 npm run build && node cloudflare-build.js",
+        "setup:storage": "node setup-storage.js"
     },
     "dependencies": {
         "@emotion/react": "^11.11.1",
