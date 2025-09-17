@@ -35,7 +35,6 @@ import { useRouter } from 'next/navigation';
 import { useBookingContext } from '@/contexts/BookingContext';
 import { callbackManager } from '@/lib/callbackManager';
 import { 
-  propertyManager, 
   destinationManager, 
   heroBackgroundManager,
   dealBannerManager,
@@ -44,6 +43,9 @@ import {
   userManager,
   bookingManager
 } from '@/lib/dataManager';
+import { PropertyManager } from '@/lib/managers/PropertyManager';
+
+const propertyManager = new PropertyManager();
 import { loyaltyManager } from '@/lib/loyaltyManager';
 import { emailService } from '@/lib/emailService';
 import { paymentManager } from '@/lib/paymentManager';
@@ -130,9 +132,9 @@ function HomePageContent() {
   useEffect(() => {
     const loadProperties = async () => {
       try {
-        await propertyManager.initialize();
-        const allData = await propertyManager.getAll();
-        const featuredData = await propertyManager.getFeatured();
+        const allData = await propertyManager.getAllProperties();
+        // Filter featured properties (is_active = true for now, can add featured field later)
+        const featuredData = allData.filter(property => property.is_active);
         setAllProperties(allData);
         setFeaturedProperties(featuredData);
         console.log('Homepage: Loaded properties - All:', allData.length, 'Featured:', featuredData.length);
@@ -144,15 +146,6 @@ function HomePageContent() {
     // Initial load
     loadProperties();
 
-    // Subscribe to real-time updates
-    const unsubscribe = propertyManager.subscribe(async () => {
-      const updatedAllData = await propertyManager.getAll();
-      const updatedFeaturedData = await propertyManager.getFeatured();
-      setAllProperties(updatedAllData);
-      setFeaturedProperties(updatedFeaturedData);
-      console.log('Homepage: Updated properties - All:', updatedAllData.length, 'Featured:', updatedFeaturedData.length);
-    });
-
     // Listen for global data update events
     const handleDataUpdate = (event: CustomEvent) => {
       if (event.detail?.type === 'properties') {
@@ -163,9 +156,8 @@ function HomePageContent() {
 
     window.addEventListener('dataUpdated', handleDataUpdate as EventListener);
 
-    // Cleanup subscription and event listener
+    // Cleanup event listener
     return () => {
-      unsubscribe();
       window.removeEventListener('dataUpdated', handleDataUpdate as EventListener);
     };
   }, []);
@@ -592,7 +584,7 @@ function HomePageContent() {
                 <CardMedia
                   component="img"
                   height="250"
-                  image={property.image}
+                  image={property.images && property.images.length > 0 ? property.images[0] : '/images/placeholder-villa.jpg'}
                   alt={property.name}
                   sx={{ objectFit: 'cover' }}
                 />
@@ -620,7 +612,7 @@ function HomePageContent() {
                   
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" sx={{ color: 'var(--primary-dark)', fontWeight: 'bold' }}>
-                      ₹{property.price.toLocaleString()}/night
+                      ₹{(property.price_per_night || 0).toLocaleString()}/night
                     </Typography>
                     <Button
                       variant="outlined"
