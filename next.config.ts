@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
       // Completely disable webpack cache for Cloudflare Pages
       webpack: (config, { isServer, dev }) => {
-        // Disable all caching completely
+        // Disable ALL caching completely
         config.cache = false;
         
         // Disable persistent caching
@@ -59,6 +59,22 @@ const nextConfig: NextConfig = {
             }
           });
         }
+        
+        // FORCE disable webpack cache directory
+        config.infrastructureLogging = {
+          level: 'error'
+        };
+        
+        // Disable all webpack caching mechanisms
+        config.optimization = {
+          ...config.optimization,
+          splitChunks: false,
+          moduleIds: 'named',
+          chunkIds: 'named',
+          runtimeChunk: false,
+          usedExports: false,
+          sideEffects: false
+        };
         
         return config;
       },
