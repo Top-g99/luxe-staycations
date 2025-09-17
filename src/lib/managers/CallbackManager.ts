@@ -1,195 +1,105 @@
-import { supabase, TABLES, Callback } from '../supabaseClient';
-import { emailManager } from './EmailManager';
+import { Callback as CallbackRequest } from '@/lib/supabaseClient';
 
 export class CallbackManager {
-  // Get all callbacks
-  async getAllCallbacks(): Promise<Callback[]> {
+  constructor() {
+    // Initialization if needed
+  }
+
+  async getAllCallbacks(): Promise<CallbackRequest[]> {
     try {
-      const { data, error } = await supabase
-        .from(TABLES.CALLBACKS)
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
+      const response = await fetch('/api/admin/callbacks');
+      if (!response.ok) throw new Error('Failed to fetch callbacks');
+      return await response.json();
     } catch (error) {
       console.error('Error fetching callbacks:', error);
       return [];
     }
   }
 
-  // Get callback by ID
-  async getCallbackById(id: string): Promise<Callback | null> {
+  async getCallback(id: string): Promise<CallbackRequest | null> {
     try {
-      const { data, error } = await supabase
-        .from(TABLES.CALLBACKS)
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      return data;
+      const response = await fetch(`/api/admin/callbacks?id=${id}`);
+      if (!response.ok) throw new Error('Failed to fetch callback');
+      return await response.json();
     } catch (error) {
       console.error('Error fetching callback:', error);
       return null;
     }
   }
 
-  // Create new callback
-  async createCallback(callback: Omit<Callback, 'id' | 'created_at' | 'updated_at'>): Promise<Callback | null> {
+  async createCallback(callback: Omit<CallbackRequest, 'id' | 'created_at' | 'updated_at'>): Promise<CallbackRequest | null> {
     try {
-      const { data, error } = await supabase
-        .from(TABLES.CALLBACKS)
-        .insert([callback])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
+      const response = await fetch('/api/admin/callbacks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(callback)
+      });
+      if (!response.ok) throw new Error('Failed to create callback');
+      return await response.json();
     } catch (error) {
       console.error('Error creating callback:', error);
       return null;
     }
   }
 
-  // Update callback
-  async updateCallback(id: string, updates: Partial<Callback>): Promise<Callback | null> {
+  async updateCallback(id: string, callback: Partial<CallbackRequest>): Promise<CallbackRequest | null> {
     try {
-      const { data, error } = await supabase
-        .from(TABLES.CALLBACKS)
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
+      const response = await fetch('/api/admin/callbacks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...callback })
+      });
+      if (!response.ok) throw new Error('Failed to update callback');
+      return await response.json();
     } catch (error) {
       console.error('Error updating callback:', error);
       return null;
     }
   }
 
-  // Delete callback
   async deleteCallback(id: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from(TABLES.CALLBACKS)
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      return true;
+      const response = await fetch(`/api/admin/callbacks?id=${id}`, {
+        method: 'DELETE'
+      });
+      return response.ok;
     } catch (error) {
       console.error('Error deleting callback:', error);
       return false;
     }
   }
 
-  // Get callbacks by status
-  async getCallbacksByStatus(status: Callback['status']): Promise<Callback[]> {
+  async getCallbackStats(): Promise<{ total: number; pending: number; contacted: number; resolved: number; dailyStats: Record<string, number> }> {
     try {
-      const { data, error } = await supabase
-        .from(TABLES.CALLBACKS)
-        .select('*')
-        .eq('status', status)
-        .order('created_at', { ascending: false });
+      const callbacks = await this.getAllCallbacks();
+      const dailyStats: Record<string, number> = {};
       
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching callbacks by status:', error);
-      return [];
-    }
-  }
+      callbacks.forEach(callback => {
+        if (callback.created_at) {
+          const date = new Date(callback.created_at).toISOString().substring(0, 10); // YYYY-MM-DD
+          dailyStats[date] = (dailyStats[date] || 0) + 1;
+        }
+      });
 
-  // Update callback status
-  async updateCallbackStatus(id: string, status: Callback['status']): Promise<boolean> {
-    try {
-      const callback = await this.getCallbackById(id);
-      if (!callback) return false;
-
-      const result = await this.updateCallback(id, { status });
-      
-      // Send email response if status is changed to contacted or resolved
-      if (status === 'contacted' || status === 'resolved') {
-        await emailManager.sendCallbackResponse({
-          name: callback.name,
-          email: callback.email,
-          message: callback.message
-        });
-      }
-      
-      return result !== null;
-    } catch (error) {
-      console.error('Error updating callback status:', error);
-      return false;
-    }
-  }
-
-  // Get callback statistics
-  async getCallbackStats(): Promise<{
-    total: number;
-    pending: number;
-    contacted: number;
-    resolved: number;
-    dailyStats: Record<string, number>;
-  }> {
-    try {
-      const { data, error } = await supabase
-        .from(TABLES.CALLBACKS)
-        .select('*');
-      
-      if (error) throw error;
-      
-      const callbacks = data || [];
-      const stats = {
+      return {
         total: callbacks.length,
         pending: callbacks.filter(c => c.status === 'pending').length,
         contacted: callbacks.filter(c => c.status === 'contacted').length,
         resolved: callbacks.filter(c => c.status === 'resolved').length,
-        dailyStats: {} as Record<string, number>
+        dailyStats
       };
-      
-      callbacks.forEach(callback => {
-        const date = new Date(callback.created_at).toISOString().substring(0, 10);
-        stats.dailyStats[date] = (stats.dailyStats[date] || 0) + 1;
-      });
-      
-      return stats;
     } catch (error) {
       console.error('Error fetching callback stats:', error);
-      return {
-        total: 0,
-        pending: 0,
-        contacted: 0,
-        resolved: 0,
-        dailyStats: {}
-      };
+      return { total: 0, pending: 0, contacted: 0, resolved: 0, dailyStats: {} };
     }
   }
 
-  // Mark as contacted
-  async markAsContacted(id: string): Promise<boolean> {
-    return await this.updateCallbackStatus(id, 'contacted');
-  }
-
-  // Mark as resolved
-  async markAsResolved(id: string): Promise<boolean> {
-    return await this.updateCallbackStatus(id, 'resolved');
-  }
-
-  // Get recent callbacks
-  async getRecentCallbacks(limit: number = 10): Promise<Callback[]> {
+  async getRecentCallbacks(limit: number = 5): Promise<CallbackRequest[]> {
     try {
-      const { data, error } = await supabase
-        .from(TABLES.CALLBACKS)
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(limit);
-      
-      if (error) throw error;
-      return data || [];
+      const callbacks = await this.getAllCallbacks();
+      return callbacks
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, limit);
     } catch (error) {
       console.error('Error fetching recent callbacks:', error);
       return [];

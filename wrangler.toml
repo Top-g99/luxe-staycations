@@ -1,0 +1,9 @@
+name = "luxe-staycations"
+compatibility_date = "2025-01-15"
+
+[env.production]
+name = "luxe-staycations"
+
+[[pages_builds]]
+build_command = "npm run build"
+build_output = ".next"

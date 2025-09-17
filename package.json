@@ -5,6 +5,7 @@
     "scripts": {
         "dev": "next dev",
         "build": "next build",
+        "build:cloudflare": "next build && find .next -name '*.pack' -size +10M -delete && find .next -name 'cache' -type d -exec rm -rf {} + 2>/dev/null || true",
         "start": "next start",
         "lint": "next lint",
         "start-simple": "node start-simple.js",

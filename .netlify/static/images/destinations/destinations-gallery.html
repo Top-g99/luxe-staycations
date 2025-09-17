@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxe Destinations Gallery</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #3E2723;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+        }
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .destination-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .destination-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        .destination-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #8D6E63 0%, #5D4037 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .destination-content {
+            padding: 20px;
+        }
+        .destination-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #3E2723;
+            margin-bottom: 10px;
+        }
+        .destination-location {
+            color: #5D4037;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        .destination-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .destination-attractions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .attraction-tag {
+            background: #D7CCC8;
+            color: #3E2723;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .featured-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #FF6B35;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .card-wrapper {
+            position: relative;
+        }
+        .instructions {
+            background: #E8F5E8;
+            border: 1px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .instructions h3 {
+            color: #2E7D32;
+            margin-top: 0;
+        }
+        .instructions ul {
+            color: #388E3C;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏖️ Luxe Tourist Destinations</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instructions for Adding Real Images</h3>
+            <ul>
+                <li><strong>Image Directory:</strong> public/images/destinations/</li>
+                <li><strong>Required Size:</strong> 800x600 pixels (minimum)</li>
+                <li><strong>Format:</strong> JPG or PNG</li>
+                <li><strong>Content:</strong> Beautiful landscape shots of each destination</li>
+                <li><strong>Naming:</strong> Use exact filenames shown in the placeholder images</li>
+            </ul>
+        </div>
+
+        <div class="destinations-grid">
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        malpe-maharashtra.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Malpe, Maharashtra</div>
+                    <div class="destination-location">Maharashtra, India</div>
+                    <div class="destination-description">
+                        Pristine beaches and coastal charm await in this serene coastal town. Experience the perfect blend of tranquility and adventure with golden sands, clear waters, and stunning sunsets.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Malpe Beach</span>
+                        <span class="attraction-tag">St. Mary's Island</span>
+                        <span class="attraction-tag">Udupi Temple</span>
+                        <span class="attraction-tag">Water Sports</span>
+                        <span class="attraction-tag">Seafood Delicacies</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        lonavala-maharashtra.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Lonavala, Maharashtra</div>
+                    <div class="destination-location">Maharashtra, India</div>
+                    <div class="destination-description">
+                        Nestled in the Western Ghats, this hill station offers breathtaking views, ancient caves, and refreshing waterfalls. Perfect for nature lovers and adventure seekers.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Tiger's Leap</span>
+                        <span class="attraction-tag">Karla Caves</span>
+                        <span class="attraction-tag">Bhaja Caves</span>
+                        <span class="attraction-tag">Lonavala Lake</span>
+                        <span class="attraction-tag">Trekking Trails</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        mahabaleshwar-maharashtra.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Mahabaleshwar, Maharashtra</div>
+                    <div class="destination-location">Maharashtra, India</div>
+                    <div class="destination-description">
+                        Queen of Hill Stations offers panoramic views, strawberry farms, and colonial charm. Experience the cool mountain air and scenic beauty of the Western Ghats.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Wilson Point</span>
+                        <span class="attraction-tag">Mapro Garden</span>
+                        <span class="attraction-tag">Venna Lake</span>
+                        <span class="attraction-tag">Strawberry Farms</span>
+                        <span class="attraction-tag">Scenic Points</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        goa-beaches.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Goa Beaches</div>
+                    <div class="destination-location">Goa, India</div>
+                    <div class="destination-description">
+                        Famous for its pristine beaches, vibrant culture, and Portuguese heritage. From party beaches to secluded coves, Goa offers something for every traveler.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Calangute Beach</span>
+                        <span class="attraction-tag">Baga Beach</span>
+                        <span class="attraction-tag">Anjuna Beach</span>
+                        <span class="attraction-tag">Old Goa Churches</span>
+                        <span class="attraction-tag">Portuguese Architecture</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        kerala-backwaters.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Kerala Backwaters</div>
+                    <div class="destination-location">Kerala, India</div>
+                    <div class="destination-description">
+                        Experience the serene beauty of Kerala's backwaters with houseboat cruises, lush greenery, and traditional village life. A perfect escape into nature.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Alleppey Backwaters</span>
+                        <span class="attraction-tag">Kumarakom</span>
+                        <span class="attraction-tag">Vembanad Lake</span>
+                        <span class="attraction-tag">Houseboat Cruises</span>
+                        <span class="attraction-tag">Ayurvedic Spas</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        udaipur-rajasthan.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Udaipur, Rajasthan</div>
+                    <div class="destination-location">Rajasthan, India</div>
+                    <div class="destination-description">
+                        The City of Lakes offers royal heritage, stunning palaces, and romantic boat rides. Experience the magic of Rajasthan's most beautiful city.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Lake Palace</span>
+                        <span class="attraction-tag">City Palace</span>
+                        <span class="attraction-tag">Jag Mandir</span>
+                        <span class="attraction-tag">Fateh Sagar Lake</span>
+                        <span class="attraction-tag">Royal Heritage</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        manali-himachal.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Manali, Himachal Pradesh</div>
+                    <div class="destination-location">Himachal Pradesh, India</div>
+                    <div class="destination-description">
+                        Adventure capital of India with snow-capped mountains, apple orchards, and thrilling activities. Perfect for both relaxation and adventure.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Rohtang Pass</span>
+                        <span class="attraction-tag">Solang Valley</span>
+                        <span class="attraction-tag">Hadimba Temple</span>
+                        <span class="attraction-tag">Apple Orchards</span>
+                        <span class="attraction-tag">Adventure Sports</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        shimla-himachal.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Shimla, Himachal Pradesh</div>
+                    <div class="destination-location">Himachal Pradesh, India</div>
+                    <div class="destination-description">
+                        Queen of Hills offers colonial architecture, scenic beauty, and pleasant weather. Experience the charm of British-era hill stations.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">The Ridge</span>
+                        <span class="attraction-tag">Christ Church</span>
+                        <span class="attraction-tag">Jakhu Temple</span>
+                        <span class="attraction-tag">Mall Road</span>
+                        <span class="attraction-tag">Colonial Architecture</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        darjeeling-west-bengal.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Darjeeling, West Bengal</div>
+                    <div class="destination-location">West Bengal, India</div>
+                    <div class="destination-description">
+                        Famous for its tea gardens, toy train, and views of Kanchenjunga. Experience the charm of the Himalayan foothills.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Tiger Hill</span>
+                        <span class="attraction-tag">Darjeeling Toy Train</span>
+                        <span class="attraction-tag">Tea Gardens</span>
+                        <span class="attraction-tag">Kanchenjunga Views</span>
+                        <span class="attraction-tag">Colonial Charm</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        varanasi-uttar-pradesh.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Varanasi, Uttar Pradesh</div>
+                    <div class="destination-location">Uttar Pradesh, India</div>
+                    <div class="destination-description">
+                        Spiritual capital of India with ancient temples, Ganga ghats, and cultural heritage. Experience the essence of Indian spirituality.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Ganga Ghats</span>
+                        <span class="attraction-tag">Kashi Vishwanath Temple</span>
+                        <span class="attraction-tag">Ganga Aarti</span>
+                        <span class="attraction-tag">Ancient Temples</span>
+                        <span class="attraction-tag">Spiritual Heritage</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        agra-uttar-pradesh.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Agra, Uttar Pradesh</div>
+                    <div class="destination-location">Uttar Pradesh, India</div>
+                    <div class="destination-description">
+                        Home to the iconic Taj Mahal, a symbol of eternal love. Experience the grandeur of Mughal architecture and history.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Taj Mahal</span>
+                        <span class="attraction-tag">Agra Fort</span>
+                        <span class="attraction-tag">Fatehpur Sikri</span>
+                        <span class="attraction-tag">Itmad-ud-Daula</span>
+                        <span class="attraction-tag">Mughal Architecture</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="destination-card">
+                <div class="card-wrapper">
+                    <div class="destination-image">
+                        jaisalmer-rajasthan.jpg<br>
+                        <small>800x600px</small>
+                    </div>
+                    <div class="featured-badge">⭐ Featured</div>
+                </div>
+                <div class="destination-content">
+                    <div class="destination-name">Jaisalmer, Rajasthan</div>
+                    <div class="destination-location">Rajasthan, India</div>
+                    <div class="destination-description">
+                        Golden City in the Thar Desert offers stunning sand dunes, ancient forts, and camel safaris. Experience the magic of the desert.
+                    </div>
+                    <div class="destination-attractions">
+                        <span class="attraction-tag">Jaisalmer Fort</span>
+                        <span class="attraction-tag">Sam Sand Dunes</span>
+                        <span class="attraction-tag">Camel Safari</span>
+                        <span class="attraction-tag">Golden Architecture</span>
+                        <span class="attraction-tag">Desert Culture</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>🎯 Next Steps</h3>
+            <ul>
+                <li><strong>Add Real Images:</strong> Replace placeholder images with actual destination photos</li>
+                <li><strong>Image Quality:</strong> Use high-resolution, professional-quality images</li>
+                <li><strong>Image Rights:</strong> Ensure you have proper rights to use the images</li>
+                <li><strong>Test Display:</strong> Refresh your browser to see the new destinations</li>
+                <li><strong>Customize:</strong> Modify descriptions and attractions as needed</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

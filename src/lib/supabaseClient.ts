@@ -11,13 +11,13 @@ export const TABLES = {
   BOOKINGS: 'bookings',
   DESTINATIONS: 'destinations',
   OFFERS: 'offers',
-  LOYALTY_MEMBERS: 'loyalty_members',
-  CALLBACKS: 'callbacks',
+  LOYALTY_MEMBERS: 'loyalty_transactions',
+  CALLBACKS: 'callback_requests',
   CONSULTATIONS: 'consultations',
   PARTNER_REQUESTS: 'partner_requests',
   SPECIAL_REQUESTS: 'special_requests',
-  EMAIL_LOGS: 'email_logs',
-  ANALYTICS: 'analytics',
+  EMAIL_LOGS: 'email_templates',
+  ANALYTICS: 'instagram_analytics',
   USERS: 'users',
   HOSTS: 'hosts'
 } as const;
