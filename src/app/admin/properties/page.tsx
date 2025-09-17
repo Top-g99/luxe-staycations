@@ -47,7 +47,20 @@ import {
   Wifi as WifiIcon,
   Pool as PoolIcon,
   DirectionsCar as CarIcon,
-  Kitchen as KitchenIcon
+  Kitchen as KitchenIcon,
+  CloudUpload as UploadIcon,
+  Image as ImageIcon,
+  AcUnit as AcIcon,
+  LocalLaundryService as LaundryIcon,
+  HotTub as HotTubIcon,
+  FitnessCenter as GymIcon,
+  Restaurant as RestaurantIcon,
+  BeachAccess as BeachIcon,
+  Terrain as MountainIcon,
+  Security as SecurityIcon,
+  Pets as PetIcon,
+  SmokingRooms as SmokingIcon,
+  NoSmoking as NoSmokingIcon
 } from '@mui/icons-material';
 
 interface Property {
@@ -120,7 +133,11 @@ const propertyTypes = [
 const amenitiesOptions = [
   'WiFi', 'Parking', 'Swimming Pool', 'Garden', 'Kitchen', 'AC', 'Balcony',
   'Beach Access', 'Fireplace', 'Cultural Activities', 'Room Service', 'Spa',
-  'Gym', 'Restaurant', 'Bar', 'Concierge', 'Laundry', 'Airport Transfer'
+  'Gym', 'Restaurant', 'Bar', 'Concierge', 'Laundry', 'Airport Transfer',
+  'Hot Tub', 'Security', 'Pet Friendly', 'Smoking Allowed', 'Non-Smoking',
+  'Terrace', 'TV', 'Sound System', 'BBQ Area', 'Outdoor Dining', 'Housekeeping',
+  'Sauna', 'Tennis Court', 'Golf Course', 'Boat Access', 'Mountain View',
+  'Pool Table', 'Ping Pong', 'Library', 'Workspace', 'Child Friendly'
 ];
 
 export default function PropertiesManagement() {
@@ -143,11 +160,14 @@ export default function PropertiesManagement() {
     property_type: 'villa'
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreview, setImagePreview] = useState<string[]>([]);
 
   const handleOpen = (property?: Property) => {
     if (property) {
       setEditingProperty(property);
       setFormData(property);
+      setImagePreview(property.images || []);
     } else {
       setEditingProperty(null);
       setFormData({
@@ -165,6 +185,8 @@ export default function PropertiesManagement() {
         is_active: true,
         property_type: 'villa'
       });
+      setImages([]);
+      setImagePreview([]);
     }
     setOpen(true);
   };
@@ -177,19 +199,31 @@ export default function PropertiesManagement() {
   const handleSave = () => {
     if (editingProperty) {
       // Update existing property
-      setProperties(prev => prev.map(p => p.id === editingProperty.id ? { ...formData, id: editingProperty.id, updated_at: new Date().toISOString() } as Property : p));
-      setSnackbar({ open: true, message: 'Property updated successfully!', severity: 'success' });
+      const updatedProperty = {
+        ...formData,
+        id: editingProperty.id,
+        images: imagePreview, // Include uploaded images
+        updated_at: new Date().toISOString()
+      } as Property;
+      
+      setProperties(prev => prev.map(p => p.id === editingProperty.id ? updatedProperty : p));
+      setSnackbar({ open: true, message: 'Property updated successfully! Now live on website.', severity: 'success' });
     } else {
       // Add new property
       const newProperty: Property = {
         ...formData as Property,
         id: Date.now().toString(),
+        images: imagePreview, // Include uploaded images
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
       setProperties(prev => [...prev, newProperty]);
-      setSnackbar({ open: true, message: 'Property added successfully!', severity: 'success' });
+      setSnackbar({ open: true, message: 'Property added successfully! Now live on website and available for booking.', severity: 'success' });
     }
+    
+    // Reset form and images
+    setImages([]);
+    setImagePreview([]);
     handleClose();
   };
 
@@ -204,12 +238,43 @@ export default function PropertiesManagement() {
     ));
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newImages = Array.from(files);
+      setImages(prev => [...prev, ...newImages]);
+      
+      // Create preview URLs
+      const newPreviews = newImages.map(file => URL.createObjectURL(file));
+      setImagePreview(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreview(prev => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const getAmenityIcon = (amenity: string) => {
     switch (amenity.toLowerCase()) {
       case 'wifi': return <WifiIcon />;
       case 'parking': return <CarIcon />;
       case 'swimming pool': return <PoolIcon />;
       case 'kitchen': return <KitchenIcon />;
+      case 'ac': case 'air conditioning': return <AcIcon />;
+      case 'laundry': return <LaundryIcon />;
+      case 'hot tub': return <HotTubIcon />;
+      case 'gym': case 'fitness center': return <GymIcon />;
+      case 'restaurant': return <RestaurantIcon />;
+      case 'beach access': return <BeachIcon />;
+      case 'mountain view': return <MountainIcon />;
+      case 'security': return <SecurityIcon />;
+      case 'pet friendly': return <PetIcon />;
+      case 'smoking allowed': return <SmokingIcon />;
+      case 'non-smoking': return <NoSmokingIcon />;
       default: return <VillaIcon />;
     }
   };
@@ -424,6 +489,69 @@ export default function PropertiesManagement() {
                 value={formData.bathrooms}
                 onChange={(e) => setFormData({ ...formData, bathrooms: Number(e.target.value) })}
               />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Property Images
+              </Typography>
+              <Box sx={{ border: '2px dashed #ccc', p: 2, textAlign: 'center', mb: 2 }}>
+                <input
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  id="image-upload"
+                  multiple
+                  type="file"
+                  onChange={handleImageUpload}
+                />
+                <label htmlFor="image-upload">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<UploadIcon />}
+                    sx={{ mb: 1 }}
+                  >
+                    Upload Images
+                  </Button>
+                </label>
+                <Typography variant="body2" color="text.secondary">
+                  Upload multiple images of your property (max 10 images)
+                </Typography>
+              </Box>
+              
+              {/* Image Previews */}
+              {imagePreview.length > 0 && (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  {imagePreview.map((preview, index) => (
+                    <Box key={index} sx={{ position: 'relative' }}>
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        style={{
+                          width: 100,
+                          height: 100,
+                          objectFit: 'cover',
+                          borderRadius: 8,
+                          border: '1px solid #ccc'
+                        }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemoveImage(index)}
+                        sx={{
+                          position: 'absolute',
+                          top: -8,
+                          right: -8,
+                          backgroundColor: 'error.main',
+                          color: 'white',
+                          '&:hover': { backgroundColor: 'error.dark' }
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
             </Grid>
             <Grid item xs={12}>
               <Autocomplete
