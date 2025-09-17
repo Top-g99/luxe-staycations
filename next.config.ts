@@ -47,7 +47,7 @@ const nextConfig: NextConfig = {
         // Disable all loaders that might cache
         if (config.module && config.module.rules) {
           config.module.rules.forEach((rule: any) => {
-            if (rule.use) {
+            if (rule.use && Array.isArray(rule.use)) {
               rule.use.forEach((use: any) => {
                 if (use.loader && use.loader.includes('cache-loader')) {
                   use.loader = false;
