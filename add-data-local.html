@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Data to LocalStorage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .info {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+        
+        #results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🚀 Add Data to LocalStorage</h1>
+        <p>This will add the missing deal banner and hero background data to your browser's localStorage, which will work immediately!</p>
+
+        <div>
+            <button onclick="addDealBanner()">🎯 Add Deal Banner</button>
+            <button onclick="addHeroBackground()">🖼️ Add Hero Background</button>
+            <button onclick="addAllData()">✨ Add All Data</button>
+            <button onclick="checkData()">📊 Check Current Data</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = message;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        function addDealBanner() {
+            try {
+                log('🎯 Adding deal banner to localStorage...', 'info');
+
+                const dealBanner = {
+                    id: 'deal-banner-1',
+                    title: 'Ready to Find a Great Villa Deal?',
+                    subtitle: 'Save up to 25% on your next luxury villa stay',
+                    buttonText: 'Explore Deals',
+                    buttonLink: '/villas',
+                    videoUrl: '',
+                    fallbackImageUrl: 'https://i.pinimg.com/736x/6d/a3/a3/6da3a3ded69f943f7d4df7b33e2d6086.jpg',
+                    isActive: true,
+                    startDate: '',
+                    endDate: '',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                // Get existing deal banners or create new array
+                let dealBanners = JSON.parse(localStorage.getItem('dealBanners') || '[]');
+                dealBanners = dealBanners.filter(banner => banner.id !== dealBanner.id); // Remove existing
+                dealBanners.push(dealBanner);
+
+                localStorage.setItem('dealBanners', JSON.stringify(dealBanners));
+                log(`✅ Deal banner added successfully!`, 'success');
+
+            } catch (error) {
+                log(`❌ Deal banner error: ${error.message}`, 'error');
+            }
+        }
+
+        function addHeroBackground() {
+            try {
+                log('🖼️ Adding hero background to localStorage...', 'info');
+
+                const heroBackground = {
+                    id: 'hero-bg-1',
+                    title: 'Ready to Find a Great Villa Deal?',
+                    subtitle: 'Save up to 25% on your next luxury villa stay',
+                    image: 'https://i.pinimg.com/736x/6d/a3/a3/6da3a3ded69f943f7d4df7b33e2d6086.jpg',
+                    altText: 'Luxury villa with mountain view',
+                    active: true,
+                    priority: 1,
+                    link: '/villas',
+                    linkText: 'Explore Deals',
+                    startDate: '',
+                    endDate: '',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                // Get existing hero backgrounds or create new array
+                let heroBackgrounds = JSON.parse(localStorage.getItem('heroBackgrounds') || '[]');
+                heroBackgrounds = heroBackgrounds.filter(bg => bg.id !== heroBackground.id); // Remove existing
+                heroBackgrounds.push(heroBackground);
+
+                localStorage.setItem('heroBackgrounds', JSON.stringify(heroBackgrounds));
+                log(`✅ Hero background added successfully!`, 'success');
+
+            } catch (error) {
+                log(`❌ Hero background error: ${error.message}`, 'error');
+            }
+        }
+
+        function addAllData() {
+            log('✨ Adding all data to localStorage...', 'info');
+            addDealBanner();
+            addHeroBackground();
+            log('🎉 All data added! Now visit your home page.', 'success');
+            log('🌐 Go to: http://localhost:3001', 'info');
+        }
+
+        function checkData() {
+            log('📊 Checking current localStorage data...', 'info');
+
+            const dealBanners = JSON.parse(localStorage.getItem('dealBanners') || '[]');
+            const heroBackgrounds = JSON.parse(localStorage.getItem('heroBackgrounds') || '[]');
+            const properties = JSON.parse(localStorage.getItem('properties') || '[]');
+            const destinations = JSON.parse(localStorage.getItem('destinations') || '[]');
+
+            log(`Deal Banners: ${dealBanners.length}`, 'info');
+            log(`Hero Backgrounds: ${heroBackgrounds.length}`, 'info');
+            log(`Properties: ${properties.length}`, 'info');
+            log(`Destinations: ${destinations.length}`, 'info');
+        }
+    </script>
+</body>
+
+</html>

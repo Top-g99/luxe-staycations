@@ -1,0 +1,20 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /debug/
+Disallow: /test-
+Disallow: /check-
+Disallow: /guest/
+Disallow: /host/
+Disallow: /partner/
+Disallow: /booking/checkout
+Disallow: /booking/confirmation
+Disallow: /loyalty
+
+# Host
+Host: https://luxestaycations.in
+
+# Sitemaps
+Sitemap: https://luxestaycations.in/sitemap.xml

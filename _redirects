@@ -1,0 +1,5 @@
+# Cloudflare Pages redirects
+/api/*  /api/:splat  200
+/admin/*  /admin/:splat  200
+/villas/*  /villas/:splat  200
+/*  /index.html  200
