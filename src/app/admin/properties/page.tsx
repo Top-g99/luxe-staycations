@@ -388,17 +388,17 @@ export default function PropertiesManagement() {
 
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <MoneyIcon fontSize="small" sx={{ mr: 1 }} />
-                  <Typography variant="body2">₹{property.price_per_night.toLocaleString()}/night</Typography>
+                  <Typography variant="body2">₹{(property.price_per_night || 0).toLocaleString()}/night</Typography>
                 </Box>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <PeopleIcon fontSize="small" sx={{ mr: 1 }} />
-                  <Typography variant="body2">{property.max_guests} guests</Typography>
+                  <Typography variant="body2">{property.max_guests || 0} guests</Typography>
                 </Box>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <BedIcon fontSize="small" sx={{ mr: 1 }} />
-                  <Typography variant="body2">{property.bedrooms} bed • {property.bathrooms} bath</Typography>
+                  <Typography variant="body2">{property.bedrooms || 0} bed • {property.bathrooms || 0} bath</Typography>
                 </Box>
 
                 <Box sx={{ mb: 2 }}>
@@ -406,7 +406,7 @@ export default function PropertiesManagement() {
                     Amenities:
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {property.amenities.slice(0, 3).map((amenity) => (
+                    {(property.amenities || []).slice(0, 3).map((amenity) => (
                       <Chip
                         key={amenity}
                         label={amenity}
@@ -415,9 +415,9 @@ export default function PropertiesManagement() {
                         variant="outlined"
                       />
                     ))}
-                    {property.amenities.length > 3 && (
+                    {(property.amenities || []).length > 3 && (
                       <Chip
-                        label={`+${property.amenities.length - 3} more`}
+                        label={`+${(property.amenities || []).length - 3} more`}
                         size="small"
                         variant="outlined"
                       />
@@ -517,8 +517,8 @@ export default function PropertiesManagement() {
                 fullWidth
                 label="Price per Night"
                 type="number"
-                value={formData.price_per_night}
-                onChange={(e) => setFormData({ ...formData, price_per_night: Number(e.target.value) })}
+                value={formData.price_per_night || 0}
+                onChange={(e) => setFormData({ ...formData, price_per_night: Number(e.target.value) || 0 })}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -526,8 +526,8 @@ export default function PropertiesManagement() {
                 fullWidth
                 label="Max Guests"
                 type="number"
-                value={formData.max_guests}
-                onChange={(e) => setFormData({ ...formData, max_guests: Number(e.target.value) })}
+                value={formData.max_guests || 1}
+                onChange={(e) => setFormData({ ...formData, max_guests: Number(e.target.value) || 1 })}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -535,8 +535,8 @@ export default function PropertiesManagement() {
                 fullWidth
                 label="Bedrooms"
                 type="number"
-                value={formData.bedrooms}
-                onChange={(e) => setFormData({ ...formData, bedrooms: Number(e.target.value) })}
+                value={formData.bedrooms || 1}
+                onChange={(e) => setFormData({ ...formData, bedrooms: Number(e.target.value) || 1 })}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -544,8 +544,8 @@ export default function PropertiesManagement() {
                 fullWidth
                 label="Bathrooms"
                 type="number"
-                value={formData.bathrooms}
-                onChange={(e) => setFormData({ ...formData, bathrooms: Number(e.target.value) })}
+                value={formData.bathrooms || 1}
+                onChange={(e) => setFormData({ ...formData, bathrooms: Number(e.target.value) || 1 })}
               />
             </Grid>
             <Grid item xs={12}>
