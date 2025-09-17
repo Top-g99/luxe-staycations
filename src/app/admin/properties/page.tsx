@@ -60,7 +60,7 @@ import {
   Security as SecurityIcon,
   Pets as PetIcon,
   SmokingRooms as SmokingIcon,
-  NoSmoking as NoSmokingIcon
+  Block as NoSmokingIcon
 } from '@mui/icons-material';
 
 interface Property {
