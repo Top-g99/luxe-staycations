@@ -49,6 +49,7 @@ import { usePathname } from 'next/navigation';
 const drawerWidth = 280;
 
 const menuItems = [
+  { text: 'Home', icon: <HomeIcon />, href: '/' },
   { text: 'Dashboard', icon: <DashboardIcon />, href: '/admin' },
   { text: 'Properties', icon: <VillaIcon />, href: '/admin/properties' },
   { text: 'Destinations', icon: <LocationIcon />, href: '/admin/destinations' },
@@ -183,9 +184,11 @@ export default function AdminLayout({
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton color="inherit">
-              <HomeIcon />
-            </IconButton>
+            <Link href="/" style={{ textDecoration: 'none' }}>
+              <IconButton color="inherit" title="Go to Home Page">
+                <HomeIcon />
+              </IconButton>
+            </Link>
             <IconButton color="inherit">
               <Badge badgeContent={4} color="error">
                 <NotificationsIcon />
